@@ -33,6 +33,13 @@ async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
     clearToken();
     throw new Error('Session expired — please log in again');
   }
+  if (res.status === 404) {
+    const text = await res.text();
+    if (text.includes('<!DOCTYPE') || text.includes('<html') || !text.startsWith('{')) {
+      throw new Error('Backend not connected — set VITE_API_URL to your backend URL');
+    }
+    throw new Error(`Not found: ${path}`);
+  }
   if (!res.ok) throw new Error(`API ${res.status}: ${res.statusText}`);
   return res.json();
 }
