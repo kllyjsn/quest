@@ -18,9 +18,12 @@ import {
   generateDashboardData, generateSignals, generateBacktest,
   generateRiskLimits, generateBrokerData, generateTechnicals,
   generateMonteCarlo, generateCorrelationMatrix, generatePerformanceAttribution,
+  generateWalkForwardCV, generateDeflatedSharpe, generatePCADecomposition,
+  generateStressTests, generateICAnalysis, generateHRP, generateMacroRegime,
+  generateTransactionCosts,
 } from './lib/simulation';
 
-type Tab = 'dashboard' | 'signals' | 'backtest' | 'risk' | 'broker' | 'paper';
+type Tab = 'dashboard' | 'signals' | 'backtest' | 'risk' | 'broker' | 'paper' | 'research';
 
 interface RegimeData {
   regime: string;
@@ -44,6 +47,7 @@ const TABS: { id: Tab; icon: any; label: string; shortLabel: string }[] = [
   { id: 'signals', icon: Crosshair, label: 'Signals', shortLabel: 'Signals' },
   { id: 'backtest', icon: FlaskConical, label: 'Backtest', shortLabel: 'Backtest' },
   { id: 'risk', icon: ShieldCheck, label: 'Risk', shortLabel: 'Risk' },
+  { id: 'research', icon: Cpu, label: 'Research', shortLabel: 'Research' },
   { id: 'broker', icon: Link2, label: 'Broker', shortLabel: 'Broker' },
   { id: 'paper', icon: LineChart, label: 'Paper Trade', shortLabel: 'Paper' },
 ];
@@ -67,6 +71,7 @@ function App() {
   const [monteCarlo, setMonteCarlo] = useState<any>(null);
   const [correlationMatrix, setCorrelationMatrix] = useState<any>(null);
   const [attribution, setAttribution] = useState<any>(null);
+  const [researchData, setResearchData] = useState<any>(null);
 
 
   const loadDashboard = useCallback(async () => {
@@ -131,6 +136,24 @@ function App() {
     } catch {}
   };
 
+  const loadResearch = async () => {
+    setLoading(true);
+    try {
+      const [wf, ds, pca, stress, ic, hrp, macro, txCost] = await Promise.all([
+        generateWalkForwardCV(),
+        generateDeflatedSharpe(),
+        generatePCADecomposition(),
+        generateStressTests(),
+        generateICAnalysis(),
+        generateHRP(),
+        generateMacroRegime(),
+        generateTransactionCosts(),
+      ]);
+      setResearchData({ walkForward: wf, deflatedSharpe: ds, pca, stressTests: stress, ic, hrp, macro, txCost });
+    } catch (e: any) { setError(e.message); }
+    setLoading(false);
+  };
+
   const loadBroker = async () => {
     setLoading(true);
     try {
@@ -184,6 +207,7 @@ function App() {
     if (tab === 'signals') loadSignals();
     if (tab === 'backtest') loadBacktest();
     if (tab === 'broker' || tab === 'risk') { loadBroker(); loadCorrelation(); }
+    if (tab === 'research') loadResearch();
     // paper tab manages its own data loading internally
   }, [tab]);
 
@@ -273,6 +297,7 @@ function App() {
         {tab === 'signals' && <SignalsTab signals={signals} loading={loading} onRefresh={loadSignals} onSelectSymbol={loadTechnicals} />}
         {tab === 'backtest' && <BacktestTab result={backtestResult} loading={loading} onRun={loadBacktest} monteCarlo={monteCarlo} attribution={attribution} />}
         {tab === 'risk' && <RiskTab limits={riskLimits} correlationMatrix={correlationMatrix} />}
+        {tab === 'research' && <ResearchTab data={researchData} loading={loading} onRefresh={loadResearch} />}
         {tab === 'broker' && <BrokerTab status={brokerStatus} portfolio={targetPortfolio} />}
         {tab === 'paper' && <PaperTradingTab />}
       </main>
@@ -875,6 +900,337 @@ function LimitBar({ label, value, color }: { label: string; value: number; color
       <div className="h-2 bg-white/5 rounded-full overflow-hidden">
         <div className="h-full rounded-full transition-all duration-700" style={{ width: `${value * 100}%`, background: `linear-gradient(90deg, ${color}, ${color}80)` }} />
       </div>
+    </div>
+  );
+}
+
+// ── Research (Institutional Analytics) ──
+function ResearchTab({ data, loading, onRefresh }: any) {
+  if (!data && loading) return (
+    <div className="space-y-4">
+      <SectionHeader icon={Cpu} title="Institutional Research" subtitle="Loading analytics..." accent="#8b5cf6"
+        action={<ActionButton onClick={onRefresh} loading={loading} icon={RefreshCw} label="Refresh" />} />
+      {[1,2,3,4].map(i => <div key={i} className="h-48 shimmer rounded-2xl" />)}
+    </div>
+  );
+
+  if (!data) return (
+    <div className="space-y-4">
+      <SectionHeader icon={Cpu} title="Institutional Research" subtitle="Quant-grade validation suite" accent="#8b5cf6"
+        action={<ActionButton onClick={onRefresh} loading={loading} icon={RefreshCw} label="Run Analysis" />} />
+      <EmptyState icon={Cpu} title="Run Research Suite" subtitle="Walk-forward CV, deflated Sharpe, PCA, stress tests, IC analysis, HRP, macro regime" />
+    </div>
+  );
+
+  const { walkForward, deflatedSharpe, pca, stressTests, ic, hrp, macro, txCost } = data;
+
+  return (
+    <div className="space-y-5 sm:space-y-6">
+      <SectionHeader icon={Cpu} title="Institutional Research" subtitle="Quant-grade statistical validation" accent="#8b5cf6"
+        action={<ActionButton onClick={onRefresh} loading={loading} icon={RefreshCw} label="Re-run" />} />
+
+      {/* Walk-Forward Cross-Validation */}
+      {walkForward && (
+        <Card>
+          <h3 className="text-xs font-bold text-[var(--text-muted)] mb-4 uppercase tracking-wider">Walk-Forward k-Fold Cross-Validation ({walkForward.folds.length} folds)</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+            <div className="text-center p-3 bg-[var(--bg-secondary)] rounded-xl">
+              <p className="text-lg font-bold" style={{ color: walkForward.avg_test_sharpe > 0.5 ? '#22c55e' : '#f59e0b' }}>{walkForward.avg_test_sharpe}</p>
+              <p className="text-[9px] text-[var(--text-faint)]">Avg OOS Sharpe</p>
+            </div>
+            <div className="text-center p-3 bg-[var(--bg-secondary)] rounded-xl">
+              <p className="text-lg font-bold text-[var(--text-primary)]">±{walkForward.sharpe_std}</p>
+              <p className="text-[9px] text-[var(--text-faint)]">Sharpe Std</p>
+            </div>
+            <div className="text-center p-3 bg-[var(--bg-secondary)] rounded-xl">
+              <p className="text-lg font-bold" style={{ color: walkForward.overfit_ratio < 0.5 ? '#22c55e' : '#ef4444' }}>{(walkForward.overfit_ratio * 100).toFixed(0)}%</p>
+              <p className="text-[9px] text-[var(--text-faint)]">Overfit Ratio</p>
+            </div>
+            <div className="text-center p-3 bg-[var(--bg-secondary)] rounded-xl">
+              <p className="text-lg font-bold" style={{ color: walkForward.is_robust ? '#22c55e' : '#ef4444' }}>{walkForward.is_robust ? 'ROBUST' : 'WEAK'}</p>
+              <p className="text-[9px] text-[var(--text-faint)]">Verdict</p>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-[var(--text-faint)] border-b border-[var(--border)]">
+                  <th className="text-left py-2 px-1">Fold</th>
+                  <th className="text-left py-2 px-1">Train Period</th>
+                  <th className="text-right py-2 px-1">Train Sharpe</th>
+                  <th className="text-left py-2 px-1">Test Period</th>
+                  <th className="text-right py-2 px-1">OOS Sharpe</th>
+                  <th className="text-right py-2 px-1">OOS Return</th>
+                  <th className="text-right py-2 px-1">Max DD</th>
+                </tr>
+              </thead>
+              <tbody>
+                {walkForward.folds.map((f: any) => (
+                  <tr key={f.fold} className="border-b border-[var(--border)]/30">
+                    <td className="py-2 px-1 font-mono">{f.fold}</td>
+                    <td className="py-2 px-1 text-[var(--text-faint)]">{f.train_start.slice(5)}</td>
+                    <td className="py-2 px-1 text-right font-mono">{f.train_sharpe}</td>
+                    <td className="py-2 px-1 text-[var(--text-faint)]">{f.test_start.slice(5)}</td>
+                    <td className="py-2 px-1 text-right font-mono" style={{ color: f.test_sharpe > 0 ? '#22c55e' : '#ef4444' }}>{f.test_sharpe}</td>
+                    <td className="py-2 px-1 text-right font-mono" style={{ color: f.test_return > 0 ? '#22c55e' : '#ef4444' }}>{f.test_return > 0 ? '+' : ''}{f.test_return}%</td>
+                    <td className="py-2 px-1 text-right font-mono text-[#ef4444]">{f.test_max_dd}%</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
+
+      {/* Deflated Sharpe Ratio */}
+      {deflatedSharpe && (
+        <Card>
+          <h3 className="text-xs font-bold text-[var(--text-muted)] mb-4 uppercase tracking-wider">Deflated Sharpe Ratio (Bailey & Lopez de Prado)</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+            <div className="text-center p-3 bg-[var(--bg-secondary)] rounded-xl">
+              <p className="text-lg font-bold text-[var(--text-primary)]">{deflatedSharpe.observed_sharpe}</p>
+              <p className="text-[9px] text-[var(--text-faint)]">Observed Sharpe</p>
+            </div>
+            <div className="text-center p-3 bg-[var(--bg-secondary)] rounded-xl">
+              <p className="text-lg font-bold" style={{ color: deflatedSharpe.deflated_sharpe > 0 ? '#22c55e' : '#ef4444' }}>{deflatedSharpe.deflated_sharpe}</p>
+              <p className="text-[9px] text-[var(--text-faint)]">Deflated Sharpe</p>
+            </div>
+            <div className="text-center p-3 bg-[var(--bg-secondary)] rounded-xl">
+              <p className="text-lg font-bold" style={{ color: deflatedSharpe.p_value < 0.05 ? '#22c55e' : '#ef4444' }}>{deflatedSharpe.p_value}</p>
+              <p className="text-[9px] text-[var(--text-faint)]">p-value</p>
+            </div>
+            <div className="text-center p-3 bg-[var(--bg-secondary)] rounded-xl">
+              <p className="text-lg font-bold" style={{ color: deflatedSharpe.is_significant ? '#22c55e' : '#ef4444' }}>{deflatedSharpe.is_significant ? 'YES' : 'NO'}</p>
+              <p className="text-[9px] text-[var(--text-faint)]">Significant (α=0.05)</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
+            <div><span className="text-[var(--text-faint)]">Haircut:</span> <span className="font-mono text-[#f59e0b]">{deflatedSharpe.haircut_pct}%</span></div>
+            <div><span className="text-[var(--text-faint)]">P(Overfit):</span> <span className="font-mono text-[#ef4444]">{(deflatedSharpe.prob_overfit * 100).toFixed(0)}%</span></div>
+            <div><span className="text-[var(--text-faint)]">Trials:</span> <span className="font-mono">{deflatedSharpe.trials_equivalent}</span></div>
+            <div><span className="text-[var(--text-faint)]">Min Track:</span> <span className="font-mono">{deflatedSharpe.min_track_record_months}mo</span></div>
+          </div>
+        </Card>
+      )}
+
+      {/* PCA Risk Decomposition */}
+      {pca && (
+        <Card>
+          <h3 className="text-xs font-bold text-[var(--text-muted)] mb-4 uppercase tracking-wider">PCA Risk Decomposition</h3>
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="text-center p-3 bg-[var(--bg-secondary)] rounded-xl">
+              <p className="text-xl font-bold text-[#3b82f6]">{pca.systematic_risk_pct}%</p>
+              <p className="text-[9px] text-[var(--text-faint)]">Systematic Risk</p>
+            </div>
+            <div className="text-center p-3 bg-[var(--bg-secondary)] rounded-xl">
+              <p className="text-xl font-bold text-[#8b5cf6]">{pca.idiosyncratic_risk_pct}%</p>
+              <p className="text-[9px] text-[var(--text-faint)]">Idiosyncratic (Alpha)</p>
+            </div>
+          </div>
+          <div className="space-y-2">
+            {pca.components.map((c: any) => (
+              <div key={c.id} className="flex items-center gap-3">
+                <span className="w-6 text-xs font-mono text-[var(--text-faint)]">PC{c.id}</span>
+                <div className="flex-1 h-4 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
+                  <div className="h-full rounded-full bg-gradient-to-r from-[#3b82f6] to-[#8b5cf6]" style={{ width: `${c.variance_pct}%` }} />
+                </div>
+                <span className="w-12 text-right text-xs font-mono">{c.variance_pct}%</span>
+                <span className="w-24 text-xs text-[var(--text-faint)] truncate">{c.interpretation}</span>
+              </div>
+            ))}
+          </div>
+          <p className="mt-3 text-[10px] text-[var(--text-faint)]">Effective dimension: {pca.effective_dimension} factors explain 80%+ of variance. Idiosyncratic risk = true alpha opportunity.</p>
+        </Card>
+      )}
+
+      {/* Stress Tests */}
+      {stressTests && (
+        <Card>
+          <h3 className="text-xs font-bold text-[var(--text-muted)] mb-4 uppercase tracking-wider">Historical Stress Tests</h3>
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            <div className="text-center p-2 bg-[var(--bg-secondary)] rounded-xl">
+              <p className="text-sm font-bold text-[#ef4444]">{stressTests.tail_risk_var95}%</p>
+              <p className="text-[8px] text-[var(--text-faint)]">VaR (95%)</p>
+            </div>
+            <div className="text-center p-2 bg-[var(--bg-secondary)] rounded-xl">
+              <p className="text-sm font-bold text-[#ef4444]">{stressTests.tail_risk_cvar95}%</p>
+              <p className="text-[8px] text-[var(--text-faint)]">CVaR / ES</p>
+            </div>
+            <div className="text-center p-2 bg-[var(--bg-secondary)] rounded-xl">
+              <p className="text-sm font-bold text-[#f59e0b]">{stressTests.current_vulnerability}%</p>
+              <p className="text-[8px] text-[var(--text-faint)]">Ann. Vol</p>
+            </div>
+          </div>
+          <div className="space-y-2">
+            {stressTests.scenarios.map((s: any) => (
+              <div key={s.name} className="flex items-center gap-2 py-2 border-b border-[var(--border)]/30 last:border-0">
+                <div className="flex-1">
+                  <p className="text-xs font-medium">{s.name}</p>
+                  <p className="text-[9px] text-[var(--text-faint)]">{s.period} · VIX {s.vix_peak}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs font-mono font-bold text-[#ef4444]">{s.portfolio_impact.toFixed(1)}%</p>
+                  <p className="text-[8px] text-[var(--text-faint)]">{s.recovery_days}d recovery</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Information Coefficient */}
+      {ic && (
+        <Card>
+          <h3 className="text-xs font-bold text-[var(--text-muted)] mb-4 uppercase tracking-wider">Factor Information Coefficient (IC) Analysis</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-[var(--text-faint)] border-b border-[var(--border)]">
+                  <th className="text-left py-2">Factor</th>
+                  <th className="text-right py-2">IC</th>
+                  <th className="text-right py-2">ICIR</th>
+                  <th className="text-right py-2">t-stat</th>
+                  <th className="text-right py-2">Hit Rate</th>
+                  <th className="text-right py-2">Halflife</th>
+                  <th className="text-right py-2">Sig?</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ic.factors.map((f: any) => (
+                  <tr key={f.name} className="border-b border-[var(--border)]/30">
+                    <td className="py-2 font-medium">{f.name}</td>
+                    <td className="py-2 text-right font-mono" style={{ color: f.ic_mean > 0 ? '#22c55e' : '#ef4444' }}>{f.ic_mean.toFixed(3)}</td>
+                    <td className="py-2 text-right font-mono" style={{ color: f.icir > 0.5 ? '#22c55e' : '#f59e0b' }}>{f.icir.toFixed(2)}</td>
+                    <td className="py-2 text-right font-mono">{f.t_stat.toFixed(2)}</td>
+                    <td className="py-2 text-right font-mono">{(f.hit_rate * 100).toFixed(0)}%</td>
+                    <td className="py-2 text-right font-mono">{f.decay_halflife}d</td>
+                    <td className="py-2 text-right">{f.is_significant ? <span className="text-[#22c55e]">✓</span> : <span className="text-[#ef4444]">✗</span>}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-3 text-[10px] text-[var(--text-faint)]">Best: {ic.best_factor} · Worst: {ic.worst_factor} · Combined ICIR: {ic.combined_icir}</p>
+        </Card>
+      )}
+
+      {/* Hierarchical Risk Parity */}
+      {hrp && (
+        <Card>
+          <h3 className="text-xs font-bold text-[var(--text-muted)] mb-4 uppercase tracking-wider">Hierarchical Risk Parity (Lopez de Prado)</h3>
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="text-center p-3 bg-[var(--bg-secondary)] rounded-xl">
+              <p className="text-lg font-bold text-[#3b82f6]">{hrp.diversification_ratio}x</p>
+              <p className="text-[9px] text-[var(--text-faint)]">Diversification Ratio</p>
+            </div>
+            <div className="text-center p-3 bg-[var(--bg-secondary)] rounded-xl">
+              <p className="text-lg font-bold text-[#8b5cf6]">{hrp.effective_n}</p>
+              <p className="text-[9px] text-[var(--text-faint)]">Effective N</p>
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            {hrp.weights.slice(0, 12).map((w: any) => (
+              <div key={w.symbol} className="flex items-center gap-2">
+                <span className="w-12 text-xs font-mono text-[var(--text-secondary)]">{w.symbol}</span>
+                <div className="flex-1 h-3 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
+                  <div className="h-full rounded-full" style={{ width: `${w.weight * 100 * 5}%`, background: `hsl(${w.cluster * 80 + 200}, 70%, 55%)` }} />
+                </div>
+                <span className="w-12 text-right text-[10px] font-mono">{(w.weight * 100).toFixed(1)}%</span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 flex gap-2 flex-wrap">
+            {hrp.clusters.map((c: any) => (
+              <span key={c.id} className="text-[9px] px-2 py-1 rounded-full bg-[var(--bg-secondary)] text-[var(--text-faint)]">
+                C{c.id}: {c.symbols.slice(0, 3).join(', ')} (ρ={c.avg_correlation})
+              </span>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Macro Regime */}
+      {macro && (
+        <Card>
+          <h3 className="text-xs font-bold text-[var(--text-muted)] mb-4 uppercase tracking-wider">Macro Regime Signals</h3>
+          <div className="flex items-center gap-3 mb-4 p-3 rounded-xl" style={{ background: macro.regime.includes('Expansion') ? 'rgba(34,197,94,0.08)' : macro.regime.includes('Contraction') ? 'rgba(239,68,68,0.08)' : 'rgba(245,158,11,0.08)' }}>
+            <div className="text-sm font-bold" style={{ color: macro.regime.includes('Expansion') ? '#22c55e' : macro.regime.includes('Contraction') ? '#ef4444' : '#f59e0b' }}>
+              {macro.regime}
+            </div>
+            <div className="ml-auto text-xs font-mono">{macro.confidence}% confidence</div>
+          </div>
+          <div className="space-y-2 mb-4">
+            {macro.signals.map((s: any) => (
+              <div key={s.name} className="flex items-center gap-2 py-1.5 border-b border-[var(--border)]/30 last:border-0">
+                <span className="w-2 h-2 rounded-full" style={{ background: s.signal === 'bullish' ? '#22c55e' : s.signal === 'bearish' ? '#ef4444' : '#f59e0b' }}></span>
+                <span className="flex-1 text-xs">{s.name}</span>
+                <span className="text-xs font-mono">{s.value > 0 ? '+' : ''}{s.value}%</span>
+                <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: s.signal === 'bullish' ? 'rgba(34,197,94,0.15)' : s.signal === 'bearish' ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)', color: s.signal === 'bullish' ? '#22c55e' : s.signal === 'bearish' ? '#ef4444' : '#f59e0b' }}>{s.signal}</span>
+              </div>
+            ))}
+          </div>
+          <h4 className="text-[10px] font-bold text-[var(--text-faint)] mb-2 uppercase">Recommended Allocation</h4>
+          <div className="space-y-1.5">
+            {macro.recommended_allocation.map((a: any) => (
+              <div key={a.asset_class} className="flex items-center gap-2">
+                <span className="w-16 text-xs">{a.asset_class}</span>
+                <div className="flex-1 h-3 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
+                  <div className="h-full rounded-full bg-gradient-to-r from-[#3b82f6] to-[#22c55e]" style={{ width: `${a.weight}%` }} />
+                </div>
+                <span className="w-8 text-right text-[10px] font-mono">{a.weight}%</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Transaction Cost Model */}
+      {txCost && (
+        <Card>
+          <h3 className="text-xs font-bold text-[var(--text-muted)] mb-4 uppercase tracking-wider">Transaction Cost Model ({txCost.model})</h3>
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            <div className="text-center p-2 bg-[var(--bg-secondary)] rounded-xl">
+              <p className="text-sm font-bold" style={{ color: txCost.total_portfolio_cost_bps < 10 ? '#22c55e' : '#f59e0b' }}>{txCost.total_portfolio_cost_bps} bps</p>
+              <p className="text-[8px] text-[var(--text-faint)]">Avg Cost/Trade</p>
+            </div>
+            <div className="text-center p-2 bg-[var(--bg-secondary)] rounded-xl">
+              <p className="text-sm font-bold" style={{ color: txCost.annual_drag_pct < 1 ? '#22c55e' : '#ef4444' }}>{txCost.annual_drag_pct}%</p>
+              <p className="text-[8px] text-[var(--text-faint)]">Annual Drag</p>
+            </div>
+            <div className="text-center p-2 bg-[var(--bg-secondary)] rounded-xl">
+              <p className="text-sm font-bold text-[var(--text-primary)]">{txCost.turnover_assumption}x</p>
+              <p className="text-[8px] text-[var(--text-faint)]">Ann. Turnover</p>
+            </div>
+          </div>
+          <p className="text-xs mb-3 p-2 rounded-lg bg-[var(--bg-secondary)] text-[var(--text-muted)]">{txCost.recommendation}</p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-[10px]">
+              <thead>
+                <tr className="text-[var(--text-faint)] border-b border-[var(--border)]">
+                  <th className="text-left py-1">Symbol</th>
+                  <th className="text-right py-1">Shares</th>
+                  <th className="text-right py-1">Impact (bps)</th>
+                  <th className="text-right py-1">Spread (bps)</th>
+                  <th className="text-right py-1">Total (bps)</th>
+                  <th className="text-right py-1">Opt. Horizon</th>
+                </tr>
+              </thead>
+              <tbody>
+                {txCost.estimates.slice(0, 10).map((e: any) => (
+                  <tr key={e.symbol} className="border-b border-[var(--border)]/20">
+                    <td className="py-1 font-mono">{e.symbol}</td>
+                    <td className="py-1 text-right">{e.shares}</td>
+                    <td className="py-1 text-right font-mono">{e.market_impact_bps}</td>
+                    <td className="py-1 text-right font-mono">{e.spread_cost_bps}</td>
+                    <td className="py-1 text-right font-mono font-bold">{e.total_cost_bps}</td>
+                    <td className="py-1 text-right">{e.optimal_horizon_min}min</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
     </div>
   );
 }
