@@ -409,3 +409,387 @@ export function simGetPaperTrades() {
   const state = getState();
   return { trades: state.trades };
 }
+
+// ── Real Market Data 30-Day Paper Backtest ──
+
+interface PriceData {
+  dates: string[];
+  closes: number[];
+  symbol: string;
+}
+
+const BACKTEST_CACHE_KEY = 'quest_30d_backtest';
+const CACHE_DURATION = 3600000; // 1 hour
+
+/** Fetch real 30-day price data via Netlify serverless function or local proxy. */
+async function fetchRealPrices(symbols: string[]): Promise<Record<string, PriceData>> {
+  const symbolStr = symbols.join(',');
+  // Try Netlify function path first, then local proxy
+  const urls = [
+    `/api/market-data?symbols=${symbolStr}&range=2mo&interval=1d`,
+    `/.netlify/functions/market-data?symbols=${symbolStr}&range=2mo&interval=1d`,
+  ];
+
+  for (const url of urls) {
+    try {
+      const res = await fetch(url);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.data && Object.keys(json.data).length > 0) {
+          return json.data;
+        }
+      }
+    } catch {
+      // try next URL
+    }
+  }
+
+  return {};
+}
+
+/** Compute momentum factor from price series */
+function computeMomentum(closes: number[]): number {
+  if (closes.length < 22) return 0;
+  const skipRecent = closes.slice(0, -5); // skip last week
+  const start = skipRecent[Math.max(0, skipRecent.length - 21)];
+  const end = skipRecent[skipRecent.length - 1];
+  return start > 0 ? (end / start) - 1 : 0;
+}
+
+/** Compute RSI from closes */
+function computeRSI(closes: number[], period = 14): number {
+  if (closes.length < period + 1) return 50;
+  let gains = 0, losses = 0;
+  for (let i = closes.length - period; i < closes.length; i++) {
+    const diff = closes[i] - closes[i - 1];
+    if (diff > 0) gains += diff;
+    else losses -= diff;
+  }
+  if (losses === 0) return 100;
+  const rs = (gains / period) / (losses / period);
+  return 100 - (100 / (1 + rs));
+}
+
+/** Compute annualized volatility */
+function computeVolatility(closes: number[]): number {
+  if (closes.length < 10) return 0.3;
+  const returns: number[] = [];
+  for (let i = 1; i < closes.length; i++) {
+    if (closes[i - 1] > 0) returns.push(Math.log(closes[i] / closes[i - 1]));
+  }
+  const mean = returns.reduce((s, r) => s + r, 0) / returns.length;
+  const variance = returns.reduce((s, r) => s + (r - mean) ** 2, 0) / returns.length;
+  return Math.sqrt(variance * 252);
+}
+
+/** Compute quality score: trend consistency */
+function computeQuality(closes: number[]): number {
+  if (closes.length < 10) return 0.5;
+  // R-squared of log-price regression
+  const n = closes.length;
+  const logPrices = closes.map(c => Math.log(Math.max(c, 0.01)));
+  const xMean = (n - 1) / 2;
+  const yMean = logPrices.reduce((a, b) => a + b, 0) / n;
+  let ssXY = 0, ssXX = 0;
+  for (let i = 0; i < n; i++) {
+    ssXY += (i - xMean) * (logPrices[i] - yMean);
+    ssXX += (i - xMean) ** 2;
+  }
+  const slope = ssXX > 0 ? ssXY / ssXX : 0;
+  const yHat = logPrices.map((_, i) => yMean + slope * (i - xMean));
+  const ssTot = logPrices.reduce((s, y) => s + (y - yMean) ** 2, 0);
+  const ssRes = logPrices.reduce((s, y, i) => s + (y - yHat[i]) ** 2, 0);
+  const rSquared = ssTot > 0 ? 1 - ssRes / ssTot : 0;
+  // Higher R² + positive slope = better quality
+  return Math.max(0, Math.min(1, rSquared * (slope > 0 ? 1 : 0.3)));
+}
+
+interface BacktestDay {
+  date: string;
+  value: number;
+  drawdown: number;
+}
+
+interface BacktestTrade {
+  date: string;
+  symbol: string;
+  side: 'buy' | 'sell';
+  quantity: number;
+  price: number;
+  reason: string;
+}
+
+export interface RealBacktestResult {
+  initial_capital: number;
+  final_value: number;
+  total_return: number;
+  max_drawdown: number;
+  sharpe_ratio: number;
+  total_trades: number;
+  win_rate: number;
+  equity_curve: BacktestDay[];
+  trades: BacktestTrade[];
+  positions: { symbol: string; quantity: number; entry_price: number; current_price: number; pnl: number; pnl_pct: number; sector: string }[];
+  regime: string;
+  days_simulated: number;
+  data_source: 'real' | 'simulated';
+  loading?: boolean;
+}
+
+/** Run a 30-day paper backtest using real Yahoo Finance data. */
+export async function runReal30DayBacktest(): Promise<RealBacktestResult> {
+  // Check cache
+  const cached = localStorage.getItem(BACKTEST_CACHE_KEY);
+  if (cached) {
+    try {
+      const parsed = JSON.parse(cached);
+      if (Date.now() - parsed._ts < CACHE_DURATION) {
+        return parsed.result;
+      }
+    } catch { /* ignore bad cache */ }
+  }
+
+  const symbols = STOCKS.map(s => s.symbol);
+  const priceData = await fetchRealPrices(symbols);
+
+  const hasRealData = Object.keys(priceData).length >= 5;
+
+  if (!hasRealData) {
+    // Fall back to simulation
+    return runSimulated30DayBacktest();
+  }
+
+  // Run the actual walk-forward backtest
+  const INITIAL = 1000;
+  const COST_BPS = 15; // 15bps round-trip
+  const MAX_POSITIONS = 6;
+  const TRAILING_STOP = 0.08;
+  const REBALANCE_EVERY = 5; // rebalance weekly
+
+  // Find common date range (last ~30 trading days)
+  const allDates = new Set<string>();
+  for (const sym of Object.keys(priceData)) {
+    priceData[sym].dates.forEach(d => allDates.add(d));
+  }
+  const sortedDates = Array.from(allDates).sort();
+  const tradingDates = sortedDates.slice(-30);
+
+  let cash = INITIAL;
+  let positions: Record<string, { qty: number; entry: number; high: number }> = {};
+  let peakValue = INITIAL;
+  const equityCurve: BacktestDay[] = [];
+  const trades: BacktestTrade[] = [];
+
+  for (let dayIdx = 0; dayIdx < tradingDates.length; dayIdx++) {
+    const date = tradingDates[dayIdx];
+
+    // Get current prices
+    const currentPrices: Record<string, number> = {};
+    for (const [sym, data] of Object.entries(priceData)) {
+      const idx = data.dates.indexOf(date);
+      if (idx >= 0 && data.closes[idx] != null) {
+        currentPrices[sym] = data.closes[idx];
+      }
+    }
+
+    // Update position highs + check trailing stops
+    for (const sym of Object.keys(positions)) {
+      if (currentPrices[sym]) {
+        positions[sym].high = Math.max(positions[sym].high, currentPrices[sym]);
+        const drawdownFromHigh = (currentPrices[sym] - positions[sym].high) / positions[sym].high;
+        if (drawdownFromHigh <= -TRAILING_STOP) {
+          // Sell — trailing stop hit
+          const sellValue = positions[sym].qty * currentPrices[sym] * (1 - COST_BPS / 10000);
+          cash += sellValue;
+          trades.push({ date, symbol: sym, side: 'sell', quantity: positions[sym].qty, price: currentPrices[sym], reason: 'Trailing stop' });
+          delete positions[sym];
+        }
+      }
+    }
+
+    // Rebalance every N days
+    if (dayIdx % REBALANCE_EVERY === 0 && dayIdx > 0) {
+      // Score all stocks using real data
+      const scored: { symbol: string; score: number; price: number }[] = [];
+      for (const [sym, data] of Object.entries(priceData)) {
+        const dateIdx = data.dates.indexOf(date);
+        if (dateIdx < 10) continue;
+        const historicalCloses = data.closes.slice(0, dateIdx + 1);
+        const price = historicalCloses[historicalCloses.length - 1];
+        if (!price || price <= 0) continue;
+
+        const momentum = computeMomentum(historicalCloses);
+        const rsi = computeRSI(historicalCloses);
+        const vol = computeVolatility(historicalCloses);
+        const quality = computeQuality(historicalCloses);
+
+        // Mean reversion: favor RSI oversold
+        const meanRev = rsi < 30 ? 0.8 : rsi < 40 ? 0.5 : rsi > 70 ? 0.1 : 0.3;
+        // Vol targeting: prefer moderate vol
+        const volScore = vol > 0.05 && vol < 0.5 ? 1 - Math.abs(vol - 0.2) : 0.2;
+
+        const composite = momentum * 0.30 + meanRev * 0.15 + quality * 0.25 + volScore * 0.15 + 0.15 * (momentum > 0 ? momentum / (vol || 0.3) : 0);
+
+        scored.push({ symbol: sym, score: composite, price });
+      }
+
+      scored.sort((a, b) => b.score - a.score);
+      const topPicks = scored.slice(0, MAX_POSITIONS);
+      const topSymbols = new Set(topPicks.map(s => s.symbol));
+
+      // Sell positions not in top picks
+      for (const sym of Object.keys(positions)) {
+        if (!topSymbols.has(sym) && currentPrices[sym]) {
+          const sellValue = positions[sym].qty * currentPrices[sym] * (1 - COST_BPS / 10000);
+          cash += sellValue;
+          trades.push({ date, symbol: sym, side: 'sell', quantity: positions[sym].qty, price: currentPrices[sym], reason: 'Rebalance sell' });
+          delete positions[sym];
+        }
+      }
+
+      // Buy top picks not already held
+      const numToBuy = topPicks.filter(p => !positions[p.symbol]).length;
+      if (numToBuy > 0) {
+        const perPosition = (cash * 0.92) / numToBuy; // keep 8% cash reserve
+        for (const pick of topPicks) {
+          if (!positions[pick.symbol] && perPosition > 10 && pick.price > 0) {
+            const qty = (perPosition / pick.price) * (1 - COST_BPS / 10000);
+            positions[pick.symbol] = { qty, entry: pick.price, high: pick.price };
+            cash -= perPosition;
+            trades.push({ date, symbol: pick.symbol, side: 'buy', quantity: Math.round(qty * 10000) / 10000, price: pick.price, reason: 'Rebalance buy' });
+          }
+        }
+      }
+    }
+
+    // Calculate portfolio value
+    let posValue = 0;
+    for (const [sym, pos] of Object.entries(positions)) {
+      posValue += pos.qty * (currentPrices[sym] || pos.entry);
+    }
+    const portfolioValue = cash + posValue;
+    peakValue = Math.max(peakValue, portfolioValue);
+    const drawdown = (portfolioValue - peakValue) / peakValue;
+
+    equityCurve.push({
+      date,
+      value: Math.round(portfolioValue * 100) / 100,
+      drawdown: Math.round(drawdown * 10000) / 10000,
+    });
+  }
+
+  // Final metrics
+  const finalValue = equityCurve[equityCurve.length - 1]?.value || INITIAL;
+  const totalReturn = (finalValue / INITIAL) - 1;
+  const maxDD = Math.min(...equityCurve.map(e => e.drawdown));
+
+  // Sharpe: annualize daily returns
+  const dailyReturns: number[] = [];
+  for (let i = 1; i < equityCurve.length; i++) {
+    dailyReturns.push((equityCurve[i].value / equityCurve[i - 1].value) - 1);
+  }
+  const avgReturn = dailyReturns.reduce((s, r) => s + r, 0) / (dailyReturns.length || 1);
+  const stdReturn = Math.sqrt(dailyReturns.reduce((s, r) => s + (r - avgReturn) ** 2, 0) / (dailyReturns.length || 1));
+  const sharpe = stdReturn > 0 ? (avgReturn / stdReturn) * Math.sqrt(252) : 0;
+
+  // Win rate
+  const buyTrades = trades.filter(t => t.side === 'buy');
+  const sellTrades = trades.filter(t => t.side === 'sell');
+  let wins = 0;
+  for (const sell of sellTrades) {
+    const buyForSym = buyTrades.find(b => b.symbol === sell.symbol && b.date <= sell.date);
+    if (buyForSym && sell.price > buyForSym.price) wins++;
+  }
+  const winRate = sellTrades.length > 0 ? wins / sellTrades.length : 0.5;
+
+  // Current positions
+  const lastDate = tradingDates[tradingDates.length - 1];
+  const finalPositions = Object.entries(positions).map(([sym, pos]) => {
+    const stock = STOCKS.find(s => s.symbol === sym);
+    const lastIdx = priceData[sym]?.dates.indexOf(lastDate) ?? -1;
+    const currentPrice = lastIdx >= 0 ? priceData[sym].closes[lastIdx] : pos.entry;
+    const pnl = pos.qty * (currentPrice - pos.entry);
+    return {
+      symbol: sym,
+      quantity: Math.round(pos.qty * 10000) / 10000,
+      entry_price: Math.round(pos.entry * 100) / 100,
+      current_price: Math.round(currentPrice * 100) / 100,
+      pnl: Math.round(pnl * 100) / 100,
+      pnl_pct: Math.round(((currentPrice / pos.entry) - 1) * 10000) / 100,
+      sector: stock?.sector || 'Technology',
+    };
+  });
+
+  const result: RealBacktestResult = {
+    initial_capital: INITIAL,
+    final_value: Math.round(finalValue * 100) / 100,
+    total_return: Math.round(totalReturn * 10000) / 10000,
+    max_drawdown: Math.round(maxDD * 10000) / 10000,
+    sharpe_ratio: Math.round(sharpe * 1000) / 1000,
+    total_trades: trades.length,
+    win_rate: Math.round(winRate * 1000) / 1000,
+    equity_curve: equityCurve,
+    trades,
+    positions: finalPositions,
+    regime: simGetRegime().regime,
+    days_simulated: tradingDates.length,
+    data_source: 'real',
+  };
+
+  // Cache the result
+  try {
+    localStorage.setItem(BACKTEST_CACHE_KEY, JSON.stringify({ result, _ts: Date.now() }));
+  } catch { /* storage full */ }
+
+  return result;
+}
+
+/** Fallback: simulated 30-day backtest with pseudo-random data */
+function runSimulated30DayBacktest(): RealBacktestResult {
+  const r = seededRandom(daySeed + 100);
+  const INITIAL = 1000;
+  let value = INITIAL;
+  let peak = INITIAL;
+  const curve: BacktestDay[] = [];
+  const fakeTrades: BacktestTrade[] = [];
+
+  // Simulate 30 trading days
+  for (let i = 0; i < 30; i++) {
+    const dailyReturn = (r() - 0.47) * 0.015;
+    value *= 1 + dailyReturn;
+    peak = Math.max(peak, value);
+    const dd = (value - peak) / peak;
+    const date = new Date(Date.now() - (30 - i) * 86400000).toISOString().slice(0, 10);
+    curve.push({ date, value: Math.round(value * 100) / 100, drawdown: Math.round(dd * 10000) / 10000 });
+
+    // Add some trades
+    if (i % 5 === 0 && i > 0) {
+      const stock = STOCKS[Math.floor(r() * STOCKS.length)];
+      fakeTrades.push({
+        date, symbol: stock.symbol, side: 'buy',
+        quantity: Math.round((value * 0.15 / stock.basePrice) * 100) / 100,
+        price: Math.round(stock.basePrice * (1 + (r() - 0.5) * 0.04) * 100) / 100,
+        reason: 'Rebalance buy',
+      });
+    }
+  }
+
+  const totalReturn = (value / INITIAL) - 1;
+  const maxDD = Math.min(...curve.map(c => c.drawdown));
+
+  return {
+    initial_capital: INITIAL,
+    final_value: Math.round(value * 100) / 100,
+    total_return: Math.round(totalReturn * 10000) / 10000,
+    max_drawdown: Math.round(maxDD * 10000) / 10000,
+    sharpe_ratio: Math.round((totalReturn / Math.abs(maxDD || 0.1)) * 1000) / 1000,
+    total_trades: fakeTrades.length,
+    win_rate: 0.55,
+    equity_curve: curve,
+    trades: fakeTrades,
+    positions: [],
+    regime: simGetRegime().regime,
+    days_simulated: 30,
+    data_source: 'simulated',
+  };
+}

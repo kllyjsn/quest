@@ -3,6 +3,14 @@
   command = "npm run build"
   publish = "dist"
 
+[functions]
+  directory = "../netlify/functions"
+
+[[redirects]]
+  from = "/api/market-data"
+  to = "/.netlify/functions/market-data"
+  status = 200
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

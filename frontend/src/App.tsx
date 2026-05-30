@@ -9,10 +9,11 @@ import {
   Target, AlertTriangle, DollarSign, Layers, RefreshCw,
   ChevronRight, ArrowUpRight, ArrowDownRight, Cpu,
   Eye, Crosshair, Gauge, PieChart as PieIcon,
-  LogIn, LogOut, User, PlayCircle, Clock, Flame, X,
+  LogIn, LogOut, User, Clock, Flame, X,
   LayoutDashboard, LineChart, FlaskConical, ShieldCheck, Link2,
 } from 'lucide-react';
 import * as api from './lib/api';
+import { runReal30DayBacktest, type RealBacktestResult } from './lib/simulation';
 
 type Tab = 'dashboard' | 'signals' | 'backtest' | 'risk' | 'broker' | 'paper';
 
@@ -58,8 +59,7 @@ function App() {
   const [riskLimits, setRiskLimits] = useState<any>(null);
   const [technicals, setTechnicals] = useState<any>(null);
   const [selectedSymbol, setSelectedSymbol] = useState('');
-  const [paperStatus, setPaperStatus] = useState<any>(null);
-  const [paperTrades, setPaperTrades] = useState<any[]>([]);
+
 
   const loadDashboard = useCallback(async () => {
     setLoading(true);
@@ -120,18 +120,7 @@ function App() {
     } catch {}
   };
 
-  const loadPaper = async () => {
-    setLoading(true);
-    try {
-      const [status, trades] = await Promise.all([
-        api.getPaperStatus().catch(() => null),
-        api.getPaperTrades().catch(() => ({ trades: [] })),
-      ]);
-      if (status) setPaperStatus(status);
-      setPaperTrades(trades?.trades || []);
-    } catch (e: any) { setError(e.message); }
-    setLoading(false);
-  };
+
 
   const handleLogin = async (email: string, password: string, isRegister: boolean) => {
     try {
@@ -151,7 +140,7 @@ function App() {
     if (tab === 'signals') loadSignals();
     if (tab === 'backtest') loadBacktest();
     if (tab === 'broker' || tab === 'risk') loadBroker();
-    if (tab === 'paper') loadPaper();
+    // paper tab manages its own data loading internally
   }, [tab]);
 
   return (
@@ -241,7 +230,7 @@ function App() {
         {tab === 'backtest' && <BacktestTab result={backtestResult} loading={loading} onRun={loadBacktest} />}
         {tab === 'risk' && <RiskTab limits={riskLimits} />}
         {tab === 'broker' && <BrokerTab status={brokerStatus} portfolio={targetPortfolio} />}
-        {tab === 'paper' && <PaperTradingTab status={paperStatus} trades={paperTrades} loading={loading} onRunCycle={async () => { setLoading(true); try { await api.runPaperCycle(); await loadPaper(); } catch (e: any) { setError(e.message); } setLoading(false); }} onReset={async () => { setLoading(true); try { await api.resetPaper(); await loadPaper(); } catch (e: any) { setError(e.message); } setLoading(false); }} />}
+        {tab === 'paper' && <PaperTradingTab />}
       </main>
 
       {/* Mobile bottom nav */}
@@ -896,92 +885,187 @@ function AuthModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (emai
   );
 }
 
-// ── Paper Trading ──
-function PaperTradingTab({ status, trades, loading, onRunCycle, onReset }: any) {
-  const portfolioValue = status?.portfolio_value || 1000;
-  const totalReturn = status?.total_return_pct || 0;
+// ── Paper Trading (Auto-running 30-day backtest) ──
+function PaperTradingTab() {
+  const [result, setResult] = useState<RealBacktestResult | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setIsLoading(true);
+      try {
+        const data = await runReal30DayBacktest();
+        if (!cancelled) setResult(data);
+      } catch {
+        // silently fall back
+      }
+      if (!cancelled) setIsLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const handleRefresh = async () => {
+    setIsLoading(true);
+    localStorage.removeItem('quest_30d_backtest');
+    try {
+      const data = await runReal30DayBacktest();
+      setResult(data);
+    } catch {}
+    setIsLoading(false);
+  };
+
+  if (isLoading && !result) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <div className="w-12 h-12 rounded-full border-4 border-[#3b82f6]/20 border-t-[#3b82f6] animate-spin mb-4" />
+        <p className="text-sm text-[var(--text-muted)] font-medium">Running 30-day paper backtest...</p>
+        <p className="text-[10px] text-[var(--text-faint)] mt-1">Fetching real market data for 20 stocks</p>
+      </div>
+    );
+  }
+
+  if (!result) return null;
+
+  const totalReturn = result.total_return * 100;
   const isPositive = totalReturn >= 0;
-  const cashAvail = status?.cash || 1000;
-  const numPositions = status?.num_positions || 0;
+  const equityCurve = result.equity_curve || [];
+  const positions = result.positions || [];
+  const trades = result.trades || [];
 
   return (
     <div className="space-y-5 sm:space-y-6">
-      {/* Portfolio Hero - Robinhood style */}
+      {/* Portfolio Hero */}
       <div className="text-center py-4 sm:py-6">
-        <p className="text-xs text-[var(--text-faint)] mb-1 flex items-center justify-center gap-1.5 uppercase tracking-wider font-medium">
-          <Clock className="w-3.5 h-3.5" /> Paper Portfolio
-        </p>
+        <div className="flex items-center justify-center gap-2 mb-1">
+          <p className="text-xs text-[var(--text-faint)] uppercase tracking-wider font-medium flex items-center gap-1.5">
+            <Clock className="w-3.5 h-3.5" /> 30-Day Paper Backtest
+          </p>
+          <span className={`text-[9px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider ${result.data_source === 'real' ? 'bg-[#22c55e]/10 text-[#22c55e]' : 'bg-[#f59e0b]/10 text-[#f59e0b]'}`}>
+            {result.data_source === 'real' ? 'Real Data' : 'Simulated'}
+          </span>
+        </div>
         <p className="text-4xl sm:text-5xl font-bold font-mono tracking-tighter count-up">
-          ${portfolioValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          ${result.final_value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </p>
         <div className={`inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full text-sm font-semibold
           ${isPositive ? 'bg-[#22c55e]/10 text-[#22c55e]' : 'bg-[#ef4444]/10 text-[#ef4444]'}`}>
           {isPositive ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
           {isPositive ? '+' : ''}{totalReturn.toFixed(2)}%
-          <span className="text-[var(--text-faint)] font-normal text-xs ml-1">all time</span>
+          <span className="text-[var(--text-faint)] font-normal text-xs ml-1">{result.days_simulated} days</span>
         </div>
 
-        <div className="flex items-center justify-center gap-3 mt-5">
-          <button onClick={onRunCycle} disabled={loading}
-            className="flex items-center gap-2 px-5 sm:px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#22c55e] to-[#10b981] font-semibold text-sm disabled:opacity-50 hover:opacity-90 transition-all">
-            <PlayCircle className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            {loading ? 'Running...' : 'Run Cycle'}
-          </button>
-          <button onClick={onReset} disabled={loading}
-            className="px-4 sm:px-5 py-2.5 rounded-xl border border-[var(--border)] text-sm font-medium text-[var(--text-muted)] hover:bg-white/5 hover:text-white disabled:opacity-50 transition-all">
-            Reset
+        <div className="flex items-center justify-center gap-3 mt-4">
+          <button onClick={handleRefresh} disabled={isLoading}
+            className="flex items-center gap-2 px-5 py-2 rounded-xl border border-[var(--border)] text-sm font-medium text-[var(--text-muted)] hover:bg-white/5 hover:text-white disabled:opacity-50 transition-all">
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+            {isLoading ? 'Running...' : 'Refresh'}
           </button>
         </div>
       </div>
 
-      {/* Metrics row */}
-      {status && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <Card>
-            <p className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider mb-1 font-medium">Cash</p>
-            <p className="text-lg sm:text-xl font-bold font-mono text-[#3b82f6]">${cashAvail.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
-          </Card>
-          <Card>
-            <p className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider mb-1 font-medium">Positions</p>
-            <p className="text-lg sm:text-xl font-bold font-mono">{numPositions}</p>
-          </Card>
-          <Card>
-            <p className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider mb-1 font-medium">Peak</p>
-            <p className="text-lg sm:text-xl font-bold font-mono text-[#8b5cf6]">${(status.peak_value || 1000).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
-          </Card>
-          <Card>
-            <p className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider mb-1 font-medium">Regime</p>
-            <p className={`text-lg sm:text-xl font-bold font-mono ${status.regime === 'bull' ? 'text-[#22c55e]' : status.regime === 'bear' ? 'text-[#ef4444]' : 'text-[#f59e0b]'}`}>
-              {(status.regime || 'BULL').toUpperCase()}
-            </p>
-          </Card>
-        </div>
+      {/* Performance Metrics */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+        <Card>
+          <p className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider mb-1 font-medium">Return</p>
+          <p className={`text-lg sm:text-xl font-bold font-mono ${isPositive ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+            {isPositive ? '+' : ''}{totalReturn.toFixed(2)}%
+          </p>
+        </Card>
+        <Card>
+          <p className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider mb-1 font-medium">Max Drawdown</p>
+          <p className="text-lg sm:text-xl font-bold font-mono text-[#ef4444]">{(result.max_drawdown * 100).toFixed(2)}%</p>
+        </Card>
+        <Card>
+          <p className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider mb-1 font-medium">Sharpe</p>
+          <p className={`text-lg sm:text-xl font-bold font-mono ${result.sharpe_ratio > 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+            {result.sharpe_ratio.toFixed(2)}
+          </p>
+        </Card>
+        <Card>
+          <p className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider mb-1 font-medium">Trades</p>
+          <p className="text-lg sm:text-xl font-bold font-mono">{result.total_trades}</p>
+        </Card>
+        <Card>
+          <p className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider mb-1 font-medium">Win Rate</p>
+          <p className="text-lg sm:text-xl font-bold font-mono text-[#3b82f6]">{(result.win_rate * 100).toFixed(0)}%</p>
+        </Card>
+      </div>
+
+      {/* Equity Curve */}
+      {equityCurve.length > 0 && (
+        <Card>
+          <h3 className="text-xs font-bold text-[var(--text-muted)] mb-4 flex items-center gap-2 uppercase tracking-wider">
+            <TrendingUp className="w-3.5 h-3.5 text-[#3b82f6]" /> Equity Curve
+          </h3>
+          <div className="h-[220px] sm:h-[280px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={equityCurve}>
+                <defs>
+                  <linearGradient id="equityGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={isPositive ? '#22c55e' : '#ef4444'} stopOpacity={0.3} />
+                    <stop offset="95%" stopColor={isPositive ? '#22c55e' : '#ef4444'} stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={(d: string) => d.slice(5)} interval="preserveStartEnd" />
+                <YAxis tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} domain={['auto', 'auto']} tickFormatter={(v: number) => `$${v.toFixed(0)}`} />
+                <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '12px', fontSize: '12px' }} formatter={(v: any) => [`$${Number(v).toFixed(2)}`, 'Portfolio']} labelFormatter={(l: any) => `Date: ${l}`} />
+                <Area type="monotone" dataKey="value" stroke={isPositive ? '#22c55e' : '#ef4444'} fill="url(#equityGrad)" strokeWidth={2} dot={false} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
       )}
 
-      {/* Open Positions */}
-      {status?.positions?.length > 0 && (
+      {/* Drawdown Chart */}
+      {equityCurve.length > 0 && (
+        <Card>
+          <h3 className="text-xs font-bold text-[var(--text-muted)] mb-4 flex items-center gap-2 uppercase tracking-wider">
+            <TrendingDown className="w-3.5 h-3.5 text-[#ef4444]" /> Drawdown
+          </h3>
+          <div className="h-[150px] sm:h-[180px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={equityCurve}>
+                <defs>
+                  <linearGradient id="ddGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={(d: string) => d.slice(5)} interval="preserveStartEnd" />
+                <YAxis tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={(v: number) => `${(v * 100).toFixed(1)}%`} />
+                <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '12px', fontSize: '12px' }} formatter={(v: any) => [`${(Number(v) * 100).toFixed(2)}%`, 'Drawdown']} />
+                <Area type="monotone" dataKey="drawdown" stroke="#ef4444" fill="url(#ddGrad)" strokeWidth={1.5} dot={false} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+      )}
+
+      {/* Current Positions */}
+      {positions.length > 0 && (
         <Card>
           <h3 className="text-xs font-bold text-[var(--text-muted)] mb-3 flex items-center gap-2 uppercase tracking-wider">
-            <Activity className="w-3.5 h-3.5 text-[#22c55e]" /> Open Positions
+            <Activity className="w-3.5 h-3.5 text-[#22c55e]" /> Current Holdings ({positions.length})
           </h3>
           <div className="space-y-2">
-            {status.positions.map((p: any) => (
+            {positions.map((p) => (
               <div key={p.symbol} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-[var(--border)]">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-9 h-9 rounded-xl bg-[#3b82f6]/10 flex items-center justify-center shrink-0">
-                    <span className="font-mono font-bold text-[10px] text-[#3b82f6]">{p.symbol?.slice(0, 3)}</span>
+                    <span className="font-mono font-bold text-[10px] text-[#3b82f6]">{p.symbol.slice(0, 3)}</span>
                   </div>
                   <div className="min-w-0">
                     <p className="font-mono font-bold text-sm">{p.symbol}</p>
-                    <p className="text-[10px] text-[var(--text-faint)] truncate">{p.quantity} shares @ ${p.entry_price}</p>
+                    <p className="text-[10px] text-[var(--text-faint)] truncate">{p.quantity.toFixed(2)} shares @ ${p.entry_price}</p>
                   </div>
                 </div>
                 <div className="text-right shrink-0 ml-2">
-                  <p className={`font-mono font-bold text-sm ${p.unrealized_pnl >= 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
-                    {p.unrealized_pnl >= 0 ? '+' : ''}${p.unrealized_pnl?.toFixed(2)}
+                  <p className={`font-mono font-bold text-sm ${p.pnl >= 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+                    {p.pnl >= 0 ? '+' : ''}${p.pnl.toFixed(2)}
                   </p>
-                  <p className={`text-[10px] font-mono ${p.unrealized_pnl_pct >= 0 ? 'text-[#22c55e]/70' : 'text-[#ef4444]/70'}`}>
-                    {p.unrealized_pnl_pct >= 0 ? '+' : ''}{p.unrealized_pnl_pct?.toFixed(1)}%
+                  <p className={`text-[10px] font-mono ${p.pnl_pct >= 0 ? 'text-[#22c55e]/70' : 'text-[#ef4444]/70'}`}>
+                    {p.pnl_pct >= 0 ? '+' : ''}{p.pnl_pct.toFixed(1)}%
                   </p>
                 </div>
               </div>
@@ -993,11 +1077,11 @@ function PaperTradingTab({ status, trades, loading, onRunCycle, onReset }: any) 
       {/* Trade History */}
       <Card>
         <h3 className="text-xs font-bold text-[var(--text-muted)] mb-3 flex items-center gap-2 uppercase tracking-wider">
-          <Clock className="w-3.5 h-3.5" /> Trade History
+          <Clock className="w-3.5 h-3.5" /> Trade Log ({trades.length} trades)
         </h3>
         {trades.length > 0 ? (
-          <div className="space-y-1.5">
-            {trades.slice(0, 20).map((t: any, i: number) => (
+          <div className="space-y-1.5 max-h-[400px] overflow-y-auto">
+            {trades.map((t, i) => (
               <div key={i} className="flex items-center justify-between p-2.5 rounded-lg hover:bg-white/[0.02] transition-colors">
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${t.side === 'buy' ? 'bg-[#22c55e]/10' : 'bg-[#ef4444]/10'}`}>
@@ -1009,17 +1093,15 @@ function PaperTradingTab({ status, trades, loading, onRunCycle, onReset }: any) 
                   </div>
                 </div>
                 <div className="text-right shrink-0 ml-2">
-                  <p className="font-mono text-sm font-semibold">{t.quantity?.toFixed(2)} @ ${t.price?.toFixed(2)}</p>
-                  <p className="text-[10px] text-[var(--text-faint)]">{t.date || ''}</p>
+                  <p className="font-mono text-sm font-semibold">{t.quantity.toFixed(2)} @ ${t.price.toFixed(2)}</p>
+                  <p className="text-[10px] text-[var(--text-faint)]">{t.date}</p>
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="text-center py-8">
-            <PlayCircle className="w-10 h-10 text-[var(--text-faint)]/30 mx-auto mb-2" />
-            <p className="text-sm text-[var(--text-faint)]">No trades yet</p>
-            <p className="text-[10px] text-[var(--text-faint)]/60 mt-0.5">Click "Run Cycle" to execute a trading cycle</p>
+          <div className="text-center py-6">
+            <p className="text-sm text-[var(--text-faint)]">No trades executed</p>
           </div>
         )}
       </Card>
