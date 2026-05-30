@@ -13,7 +13,11 @@ import {
   LayoutDashboard, LineChart, FlaskConical, ShieldCheck, Link2,
 } from 'lucide-react';
 import * as api from './lib/api';
-import { runReal30DayBacktest, type RealBacktestResult } from './lib/simulation';
+import {
+  runReal30DayBacktest, type RealBacktestResult,
+  generateDashboardData, generateSignals, generateBacktest,
+  generateRiskLimits, generateBrokerData, generateTechnicals,
+} from './lib/simulation';
 
 type Tab = 'dashboard' | 'signals' | 'backtest' | 'risk' | 'broker' | 'paper';
 
@@ -56,7 +60,7 @@ function App() {
   const [backtestResult, setBacktestResult] = useState<any>(null);
   const [brokerStatus, setBrokerStatus] = useState<any>(null);
   const [targetPortfolio, setTargetPortfolio] = useState<any>(null);
-  const [riskLimits, setRiskLimits] = useState<any>(null);
+  const [riskLimits, setRiskLimits] = useState<any>(generateRiskLimits());
   const [technicals, setTechnicals] = useState<any>(null);
   const [selectedSymbol, setSelectedSymbol] = useState('');
 
@@ -65,11 +69,21 @@ function App() {
     setLoading(true);
     setError('');
     try {
-      const [regimeData, rankData, sectorData] = await Promise.all([
-        api.getRegime().catch(() => null),
-        api.getRankings(15).catch(() => ({ rankings: [] })),
-        api.getSectorRotation().catch(() => ({ sectors: [] })),
-      ]);
+      // Try API first, fall back to client-side real market data
+      let regimeData, rankData, sectorData;
+      try {
+        [regimeData, rankData, sectorData] = await Promise.all([
+          api.getRegime(),
+          api.getRankings(15),
+          api.getSectorRotation(),
+        ]);
+      } catch {
+        // Fallback: generate from real Yahoo Finance data
+        const dashData = await generateDashboardData();
+        regimeData = dashData.regime;
+        rankData = { rankings: dashData.rankings };
+        sectorData = { sectors: dashData.sectors };
+      }
       if (regimeData) setRegime(regimeData);
       setRankings(rankData?.rankings || []);
       setSectors(sectorData?.sectors || []);
@@ -82,7 +96,9 @@ function App() {
   const loadSignals = async () => {
     setLoading(true);
     try {
-      const data = await api.scanSignals(0.15);
+      let data;
+      try { data = await api.scanSignals(0.15); }
+      catch { data = await generateSignals(); }
       setSignals(data?.signals || []);
     } catch (e: any) { setError(e.message); }
     setLoading(false);
@@ -91,7 +107,9 @@ function App() {
   const loadBacktest = async () => {
     setLoading(true);
     try {
-      const data = await api.quickBacktest();
+      let data;
+      try { data = await api.quickBacktest(); }
+      catch { data = await generateBacktest(); }
       setBacktestResult(data);
     } catch (e: any) { setError(e.message); }
     setLoading(false);
@@ -100,11 +118,19 @@ function App() {
   const loadBroker = async () => {
     setLoading(true);
     try {
-      const [status, portfolio, limits] = await Promise.all([
-        api.getBrokerStatus().catch(() => null),
-        api.getTargetPortfolio().catch(() => null),
-        api.getRiskLimits().catch(() => null),
-      ]);
+      let status, portfolio, limits;
+      try {
+        [status, portfolio, limits] = await Promise.all([
+          api.getBrokerStatus(),
+          api.getTargetPortfolio(),
+          api.getRiskLimits(),
+        ]);
+      } catch {
+        const brokerData = await generateBrokerData();
+        status = brokerData.status;
+        portfolio = brokerData.portfolio;
+        limits = generateRiskLimits();
+      }
       setBrokerStatus(status);
       setTargetPortfolio(portfolio);
       setRiskLimits(limits);
@@ -115,7 +141,9 @@ function App() {
   const loadTechnicals = async (symbol: string) => {
     setSelectedSymbol(symbol);
     try {
-      const data = await api.getTechnicals(symbol);
+      let data;
+      try { data = await api.getTechnicals(symbol); }
+      catch { data = await generateTechnicals(symbol); }
       setTechnicals(data);
     } catch {}
   };
