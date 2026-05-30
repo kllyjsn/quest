@@ -1,5 +1,24 @@
+import {
+  simGetRegime,
+  simGetRankings,
+  simGetSectorRotation,
+  simScanSignals,
+  simGetTechnicals,
+  simQuickBacktest,
+  simGetRiskLimits,
+  simGetBrokerStatus,
+  simGetTargetPortfolio,
+  simGetPaperStatus,
+  simRunPaperCycle,
+  simResetPaper,
+  simGetPaperTrades,
+} from './simulation';
+
 const API_URL = import.meta.env.VITE_API_URL || '';
 const BASE = `${API_URL}/api`;
+
+/** True when we've detected the backend is unreachable. */
+let offlineMode = false;
 
 function getToken(): string | null {
   return localStorage.getItem('quest_token');
@@ -23,6 +42,10 @@ export function setStoredUser(user: { user_id: number; email: string; display_na
   localStorage.setItem('quest_user', JSON.stringify(user));
 }
 
+export function isOffline(): boolean {
+  return offlineMode;
+}
+
 async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
   const token = getToken();
   const headers: Record<string, string> = { 'Content-Type': 'application/json', ...init?.headers as Record<string, string> };
@@ -36,7 +59,8 @@ async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
   if (res.status === 404) {
     const text = await res.text();
     if (text.includes('<!DOCTYPE') || text.includes('<html') || !text.startsWith('{')) {
-      throw new Error('Backend not connected — set VITE_API_URL to your backend URL');
+      offlineMode = true;
+      throw new Error('OFFLINE');
     }
     throw new Error(`Not found: ${path}`);
   }
@@ -44,7 +68,23 @@ async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json();
 }
 
-// Auth
+/** Wrap an API call: try remote, on network error or OFFLINE fall back to sim. */
+function withFallback<T>(apiFn: () => Promise<T>, simFn: () => T): () => Promise<T> {
+  return async () => {
+    if (offlineMode) return simFn();
+    try {
+      return await apiFn();
+    } catch (err: any) {
+      if (err.message === 'OFFLINE' || err.message?.includes('Failed to fetch') || err.message?.includes('NetworkError')) {
+        offlineMode = true;
+        return simFn();
+      }
+      throw err;
+    }
+  };
+}
+
+// Auth — no simulation fallback (needs real backend)
 export const register = (email: string, password: string, display_name?: string) =>
   fetchJson<any>('/auth/register', {
     method: 'POST',
@@ -60,62 +100,141 @@ export const login = (email: string, password: string) =>
 export const getProfile = () => fetchJson<any>('/auth/me');
 
 // Strategies
-export const getRegime = () => fetchJson<any>('/strategies/regime');
-export const getRankings = (topN = 20) => fetchJson<any>(`/strategies/rankings?top_n=${topN}`);
-export const getSectorRotation = () => fetchJson<any>('/strategies/sector-rotation');
-export const getStrategyConfig = () => fetchJson<any>('/strategies/config');
+export const getRegime = withFallback(
+  () => fetchJson<any>('/strategies/regime'),
+  simGetRegime,
+);
+export const getRankings = (topN = 20) =>
+  withFallback(
+    () => fetchJson<any>(`/strategies/rankings?top_n=${topN}`),
+    () => simGetRankings(topN),
+  )();
+export const getSectorRotation = withFallback(
+  () => fetchJson<any>('/strategies/sector-rotation'),
+  simGetSectorRotation,
+);
+export const getStrategyConfig = () =>
+  withFallback(
+    () => fetchJson<any>('/strategies/config'),
+    () => ({
+      universe_size: 20,
+      max_positions: 8,
+      rebalance_days: 21,
+      regime: simGetRegime().regime,
+    }),
+  )();
 
 // Portfolio
 export const getTargetPortfolio = (value = 1000) =>
-  fetchJson<any>(`/portfolio/target?portfolio_value=${value}`);
+  withFallback(
+    () => fetchJson<any>(`/portfolio/target?portfolio_value=${value}`),
+    simGetTargetPortfolio,
+  )();
 export const getPortfolioHistory = (limit = 90) =>
-  fetchJson<any>(`/portfolio/history?limit=${limit}`);
+  withFallback(
+    () => fetchJson<any>(`/portfolio/history?limit=${limit}`),
+    () => ({ snapshots: [] }),
+  )();
 
 // Signals
 export const scanSignals = (minStrength = 0.2) =>
-  fetchJson<any>(`/signals/scan?min_strength=${minStrength}`);
+  withFallback(
+    () => fetchJson<any>(`/signals/scan?min_strength=${minStrength}`),
+    simScanSignals,
+  )();
 export const getTechnicals = (symbol: string) =>
-  fetchJson<any>(`/signals/technicals/${symbol}`);
+  withFallback(
+    () => fetchJson<any>(`/signals/technicals/${symbol}`),
+    () => simGetTechnicals(symbol),
+  )();
 
 // Backtest
 export const runBacktest = (params: Record<string, any> = {}) => {
   const qs = new URLSearchParams(
     Object.entries(params).map(([k, v]) => [k, String(v)])
   ).toString();
-  return fetchJson<any>(`/backtest/run?${qs}`, { method: 'POST' });
+  return withFallback(
+    () => fetchJson<any>(`/backtest/run?${qs}`, { method: 'POST' }),
+    simQuickBacktest,
+  )();
 };
-export const quickBacktest = () => fetchJson<any>('/backtest/quick');
+export const quickBacktest = withFallback(
+  () => fetchJson<any>('/backtest/quick'),
+  simQuickBacktest,
+);
 
 // Broker
-export const getBrokerStatus = () => fetchJson<any>('/broker/status');
+export const getBrokerStatus = withFallback(
+  () => fetchJson<any>('/broker/status'),
+  simGetBrokerStatus,
+);
 export const getAccount = (broker = 'alpaca') =>
-  fetchJson<any>(`/broker/account?broker=${broker}`);
+  withFallback(
+    () => fetchJson<any>(`/broker/account?broker=${broker}`),
+    () => ({ status: 'not_configured' }),
+  )();
 export const getPositions = (broker = 'alpaca') =>
-  fetchJson<any>(`/broker/positions?broker=${broker}`);
+  withFallback(
+    () => fetchJson<any>(`/broker/positions?broker=${broker}`),
+    () => ({ positions: [] }),
+  )();
 export const getOrders = (broker = 'alpaca') =>
-  fetchJson<any>(`/broker/orders?broker=${broker}`);
+  withFallback(
+    () => fetchJson<any>(`/broker/orders?broker=${broker}`),
+    () => ({ orders: [] }),
+  )();
 export const placeOrder = (order: any) =>
   fetchJson<any>('/broker/order', { method: 'POST', body: JSON.stringify(order) });
 
 // Risk
 export const getRiskSummary = (value = 1000) =>
-  fetchJson<any>(`/risk/summary?portfolio_value=${value}`);
-export const getRiskLimits = () => fetchJson<any>('/risk/limits');
+  withFallback(
+    () => fetchJson<any>(`/risk/summary?portfolio_value=${value}`),
+    () => ({ portfolio_value: value, risk_score: 'moderate', limits: simGetRiskLimits() }),
+  )();
+export const getRiskLimits = withFallback(
+  () => fetchJson<any>('/risk/limits'),
+  simGetRiskLimits,
+);
 export const getKellySize = (params: Record<string, number>) => {
   const qs = new URLSearchParams(
     Object.entries(params).map(([k, v]) => [k, String(v)])
   ).toString();
-  return fetchJson<any>(`/risk/kelly?${qs}`);
+  return withFallback(
+    () => fetchJson<any>(`/risk/kelly?${qs}`),
+    () => ({ kelly_fraction: 0.12, half_kelly: 0.06, recommended_pct: 6 }),
+  )();
 };
 
 // Paper trading
-export const getPaperStatus = () => fetchJson<any>('/paper/status');
-export const runPaperCycle = () => fetchJson<any>('/paper/cycle', { method: 'POST' });
+export const getPaperStatus = withFallback(
+  () => fetchJson<any>('/paper/status'),
+  simGetPaperStatus,
+);
+export const runPaperCycle = withFallback(
+  () => fetchJson<any>('/paper/cycle', { method: 'POST' }),
+  simRunPaperCycle,
+);
 export const resetPaper = (capital = 1000) =>
-  fetchJson<any>(`/paper/reset?initial_capital=${capital}`, { method: 'POST' });
-export const getPaperTrades = () => fetchJson<any>('/paper/trades');
-export const getPaperPerformance = () => fetchJson<any>('/paper/performance');
-export const getPaperHistory = () => fetchJson<any>('/paper/history');
+  withFallback(
+    () => fetchJson<any>(`/paper/reset?initial_capital=${capital}`, { method: 'POST' }),
+    () => simResetPaper(capital),
+  )();
+export const getPaperTrades = withFallback(
+  () => fetchJson<any>('/paper/trades'),
+  simGetPaperTrades,
+);
+export const getPaperPerformance = withFallback(
+  () => fetchJson<any>('/paper/performance'),
+  () => ({ daily_returns: [], total_return: 0, sharpe: 0 }),
+);
+export const getPaperHistory = withFallback(
+  () => fetchJson<any>('/paper/history'),
+  () => ({ snapshots: [] }),
+);
 
 // Health
-export const healthCheck = () => fetchJson<any>('/health');
+export const healthCheck = withFallback(
+  () => fetchJson<any>('/health'),
+  () => ({ status: 'demo', version: '0.1.0' }),
+);
