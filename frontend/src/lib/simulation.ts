@@ -7,26 +7,67 @@
  */
 
 const STOCKS = [
+  // Technology
   { symbol: 'NVDA', sector: 'Technology', basePrice: 135 },
   { symbol: 'AAPL', sector: 'Technology', basePrice: 198 },
   { symbol: 'MSFT', sector: 'Technology', basePrice: 430 },
   { symbol: 'GOOGL', sector: 'Technology', basePrice: 178 },
   { symbol: 'META', sector: 'Technology', basePrice: 510 },
-  { symbol: 'AMZN', sector: 'Consumer Discretionary', basePrice: 195 },
-  { symbol: 'TSLA', sector: 'Consumer Discretionary', basePrice: 250 },
-  { symbol: 'JPM', sector: 'Financials', basePrice: 205 },
-  { symbol: 'UNH', sector: 'Health Care', basePrice: 530 },
-  { symbol: 'LLY', sector: 'Health Care', basePrice: 790 },
-  { symbol: 'V', sector: 'Financials', basePrice: 280 },
   { symbol: 'AVGO', sector: 'Technology', basePrice: 175 },
-  { symbol: 'XOM', sector: 'Energy', basePrice: 112 },
-  { symbol: 'PG', sector: 'Consumer Staples', basePrice: 165 },
-  { symbol: 'HD', sector: 'Consumer Discretionary', basePrice: 350 },
   { symbol: 'INTC', sector: 'Technology', basePrice: 30 },
   { symbol: 'AMD', sector: 'Technology', basePrice: 160 },
   { symbol: 'CRM', sector: 'Technology', basePrice: 265 },
-  { symbol: 'NFLX', sector: 'Communication Services', basePrice: 640 },
+  { symbol: 'ORCL', sector: 'Technology', basePrice: 155 },
+  { symbol: 'ADBE', sector: 'Technology', basePrice: 520 },
+  { symbol: 'NOW', sector: 'Technology', basePrice: 780 },
+  // Financials
+  { symbol: 'JPM', sector: 'Financials', basePrice: 205 },
+  { symbol: 'V', sector: 'Financials', basePrice: 280 },
+  { symbol: 'MA', sector: 'Financials', basePrice: 470 },
+  { symbol: 'BAC', sector: 'Financials', basePrice: 38 },
+  { symbol: 'GS', sector: 'Financials', basePrice: 440 },
+  // Health Care
+  { symbol: 'UNH', sector: 'Health Care', basePrice: 530 },
+  { symbol: 'LLY', sector: 'Health Care', basePrice: 790 },
+  { symbol: 'JNJ', sector: 'Health Care', basePrice: 155 },
+  { symbol: 'PFE', sector: 'Health Care', basePrice: 28 },
+  { symbol: 'ABBV', sector: 'Health Care', basePrice: 175 },
+  // Consumer Discretionary
+  { symbol: 'AMZN', sector: 'Consumer Discretionary', basePrice: 195 },
+  { symbol: 'TSLA', sector: 'Consumer Discretionary', basePrice: 250 },
+  { symbol: 'HD', sector: 'Consumer Discretionary', basePrice: 350 },
+  { symbol: 'NKE', sector: 'Consumer Discretionary', basePrice: 95 },
+  { symbol: 'SBUX', sector: 'Consumer Discretionary', basePrice: 92 },
+  // Consumer Staples
+  { symbol: 'PG', sector: 'Consumer Staples', basePrice: 165 },
   { symbol: 'KO', sector: 'Consumer Staples', basePrice: 62 },
+  { symbol: 'PEP', sector: 'Consumer Staples', basePrice: 175 },
+  { symbol: 'COST', sector: 'Consumer Staples', basePrice: 720 },
+  // Communication Services
+  { symbol: 'NFLX', sector: 'Communication Services', basePrice: 640 },
+  { symbol: 'DIS', sector: 'Communication Services', basePrice: 105 },
+  { symbol: 'CMCSA', sector: 'Communication Services', basePrice: 42 },
+  // Energy
+  { symbol: 'XOM', sector: 'Energy', basePrice: 112 },
+  { symbol: 'CVX', sector: 'Energy', basePrice: 155 },
+  { symbol: 'COP', sector: 'Energy', basePrice: 112 },
+  // Industrials
+  { symbol: 'CAT', sector: 'Industrials', basePrice: 340 },
+  { symbol: 'GE', sector: 'Industrials', basePrice: 165 },
+  { symbol: 'HON', sector: 'Industrials', basePrice: 200 },
+  { symbol: 'UPS', sector: 'Industrials', basePrice: 145 },
+  // Materials & Real Estate & Utilities
+  { symbol: 'LIN', sector: 'Materials', basePrice: 440 },
+  { symbol: 'APD', sector: 'Materials', basePrice: 290 },
+  { symbol: 'AMT', sector: 'Real Estate', basePrice: 210 },
+  { symbol: 'PLD', sector: 'Real Estate', basePrice: 125 },
+  { symbol: 'NEE', sector: 'Utilities', basePrice: 75 },
+  { symbol: 'DUK', sector: 'Utilities', basePrice: 105 },
+  // Semiconductor & AI
+  { symbol: 'TSM', sector: 'Technology', basePrice: 165 },
+  { symbol: 'ASML', sector: 'Technology', basePrice: 680 },
+  { symbol: 'MRVL', sector: 'Technology', basePrice: 70 },
+  { symbol: 'SNPS', sector: 'Technology', basePrice: 520 },
 ];
 
 const SECTORS = [
@@ -1294,6 +1335,124 @@ export async function generateTechnicals(symbol: string) {
       date: d,
       close: closes[closes.length - 30 + i] || price,
     })),
+  };
+}
+
+/** Monte Carlo simulation — projects future portfolio value with confidence intervals */
+export async function generateMonteCarlo(initialValue = 1000, days = 90, simulations = 500) {
+  const symbols = STOCKS.slice(0, 20).map(s => s.symbol);
+  const priceData = await fetchRealPrices(symbols);
+
+  // Calculate historical daily returns
+  const allReturns: number[] = [];
+  for (const data of Object.values(priceData)) {
+    const c = data.closes;
+    for (let i = 1; i < c.length; i++) {
+      if (c[i - 1] > 0) allReturns.push(c[i] / c[i - 1] - 1);
+    }
+  }
+
+  const mean = allReturns.length > 0 ? allReturns.reduce((s, r) => s + r, 0) / allReturns.length : 0.0004;
+  const std = allReturns.length > 0 ? Math.sqrt(allReturns.reduce((s, r) => s + (r - mean) ** 2, 0) / allReturns.length) : 0.015;
+
+  // Run simulations
+  const paths: number[][] = [];
+  const r = seededRandom(daySeed + 999);
+  for (let sim = 0; sim < simulations; sim++) {
+    const path: number[] = [initialValue];
+    let val = initialValue;
+    for (let d = 0; d < days; d++) {
+      // Box-Muller for normal distribution
+      const u1 = r(), u2 = r();
+      const z = Math.sqrt(-2 * Math.log(Math.max(u1, 0.0001))) * Math.cos(2 * Math.PI * u2);
+      const dailyRet = mean + std * z;
+      val *= (1 + dailyRet);
+      path.push(Math.round(val * 100) / 100);
+    }
+    paths.push(path);
+  }
+
+  // Calculate percentiles for each day
+  const result: { day: number; p5: number; p25: number; p50: number; p75: number; p95: number }[] = [];
+  for (let d = 0; d <= days; d++) {
+    const vals = paths.map(p => p[d]).sort((a, b) => a - b);
+    result.push({
+      day: d,
+      p5: vals[Math.floor(simulations * 0.05)],
+      p25: vals[Math.floor(simulations * 0.25)],
+      p50: vals[Math.floor(simulations * 0.50)],
+      p75: vals[Math.floor(simulations * 0.75)],
+      p95: vals[Math.floor(simulations * 0.95)],
+    });
+  }
+
+  return {
+    cone: result,
+    stats: {
+      mean_annual: Math.round(mean * 252 * 10000) / 100,
+      vol_annual: Math.round(std * Math.sqrt(252) * 10000) / 100,
+      median_outcome: result[days].p50,
+      best_case: result[days].p95,
+      worst_case: result[days].p5,
+    },
+  };
+}
+
+/** Correlation matrix — pairwise Pearson correlations for portfolio holdings */
+export async function generateCorrelationMatrix() {
+  const symbols = STOCKS.slice(0, 20).map(s => s.symbol);
+  const priceData = await fetchRealPrices(symbols);
+
+  const validSymbols = Object.keys(priceData).filter(s => priceData[s].closes.length >= 15);
+  const matrix: { symA: string; symB: string; correlation: number }[] = [];
+
+  for (let i = 0; i < validSymbols.length; i++) {
+    for (let j = i; j < validSymbols.length; j++) {
+      const corr = i === j ? 1.0 : computeCorrelation(priceData[validSymbols[i]].closes, priceData[validSymbols[j]].closes);
+      matrix.push({ symA: validSymbols[i], symB: validSymbols[j], correlation: Math.round(corr * 100) / 100 });
+      if (i !== j) matrix.push({ symA: validSymbols[j], symB: validSymbols[i], correlation: Math.round(corr * 100) / 100 });
+    }
+  }
+
+  return { symbols: validSymbols, matrix };
+}
+
+/** Performance attribution — factor decomposition of returns */
+export async function generatePerformanceAttribution() {
+  const symbols = STOCKS.slice(0, 20).map(s => s.symbol);
+  const priceData = await fetchRealPrices(symbols);
+
+  let totalMomContrib = 0, totalQualContrib = 0, totalVolContrib = 0, totalMRContrib = 0, totalMACD = 0;
+  let count = 0;
+
+  for (const data of Object.values(priceData)) {
+    if (data.closes.length < 20) continue;
+    const closes = data.closes;
+    const ret = (closes[closes.length - 1] / closes[0]) - 1;
+    const mom = computeMomentum(closes);
+    const qual = computeQuality(closes);
+    const vol = computeVolatility(closes);
+    const { signal } = computeMACD(closes);
+
+    // Attribute return contribution based on factor exposure × return
+    totalMomContrib += mom * ret * 0.30;
+    totalQualContrib += qual * ret * 0.25;
+    totalVolContrib += (1 - vol) * ret * 0.15;
+    totalMRContrib += (computeRSI(closes) < 40 ? 0.7 : 0.3) * ret * 0.20;
+    totalMACD += (signal > 0 ? 1 : -0.5) * ret * 0.10;
+    count++;
+  }
+
+  const div = Math.max(count, 1);
+  return {
+    factors: [
+      { name: 'Momentum', contribution: Math.round(totalMomContrib / div * 10000) / 100, weight: 30 },
+      { name: 'Quality', contribution: Math.round(totalQualContrib / div * 10000) / 100, weight: 25 },
+      { name: 'Mean Reversion', contribution: Math.round(totalMRContrib / div * 10000) / 100, weight: 20 },
+      { name: 'Low Volatility', contribution: Math.round(totalVolContrib / div * 10000) / 100, weight: 15 },
+      { name: 'MACD Signal', contribution: Math.round(totalMACD / div * 10000) / 100, weight: 10 },
+    ],
+    total_return: Math.round((totalMomContrib + totalQualContrib + totalVolContrib + totalMRContrib + totalMACD) / div * 10000) / 100,
   };
 }
 

@@ -17,6 +17,7 @@ import {
   runReal30DayBacktest, type RealBacktestResult,
   generateDashboardData, generateSignals, generateBacktest,
   generateRiskLimits, generateBrokerData, generateTechnicals,
+  generateMonteCarlo, generateCorrelationMatrix, generatePerformanceAttribution,
 } from './lib/simulation';
 
 type Tab = 'dashboard' | 'signals' | 'backtest' | 'risk' | 'broker' | 'paper';
@@ -63,6 +64,9 @@ function App() {
   const [riskLimits, setRiskLimits] = useState<any>(generateRiskLimits());
   const [technicals, setTechnicals] = useState<any>(null);
   const [selectedSymbol, setSelectedSymbol] = useState('');
+  const [monteCarlo, setMonteCarlo] = useState<any>(null);
+  const [correlationMatrix, setCorrelationMatrix] = useState<any>(null);
+  const [attribution, setAttribution] = useState<any>(null);
 
 
   const loadDashboard = useCallback(async () => {
@@ -111,8 +115,20 @@ function App() {
       try { data = await api.quickBacktest(); }
       catch { data = await generateBacktest(); }
       setBacktestResult(data);
+      // Load Monte Carlo and attribution in parallel
+      Promise.all([
+        generateMonteCarlo(data?.initial_capital || 10000),
+        generatePerformanceAttribution(),
+      ]).then(([mc, attr]) => { setMonteCarlo(mc); setAttribution(attr); });
     } catch (e: any) { setError(e.message); }
     setLoading(false);
+  };
+
+  const loadCorrelation = async () => {
+    try {
+      const cm = await generateCorrelationMatrix();
+      setCorrelationMatrix(cm);
+    } catch {}
   };
 
   const loadBroker = async () => {
@@ -167,7 +183,7 @@ function App() {
   useEffect(() => {
     if (tab === 'signals') loadSignals();
     if (tab === 'backtest') loadBacktest();
-    if (tab === 'broker' || tab === 'risk') loadBroker();
+    if (tab === 'broker' || tab === 'risk') { loadBroker(); loadCorrelation(); }
     // paper tab manages its own data loading internally
   }, [tab]);
 
@@ -255,8 +271,8 @@ function App() {
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 pb-24 md:pb-6 slide-up">
         {tab === 'dashboard' && <DashboardTab regime={regime} rankings={rankings} sectors={sectors} onSelectSymbol={loadTechnicals} technicals={technicals} selectedSymbol={selectedSymbol} />}
         {tab === 'signals' && <SignalsTab signals={signals} loading={loading} onRefresh={loadSignals} onSelectSymbol={loadTechnicals} />}
-        {tab === 'backtest' && <BacktestTab result={backtestResult} loading={loading} onRun={loadBacktest} />}
-        {tab === 'risk' && <RiskTab limits={riskLimits} />}
+        {tab === 'backtest' && <BacktestTab result={backtestResult} loading={loading} onRun={loadBacktest} monteCarlo={monteCarlo} attribution={attribution} />}
+        {tab === 'risk' && <RiskTab limits={riskLimits} correlationMatrix={correlationMatrix} />}
         {tab === 'broker' && <BrokerTab status={brokerStatus} portfolio={targetPortfolio} />}
         {tab === 'paper' && <PaperTradingTab />}
       </main>
@@ -284,7 +300,7 @@ function App() {
 
 function Card({ children, className = '', glow = '' }: { children: React.ReactNode; className?: string; glow?: string }) {
   return (
-    <div className={`bg-[var(--bg-card)] rounded-2xl p-4 sm:p-5 border border-[var(--border)] hover:border-[var(--border-emphasis)] transition-all ${glow} ${className}`}>
+    <div className={`bg-[var(--bg-card)] rounded-2xl p-4 sm:p-5 border border-[var(--border)] hover:border-[var(--border-emphasis)] transition-all card-hover gradient-border ${glow} ${className}`}>
       {children}
     </div>
   );
@@ -378,7 +394,7 @@ function DashboardTab({ regime, rankings, sectors, onSelectSymbol, technicals, s
         </div>
       )}
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 stagger-in">
         <MetricCard label="Regime" value={regime?.regime?.toUpperCase() || '--'} sub={`Confidence: ${regime ? (regime.confidence * 100).toFixed(0) : '--'}%`} icon={Gauge} accent={regime?.regime === 'bull' ? '#22c55e' : regime?.regime === 'bear' ? '#ef4444' : '#f59e0b'} />
         <MetricCard label="Universe" value={rankings.length.toString()} sub="Stocks ranked" icon={Target} accent="#3b82f6" />
         <MetricCard label="Top Pick" value={topBuys[0]?.symbol || '--'} sub={topBuys[0] ? `Score: ${topBuys[0].composite.toFixed(3)}` : ''} icon={Flame} accent="#22c55e" />
@@ -596,7 +612,7 @@ function SignalsTab({ signals, loading, onRefresh, onSelectSymbol }: any) {
 }
 
 // ── Backtest ──
-function BacktestTab({ result, loading, onRun }: any) {
+function BacktestTab({ result, loading, onRun, monteCarlo, attribution }: any) {
   const isPositive = result && result.total_return > 0;
 
   return (
@@ -606,7 +622,7 @@ function BacktestTab({ result, loading, onRun }: any) {
 
       {result && !result.error && (
         <>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 stagger-in">
             <MetricCard label="Total Return" value={`${isPositive ? '+' : ''}${(result.total_return * 100).toFixed(1)}%`}
               sub={`$${result.initial_capital?.toLocaleString()} -> $${result.final_value?.toLocaleString()}`}
               icon={isPositive ? TrendingUp : TrendingDown} accent={isPositive ? '#22c55e' : '#ef4444'} />
@@ -653,6 +669,76 @@ function BacktestTab({ result, loading, onRun }: any) {
               </Card>
             </>
           )}
+
+          {/* Monte Carlo Simulation */}
+          {monteCarlo && (
+            <Card>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Monte Carlo Projection (90 days, 500 sims)</h3>
+                <div className="flex gap-3 text-[10px] text-[var(--text-faint)]">
+                  <span>Median: <span className="text-[#22c55e] font-bold">${monteCarlo.stats.median_outcome?.toLocaleString()}</span></span>
+                  <span>Best: <span className="text-[#3b82f6]">${monteCarlo.stats.best_case?.toLocaleString()}</span></span>
+                  <span>Worst: <span className="text-[#ef4444]">${monteCarlo.stats.worst_case?.toLocaleString()}</span></span>
+                </div>
+              </div>
+              <ResponsiveContainer width="100%" height={220}>
+                <AreaChart data={monteCarlo.cone}>
+                  <defs>
+                    <linearGradient id="mcOuter" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.05} />
+                      <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="mcInner" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.15} />
+                      <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.02} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="day" tick={{ fill: 'var(--text-faint)', fontSize: 10 }} axisLine={false} tickLine={false} label={{ value: 'Days', position: 'bottom', fill: 'var(--text-faint)', fontSize: 10 }} />
+                  <YAxis tick={{ fill: 'var(--text-faint)', fontSize: 10 }} width={60} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v/1000).toFixed(1)}k`} />
+                  <Tooltip contentStyle={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 12, fontSize: 11 }}
+                    formatter={(v, name) => [`$${Number(v).toLocaleString()}`, name === 'p95' ? '95th %ile' : name === 'p75' ? '75th' : name === 'p50' ? 'Median' : name === 'p25' ? '25th' : '5th %ile']} />
+                  <Area type="monotone" dataKey="p95" stroke="#3b82f6" strokeWidth={1} fill="url(#mcOuter)" strokeDasharray="3 3" dot={false} />
+                  <Area type="monotone" dataKey="p75" stroke="#8b5cf6" strokeWidth={1} fill="url(#mcInner)" dot={false} />
+                  <Area type="monotone" dataKey="p50" stroke="#22c55e" strokeWidth={2.5} fill="none" dot={false} />
+                  <Area type="monotone" dataKey="p25" stroke="#8b5cf6" strokeWidth={1} fill="none" dot={false} />
+                  <Area type="monotone" dataKey="p5" stroke="#ef4444" strokeWidth={1} fill="none" strokeDasharray="3 3" dot={false} />
+                </AreaChart>
+              </ResponsiveContainer>
+              <div className="flex justify-center gap-6 mt-2 text-[10px] text-[var(--text-faint)]">
+                <span className="flex items-center gap-1"><span className="w-3 h-0.5 bg-[#3b82f6] inline-block" style={{ borderTop: '1px dashed #3b82f6' }}></span> 5th/95th</span>
+                <span className="flex items-center gap-1"><span className="w-3 h-0.5 bg-[#8b5cf6] inline-block"></span> 25th/75th</span>
+                <span className="flex items-center gap-1"><span className="w-3 h-0.5 bg-[#22c55e] inline-block"></span> Median</span>
+              </div>
+            </Card>
+          )}
+
+          {/* Performance Attribution */}
+          {attribution && (
+            <Card>
+              <h3 className="text-xs font-semibold text-[var(--text-muted)] mb-4 uppercase tracking-wider">Performance Attribution (Factor Decomposition)</h3>
+              <div className="space-y-3">
+                {attribution.factors.map((f: any) => (
+                  <div key={f.name} className="flex items-center gap-3">
+                    <div className="w-28 text-xs text-[var(--text-secondary)]">{f.name}</div>
+                    <div className="flex-1 h-5 bg-[var(--bg-secondary)] rounded-full overflow-hidden relative">
+                      <div className={`h-full rounded-full transition-all ${f.contribution >= 0 ? 'bg-gradient-to-r from-[#22c55e]/50 to-[#22c55e]' : 'bg-gradient-to-r from-[#ef4444] to-[#ef4444]/50'}`}
+                        style={{ width: `${Math.min(Math.abs(f.contribution) * 10, 100)}%`, marginLeft: f.contribution < 0 ? 'auto' : 0 }} />
+                      <span className="absolute inset-0 flex items-center justify-end pr-2 text-[10px] font-mono text-white/80">
+                        {f.contribution >= 0 ? '+' : ''}{f.contribution.toFixed(2)}%
+                      </span>
+                    </div>
+                    <div className="w-10 text-right text-[10px] text-[var(--text-faint)]">{f.weight}%</div>
+                  </div>
+                ))}
+                <div className="flex items-center gap-3 pt-2 border-t border-[var(--border)]">
+                  <div className="w-28 text-xs font-bold text-[var(--text-primary)]">Total</div>
+                  <div className="flex-1 text-sm font-bold" style={{ color: attribution.total_return >= 0 ? '#22c55e' : '#ef4444' }}>
+                    {attribution.total_return >= 0 ? '+' : ''}{attribution.total_return.toFixed(2)}%
+                  </div>
+                </div>
+              </div>
+            </Card>
+          )}
         </>
       )}
 
@@ -666,12 +752,13 @@ function BacktestTab({ result, loading, onRun }: any) {
 }
 
 // ── Risk ──
-function RiskTab({ limits }: any) {
+function RiskTab({ limits, correlationMatrix }: any) {
   return (
     <div className="space-y-5 sm:space-y-6">
       <SectionHeader icon={ShieldCheck} title="Risk Management" subtitle="Position sizing & drawdown controls" accent="#f59e0b" />
 
       {limits ? (
+        <>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card>
             <h3 className="text-xs font-bold text-[var(--text-muted)] mb-4 uppercase tracking-wider">Position Limits</h3>
@@ -728,6 +815,49 @@ function RiskTab({ limits }: any) {
             </div>
           </Card>
         </div>
+
+        {/* Correlation Matrix Heatmap */}
+        {correlationMatrix && correlationMatrix.symbols?.length > 0 && (
+          <Card>
+            <h3 className="text-xs font-bold text-[var(--text-muted)] mb-4 uppercase tracking-wider">Correlation Matrix (Pairwise)</h3>
+            <div className="overflow-x-auto">
+              <div className="inline-grid gap-[1px]" style={{ gridTemplateColumns: `40px repeat(${correlationMatrix.symbols.length}, 1fr)` }}>
+                <div />
+                {correlationMatrix.symbols.map((s: string) => (
+                  <div key={`h-${s}`} className="text-[8px] font-mono text-[var(--text-faint)] text-center p-1 -rotate-45 origin-bottom-left h-8 flex items-end justify-center">{s}</div>
+                ))}
+                {correlationMatrix.symbols.map((row: string) => (
+                  <>
+                    <div key={`r-${row}`} className="text-[8px] font-mono text-[var(--text-faint)] flex items-center pr-1">{row}</div>
+                    {correlationMatrix.symbols.map((col: string) => {
+                      const entry = correlationMatrix.matrix.find((m: any) => m.symA === row && m.symB === col);
+                      const corr = entry?.correlation ?? 0;
+                      const absCorr = Math.abs(corr);
+                      const bg = corr >= 0
+                        ? `rgba(34, 197, 94, ${absCorr * 0.7})`
+                        : `rgba(239, 68, 68, ${absCorr * 0.7})`;
+                      return (
+                        <div key={`${row}-${col}`} className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center text-[7px] font-mono rounded-sm transition-all hover:scale-125 hover:z-10"
+                          style={{ background: bg }}
+                          title={`${row}/${col}: ${corr.toFixed(2)}`}>
+                          {absCorr > 0.3 ? corr.toFixed(1) : ''}
+                        </div>
+                      );
+                    })}
+                  </>
+                ))}
+              </div>
+            </div>
+            <div className="flex items-center justify-center gap-2 mt-3 text-[9px] text-[var(--text-faint)]">
+              <span className="w-3 h-3 rounded-sm bg-[rgba(239,68,68,0.7)]"></span> Negative
+              <span className="w-3 h-3 rounded-sm bg-[rgba(255,255,255,0.05)]"></span> Zero
+              <span className="w-3 h-3 rounded-sm bg-[rgba(34,197,94,0.7)]"></span> Positive
+              <span className="ml-2">|</span>
+              <span className="ml-2">Threshold: 0.7 max for portfolio inclusion</span>
+            </div>
+          </Card>
+        )}
+        </>
       ) : (
         <EmptyState icon={Shield} title="Loading risk parameters..." />
       )}
