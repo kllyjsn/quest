@@ -19,8 +19,20 @@ async def init_db():
     db = await aiosqlite.connect(DB_PATH)
     await db.executescript(
         """
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            display_name TEXT,
+            created_at TEXT NOT NULL,
+            alpaca_api_key TEXT,
+            alpaca_secret_key TEXT,
+            robinhood_token TEXT
+        );
+
         CREATE TABLE IF NOT EXISTS trades (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL DEFAULT 0,
             timestamp TEXT NOT NULL,
             symbol TEXT NOT NULL,
             side TEXT NOT NULL,
@@ -31,7 +43,9 @@ async def init_db():
             strategy TEXT,
             status TEXT NOT NULL DEFAULT 'pending',
             pnl REAL,
-            notes TEXT
+            notes TEXT,
+            is_paper INTEGER NOT NULL DEFAULT 1,
+            FOREIGN KEY (user_id) REFERENCES users(id)
         );
 
         CREATE TABLE IF NOT EXISTS signals (
@@ -46,16 +60,34 @@ async def init_db():
 
         CREATE TABLE IF NOT EXISTS portfolio_snapshots (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL DEFAULT 0,
             timestamp TEXT NOT NULL,
             total_value REAL NOT NULL,
             cash REAL NOT NULL,
             positions TEXT NOT NULL,
             drawdown REAL NOT NULL DEFAULT 0,
-            regime TEXT
+            regime TEXT,
+            is_paper INTEGER NOT NULL DEFAULT 1,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        );
+
+        CREATE TABLE IF NOT EXISTS paper_sessions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL DEFAULT 0,
+            started_at TEXT NOT NULL,
+            initial_capital REAL NOT NULL DEFAULT 1000.0,
+            current_cash REAL NOT NULL DEFAULT 1000.0,
+            positions_json TEXT NOT NULL DEFAULT '{}',
+            peak_value REAL NOT NULL DEFAULT 1000.0,
+            trade_log_json TEXT NOT NULL DEFAULT '[]',
+            is_active INTEGER NOT NULL DEFAULT 1,
+            ended_at TEXT,
+            FOREIGN KEY (user_id) REFERENCES users(id)
         );
 
         CREATE TABLE IF NOT EXISTS backtest_results (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL DEFAULT 0,
             timestamp TEXT NOT NULL,
             strategy TEXT NOT NULL,
             start_date TEXT NOT NULL,
@@ -69,7 +101,8 @@ async def init_db():
             max_drawdown REAL,
             win_rate REAL,
             total_trades INTEGER,
-            equity_curve TEXT
+            equity_curve TEXT,
+            FOREIGN KEY (user_id) REFERENCES users(id)
         );
 
         CREATE TABLE IF NOT EXISTS risk_events (

@@ -9,10 +9,11 @@ import {
   Target, AlertTriangle, DollarSign, Layers, RefreshCw,
   ChevronRight, ArrowUpRight, ArrowDownRight, Cpu,
   Eye, Crosshair, Gauge, Wallet, PieChart as PieIcon,
+  LogIn, LogOut, User, PlayCircle,
 } from 'lucide-react';
 import * as api from './lib/api';
 
-type Tab = 'dashboard' | 'signals' | 'backtest' | 'risk' | 'broker';
+type Tab = 'dashboard' | 'signals' | 'backtest' | 'risk' | 'broker' | 'paper';
 
 interface RegimeData {
   regime: string;
@@ -36,6 +37,10 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Auth state
+  const [user, setUser] = useState<any>(api.getStoredUser());
+  const [showAuth, setShowAuth] = useState(false);
+
   // Data states
   const [regime, setRegime] = useState<RegimeData | null>(null);
   const [rankings, setRankings] = useState<RankingEntry[]>([]);
@@ -48,6 +53,8 @@ function App() {
   const [technicals, setTechnicals] = useState<any>(null);
   const [selectedSymbol, setSelectedSymbol] = useState('');
   const [, setHealth] = useState<any>(null);
+  const [paperStatus, setPaperStatus] = useState<any>(null);
+  const [paperTrades, setPaperTrades] = useState<any[]>([]);
 
   const loadDashboard = useCallback(async () => {
     setLoading(true);
@@ -112,10 +119,43 @@ function App() {
     } catch {}
   };
 
+  const loadPaper = async () => {
+    setLoading(true);
+    try {
+      const [status, trades] = await Promise.all([
+        api.getPaperStatus().catch(() => null),
+        api.getPaperTrades().catch(() => ({ trades: [] })),
+      ]);
+      if (status) setPaperStatus(status);
+      setPaperTrades(trades?.trades || []);
+    } catch (e: any) { setError(e.message); }
+    setLoading(false);
+  };
+
+  const handleLogin = async (email: string, password: string, isRegister: boolean) => {
+    try {
+      const data = isRegister
+        ? await api.register(email, password, email.split('@')[0])
+        : await api.login(email, password);
+      api.setToken(data.access_token);
+      api.setStoredUser({ user_id: data.user_id, email: data.email, display_name: data.display_name });
+      setUser({ user_id: data.user_id, email: data.email, display_name: data.display_name });
+      setShowAuth(false);
+    } catch (e: any) {
+      setError(e.message);
+    }
+  };
+
+  const handleLogout = () => {
+    api.clearToken();
+    setUser(null);
+  };
+
   useEffect(() => {
     if (tab === 'signals') loadSignals();
     if (tab === 'backtest') loadBacktest();
     if (tab === 'broker' || tab === 'risk') loadBroker();
+    if (tab === 'paper') loadPaper();
   }, [tab]);
 
   const regimeColor = regime?.regime === 'bull' ? 'text-emerald-400' :
@@ -143,6 +183,19 @@ function App() {
                 <span className="text-[var(--text-muted)]">{(regime.confidence * 100).toFixed(0)}%</span>
               </div>
             )}
+            {user ? (
+              <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-[var(--bg-card)] text-sm">
+                <User className="w-3.5 h-3.5 text-blue-400" />
+                <span className="text-[var(--text-secondary)]">{user.display_name || user.email}</span>
+                <button onClick={handleLogout} className="p-1 rounded hover:bg-[var(--bg-primary)] transition-colors" title="Log out">
+                  <LogOut className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+                </button>
+              </div>
+            ) : (
+              <button onClick={() => setShowAuth(true)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-sm font-medium transition-colors">
+                <LogIn className="w-3.5 h-3.5" /> Sign In
+              </button>
+            )}
             <button onClick={loadDashboard} className="p-2 rounded-lg hover:bg-[var(--bg-card)] transition-colors" title="Refresh">
               <RefreshCw className={`w-4 h-4 text-[var(--text-muted)] ${loading ? 'animate-spin' : ''}`} />
             </button>
@@ -157,6 +210,7 @@ function App() {
             ['backtest', BarChart3, 'Backtest'],
             ['risk', Shield, 'Risk'],
             ['broker', Wallet, 'Broker'],
+            ['paper', PlayCircle, 'Paper Trading'],
           ] as [Tab, any, string][]).map(([t, Icon, label]) => (
             <button key={t} onClick={() => setTab(t)}
               className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors
@@ -184,7 +238,10 @@ function App() {
         {tab === 'backtest' && <BacktestTab result={backtestResult} loading={loading} onRun={loadBacktest} />}
         {tab === 'risk' && <RiskTab limits={riskLimits} />}
         {tab === 'broker' && <BrokerTab status={brokerStatus} portfolio={targetPortfolio} />}
+        {tab === 'paper' && <PaperTradingTab status={paperStatus} trades={paperTrades} loading={loading} onRunCycle={async () => { setLoading(true); try { await api.runPaperCycle(); await loadPaper(); } catch (e: any) { setError(e.message); } setLoading(false); }} onReset={async () => { setLoading(true); try { await api.resetPaper(); await loadPaper(); } catch (e: any) { setError(e.message); } setLoading(false); }} />}
       </main>
+
+      {showAuth && <AuthModal onClose={() => setShowAuth(false)} onSubmit={handleLogin} />}
     </div>
   );
 }
@@ -743,6 +800,163 @@ function BrokerTab({ status, portfolio }: any) {
           )}
         </Card>
       )}
+    </div>
+  );
+}
+
+// ── Auth Modal ──
+function AuthModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (email: string, password: string, isRegister: boolean) => void }) {
+  const [isRegister, setIsRegister] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    await onSubmit(email, password, isRegister);
+    setSubmitting(false);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <LogIn className="w-5 h-5 text-blue-400" />
+          {isRegister ? 'Create Account' : 'Sign In'}
+        </h2>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="text-xs text-[var(--text-muted)] block mb-1">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+              required
+              autoFocus
+            />
+          </div>
+          <div>
+            <label className="text-xs text-[var(--text-muted)] block mb-1">Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+              required
+              minLength={6}
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full py-2 rounded-lg bg-blue-600 hover:bg-blue-700 font-medium text-sm transition-colors disabled:opacity-50"
+          >
+            {submitting ? 'Loading...' : isRegister ? 'Create Account' : 'Sign In'}
+          </button>
+        </form>
+
+        <p className="text-xs text-center text-[var(--text-muted)] mt-4">
+          {isRegister ? 'Already have an account?' : "Don't have an account?"}{' '}
+          <button onClick={() => setIsRegister(!isRegister)} className="text-blue-400 hover:underline">
+            {isRegister ? 'Sign in' : 'Create one'}
+          </button>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ── Paper Trading Tab ──
+function PaperTradingTab({ status, trades, loading, onRunCycle, onReset }: any) {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold flex items-center gap-2">
+          <PlayCircle className="w-5 h-5 text-emerald-400" /> Paper Trading
+        </h2>
+        <div className="flex gap-2">
+          <button
+            onClick={onRunCycle}
+            disabled={loading}
+            className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-sm font-medium transition-colors disabled:opacity-50"
+          >
+            {loading ? 'Running...' : 'Run Cycle'}
+          </button>
+          <button
+            onClick={onReset}
+            disabled={loading}
+            className="px-3 py-1.5 rounded-lg bg-[var(--bg-card)] border border-[var(--border)] hover:bg-[var(--bg-primary)] text-sm transition-colors disabled:opacity-50"
+          >
+            Reset
+          </button>
+        </div>
+      </div>
+
+      {status && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card>
+            <p className="text-xs text-[var(--text-muted)] mb-1">Portfolio Value</p>
+            <p className="text-xl font-bold font-mono">${status.portfolio_value?.toLocaleString()}</p>
+          </Card>
+          <Card>
+            <p className="text-xs text-[var(--text-muted)] mb-1">Total Return</p>
+            <p className={`text-xl font-bold font-mono ${status.total_return_pct >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+              {status.total_return_pct >= 0 ? '+' : ''}{status.total_return_pct?.toFixed(2)}%
+            </p>
+          </Card>
+          <Card>
+            <p className="text-xs text-[var(--text-muted)] mb-1">Cash</p>
+            <p className="text-xl font-bold font-mono text-cyan-400">${status.cash?.toLocaleString()}</p>
+          </Card>
+          <Card>
+            <p className="text-xs text-[var(--text-muted)] mb-1">Positions</p>
+            <p className="text-xl font-bold font-mono">{status.num_positions || 0}</p>
+          </Card>
+        </div>
+      )}
+
+      {status?.positions?.length > 0 && (
+        <Card>
+          <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-3">Open Positions</h3>
+          <div className="space-y-2">
+            {status.positions.map((p: any) => (
+              <div key={p.symbol} className="flex items-center justify-between text-sm">
+                <span className="font-mono text-blue-400 w-14">{p.symbol}</span>
+                <span className="text-[var(--text-muted)]">{p.quantity} shares @ ${p.entry_price}</span>
+                <span className={`font-mono ${p.unrealized_pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {p.unrealized_pnl >= 0 ? '+' : ''}${p.unrealized_pnl?.toFixed(2)} ({p.unrealized_pnl_pct?.toFixed(1)}%)
+                </span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      <Card>
+        <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-3">Trade History</h3>
+        {trades?.length > 0 ? (
+          <div className="space-y-1 max-h-96 overflow-y-auto">
+            {trades.slice(0, 50).map((t: any, i: number) => (
+              <div key={i} className="flex items-center justify-between text-xs py-1 border-b border-[var(--border)]/50">
+                <span className="text-[var(--text-muted)] w-28">{new Date(t.timestamp).toLocaleDateString()}</span>
+                <span className={`font-mono w-10 ${t.side === 'buy' ? 'text-emerald-400' : 'text-red-400'}`}>{t.side?.toUpperCase()}</span>
+                <span className="font-mono text-blue-400 w-14">{t.symbol}</span>
+                <span className="text-[var(--text-muted)] w-16 text-right">{t.quantity} @ ${t.price}</span>
+                {t.pnl != null && (
+                  <span className={`font-mono w-16 text-right ${t.pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {t.pnl >= 0 ? '+' : ''}${t.pnl?.toFixed(2)}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-[var(--text-muted)]">No trades yet. Click "Run Cycle" to execute a trading cycle.</p>
+        )}
+      </Card>
     </div>
   );
 }

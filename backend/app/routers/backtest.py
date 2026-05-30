@@ -73,4 +73,5 @@ async def quick_backtest():
         "sortino_ratio": result.get("sortino_ratio"),
         "max_drawdown": result.get("max_drawdown"),
         "total_trades": result.get("total_trades"),
+        "equity_curve": result.get("equity_curve"),
     }
