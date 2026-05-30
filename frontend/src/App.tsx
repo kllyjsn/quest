@@ -965,7 +965,7 @@ function PaperTradingTab() {
       </div>
 
       {/* Performance Metrics */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <Card>
           <p className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider mb-1 font-medium">Return</p>
           <p className={`text-lg sm:text-xl font-bold font-mono ${isPositive ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
@@ -977,18 +977,40 @@ function PaperTradingTab() {
           <p className="text-lg sm:text-xl font-bold font-mono text-[#ef4444]">{(result.max_drawdown * 100).toFixed(2)}%</p>
         </Card>
         <Card>
-          <p className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider mb-1 font-medium">Sharpe</p>
+          <p className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider mb-1 font-medium">Sharpe Ratio</p>
           <p className={`text-lg sm:text-xl font-bold font-mono ${result.sharpe_ratio > 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
             {result.sharpe_ratio.toFixed(2)}
           </p>
         </Card>
         <Card>
-          <p className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider mb-1 font-medium">Trades</p>
-          <p className="text-lg sm:text-xl font-bold font-mono">{result.total_trades}</p>
-        </Card>
-        <Card>
           <p className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider mb-1 font-medium">Win Rate</p>
           <p className="text-lg sm:text-xl font-bold font-mono text-[#3b82f6]">{(result.win_rate * 100).toFixed(0)}%</p>
+        </Card>
+      </div>
+
+      {/* Statistical Analysis Panel */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <Card>
+          <p className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider mb-1 font-medium">Regime</p>
+          <p className={`text-sm font-bold ${result.regime === 'bull' ? 'text-[#22c55e]' : result.regime === 'bear' ? 'text-[#ef4444]' : 'text-[#f59e0b]'}`}>
+            {result.regime === 'bull' ? '🐂 Bull' : result.regime === 'bear' ? '🐻 Bear' : '↔️ Sideways'}
+          </p>
+          <p className="text-[8px] text-[var(--text-faint)] mt-0.5">Adaptive factor weights</p>
+        </Card>
+        <Card>
+          <p className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider mb-1 font-medium">Trades</p>
+          <p className="text-lg sm:text-xl font-bold font-mono">{result.total_trades}</p>
+          <p className="text-[8px] text-[var(--text-faint)] mt-0.5">Signal-confirmed entries</p>
+        </Card>
+        <Card>
+          <p className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider mb-1 font-medium">Positions</p>
+          <p className="text-lg sm:text-xl font-bold font-mono text-[#8b5cf6]">{result.positions.length}</p>
+          <p className="text-[8px] text-[var(--text-faint)] mt-0.5">Correlation-filtered</p>
+        </Card>
+        <Card>
+          <p className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider mb-1 font-medium">Risk Model</p>
+          <p className="text-sm font-bold text-[#22c55e]">ATR Stops</p>
+          <p className="text-[8px] text-[var(--text-faint)] mt-0.5">2.5× ATR adaptive</p>
         </Card>
       </div>
 
