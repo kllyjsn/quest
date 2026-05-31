@@ -12,6 +12,21 @@
   status = 200
 
 [[redirects]]
+  from = "/api/stock-fundamentals"
+  to = "/.netlify/functions/stock-fundamentals"
+  status = 200
+
+[[redirects]]
+  from = "/api/news-feed"
+  to = "/.netlify/functions/news-feed"
+  status = 200
+
+[[redirects]]
+  from = "/api/alpaca/*"
+  to = "/.netlify/functions/alpaca-proxy"
+  status = 200
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200

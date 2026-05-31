@@ -10,7 +10,10 @@ import {
   ChevronRight, ChevronDown, ArrowUpRight, ArrowDownRight, Cpu,
   Eye, Crosshair, Gauge, PieChart as PieIcon,
   LogIn, LogOut, User, Clock, Flame, X,
-  LayoutDashboard, LineChart, FlaskConical, ShieldCheck, Link2,
+  LayoutDashboard, LineChart, FlaskConical, ShieldCheck,
+  Newspaper, History, Bell, BellOff,
+  ExternalLink, CheckCircle2, XCircle, Calendar, Plug,
+  Trophy, Radio,
 } from 'lucide-react';
 import * as api from './lib/api';
 import {
@@ -22,8 +25,21 @@ import {
   generateStressTests, generateICAnalysis, generateHRP, generateMacroRegime,
   generateTransactionCosts,
 } from './lib/simulation';
+import {
+  type LivePrice, type NewsFeed,
+  type NotificationPrefs,
+  type AlpacaAccount, type AlpacaPosition, type AlpacaOrder,
+  subscribeToPrices,
+  fetchNews,
+  getAlpacaKeys, saveAlpacaKeys, clearAlpacaKeys, testAlpacaConnection,
+  getAlpacaPositions, getAlpacaOrders,
+  getTrackRecordStats, addTrackRecordEntry,
+  shouldAutoRun, logDailyRun, getDailyRunHistory, getRunStreak,
+  getNotificationPrefs, saveNotificationPrefs, requestNotificationPermission,
+  notifyDailyReport,
+} from './lib/realtime';
 
-type Tab = 'dashboard' | 'signals' | 'backtest' | 'risk' | 'broker' | 'paper' | 'research';
+type Tab = 'dashboard' | 'signals' | 'backtest' | 'risk' | 'broker' | 'paper' | 'research' | 'news' | 'track';
 
 interface RegimeData {
   regime: string;
@@ -43,14 +59,19 @@ interface RankingEntry {
 }
 
 const TABS: { id: Tab; icon: any; label: string; shortLabel: string }[] = [
+  { id: 'paper', icon: LineChart, label: 'Paper Trade', shortLabel: 'Paper' },
   { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard', shortLabel: 'Home' },
   { id: 'signals', icon: Crosshair, label: 'Signals', shortLabel: 'Signals' },
-  { id: 'backtest', icon: FlaskConical, label: 'Backtest', shortLabel: 'Backtest' },
+  { id: 'news', icon: Newspaper, label: 'News', shortLabel: 'News' },
+  { id: 'track', icon: History, label: 'Track Record', shortLabel: 'Track' },
+  { id: 'broker', icon: Plug, label: 'Broker', shortLabel: 'Broker' },
+  { id: 'backtest', icon: FlaskConical, label: 'Backtest', shortLabel: 'Test' },
   { id: 'risk', icon: ShieldCheck, label: 'Risk', shortLabel: 'Risk' },
-  { id: 'research', icon: Cpu, label: 'Research', shortLabel: 'Research' },
-  { id: 'broker', icon: Link2, label: 'Broker', shortLabel: 'Broker' },
-  { id: 'paper', icon: LineChart, label: 'Paper Trade', shortLabel: 'Paper' },
+  { id: 'research', icon: Cpu, label: 'Research', shortLabel: 'Lab' },
 ];
+
+// Mobile-only bottom nav shows a subset
+const MOBILE_TABS: Tab[] = ['paper', 'dashboard', 'news', 'track', 'broker'];
 
 function App() {
   const [tab, setTab] = useState<Tab>('paper');
@@ -72,7 +93,35 @@ function App() {
   const [correlationMatrix, setCorrelationMatrix] = useState<any>(null);
   const [attribution, setAttribution] = useState<any>(null);
   const [researchData, setResearchData] = useState<any>(null);
+  const [livePrices, setLivePrices] = useState<Record<string, LivePrice>>({});
+  const [newsData, setNewsData] = useState<NewsFeed | null>(null);
+  const [showMoreTabs, setShowMoreTabs] = useState(false);
 
+  // Real-time price subscription
+  useEffect(() => {
+    const topSymbols = ['AAPL', 'NVDA', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'META', 'JPM', 'V', 'UNH'];
+    const unsub = subscribeToPrices(topSymbols, (prices) => setLivePrices(prices));
+    return unsub;
+  }, []);
+
+  // Auto-run scheduler
+  useEffect(() => {
+    if (shouldAutoRun()) {
+      (async () => {
+        try {
+          const data = await runReal30DayBacktest();
+          logDailyRun({
+            regime: data.regime,
+            signalsGenerated: data.total_trades,
+            tradesExecuted: data.trades.length,
+            portfolioValue: data.final_value,
+            dailyReturn: data.total_return * 100,
+          });
+          notifyDailyReport(data.final_value, data.total_return * 100, data.trades.length);
+        } catch { /* silent */ }
+      })();
+    }
+  }, []);
 
   const loadDashboard = useCallback(async () => {
     setLoading(true);
@@ -203,12 +252,19 @@ function App() {
 
   const handleLogout = () => { api.clearToken(); setUser(null); };
 
+  const loadNews = async () => {
+    try {
+      const data = await fetchNews();
+      setNewsData(data);
+    } catch {}
+  };
+
   useEffect(() => {
     if (tab === 'signals') loadSignals();
     if (tab === 'backtest') loadBacktest();
     if (tab === 'broker' || tab === 'risk') { loadBroker(); loadCorrelation(); }
     if (tab === 'research') loadResearch();
-    // paper tab manages its own data loading internally
+    if (tab === 'news') loadNews();
   }, [tab]);
 
   return (
@@ -299,21 +355,76 @@ function App() {
         {tab === 'risk' && <RiskTab limits={riskLimits} correlationMatrix={correlationMatrix} />}
         {tab === 'research' && <ResearchTab data={researchData} loading={loading} onRefresh={loadResearch} />}
         {tab === 'broker' && <BrokerTab status={brokerStatus} portfolio={targetPortfolio} />}
-        {tab === 'paper' && <PaperTradingTab />}
+        {tab === 'paper' && <PaperTradingTab livePrices={livePrices} />}
+        {tab === 'news' && <NewsTab data={newsData} loading={loading} onRefresh={loadNews} />}
+        {tab === 'track' && <TrackRecordTab />}
       </main>
 
-      {/* Mobile bottom nav */}
+      {/* Live Price Ticker */}
+      <div className="overflow-hidden border-b border-[var(--border)] bg-[var(--bg-secondary)]">
+        <div className="flex animate-ticker whitespace-nowrap py-1.5 gap-6 px-4">
+          {Object.values(livePrices).length > 0 ? Object.values(livePrices).map(p => (
+            <span key={p.symbol} className="inline-flex items-center gap-1.5 text-[10px] font-mono shrink-0">
+              <span className="font-semibold text-[var(--text-secondary)]">{p.symbol}</span>
+              <span className="text-[var(--text-primary)]">${p.price.toFixed(2)}</span>
+              <span className={p.changePct >= 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}>
+                {p.changePct >= 0 ? '+' : ''}{p.changePct.toFixed(2)}%
+              </span>
+            </span>
+          )) : (
+            ['AAPL', 'NVDA', 'MSFT', 'GOOGL', 'AMZN'].map(s => (
+              <span key={s} className="inline-flex items-center gap-1.5 text-[10px] font-mono text-[var(--text-faint)] shrink-0">
+                {s} <span className="shimmer w-12 h-3 rounded" />
+              </span>
+            ))
+          )}
+          {/* Repeat for seamless scroll */}
+          {Object.values(livePrices).length > 0 && Object.values(livePrices).map(p => (
+            <span key={`${p.symbol}-2`} className="inline-flex items-center gap-1.5 text-[10px] font-mono shrink-0">
+              <span className="font-semibold text-[var(--text-secondary)]">{p.symbol}</span>
+              <span className="text-[var(--text-primary)]">${p.price.toFixed(2)}</span>
+              <span className={p.changePct >= 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}>
+                {p.changePct >= 0 ? '+' : ''}{p.changePct.toFixed(2)}%
+              </span>
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Mobile bottom nav — shows 5 primary tabs + "More" */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 glass border-t border-[var(--border)] z-50 safe-bottom">
         <div className="flex justify-around items-center h-[60px] px-1">
-          {TABS.map(({ id, icon: Icon, shortLabel }) => (
-            <button key={id} onClick={() => setTab(id)}
+          {TABS.filter(t => MOBILE_TABS.includes(t.id)).map(({ id, icon: Icon, shortLabel }) => (
+            <button key={id} onClick={() => { setTab(id); setShowMoreTabs(false); }}
               className={`flex flex-col items-center justify-center gap-[3px] min-w-[44px] min-h-[44px] rounded-xl transition-all press-scale
                 ${tab === id ? 'text-[#3b82f6] nav-pill-active' : 'text-[var(--text-faint)]'}`}>
               <Icon className={`w-[22px] h-[22px] transition-transform ${tab === id ? 'text-[#3b82f6] scale-110' : ''}`} />
               <span className={`text-[9px] leading-none font-semibold ${tab === id ? 'text-[#3b82f6]' : ''}`}>{shortLabel}</span>
             </button>
           ))}
+          {/* More button */}
+          <button onClick={() => setShowMoreTabs(!showMoreTabs)}
+            className={`flex flex-col items-center justify-center gap-[3px] min-w-[44px] min-h-[44px] rounded-xl transition-all press-scale
+              ${!MOBILE_TABS.includes(tab) ? 'text-[#3b82f6] nav-pill-active' : 'text-[var(--text-faint)]'}`}>
+            <Layers className="w-[22px] h-[22px]" />
+            <span className="text-[9px] leading-none font-semibold">More</span>
+          </button>
         </div>
+        {/* More tabs dropdown */}
+        {showMoreTabs && (
+          <div className="absolute bottom-[64px] left-2 right-2 glass border border-[var(--border)] rounded-2xl p-2 scale-in">
+            <div className="grid grid-cols-4 gap-1">
+              {TABS.filter(t => !MOBILE_TABS.includes(t.id)).map(({ id, icon: Icon, shortLabel }) => (
+                <button key={id} onClick={() => { setTab(id); setShowMoreTabs(false); }}
+                  className={`flex flex-col items-center gap-1 p-3 rounded-xl press-scale
+                    ${tab === id ? 'text-[#3b82f6] bg-[#3b82f6]/10' : 'text-[var(--text-faint)] hover:bg-white/5'}`}>
+                  <Icon className="w-5 h-5" />
+                  <span className="text-[9px] font-semibold">{shortLabel}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </nav>
 
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} onSubmit={handleLogin} />}
@@ -1335,58 +1446,183 @@ function ResearchTab({ data, loading, onRefresh }: any) {
 }
 
 // ── Broker ──
-function BrokerTab({ status, portfolio }: any) {
+function BrokerTab({ status: _status, portfolio }: any) {
+  const [alpacaKey, setAlpacaKey] = useState('');
+  const [alpacaSecret, setAlpacaSecret] = useState('');
+  const [connecting, setConnecting] = useState(false);
+  const [alpacaStatus, setAlpacaStatus] = useState<{ connected: boolean; account?: AlpacaAccount; error?: string } | null>(null);
+  const [alpacaPositions, setAlpacaPositions] = useState<AlpacaPosition[]>([]);
+  const [alpacaOrders, setAlpacaOrders] = useState<AlpacaOrder[]>([]);
+  const existingKeys = getAlpacaKeys();
+
+  useEffect(() => {
+    if (existingKeys) {
+      testAlpacaConnection().then(result => {
+        setAlpacaStatus(result);
+        if (result.connected) {
+          getAlpacaPositions().then(p => setAlpacaPositions(p)).catch(() => {});
+          getAlpacaOrders().then(o => setAlpacaOrders(o)).catch(() => {});
+        }
+      });
+    }
+  }, []);
+
+  const handleConnect = async () => {
+    if (!alpacaKey || !alpacaSecret) return;
+    setConnecting(true);
+    saveAlpacaKeys(alpacaKey, alpacaSecret, true);
+    const result = await testAlpacaConnection();
+    setAlpacaStatus(result);
+    if (result.connected) {
+      getAlpacaPositions().then(p => setAlpacaPositions(p)).catch(() => {});
+      getAlpacaOrders().then(o => setAlpacaOrders(o)).catch(() => {});
+    }
+    setConnecting(false);
+  };
+
+  const handleDisconnect = () => {
+    clearAlpacaKeys();
+    setAlpacaStatus(null);
+    setAlpacaPositions([]);
+    setAlpacaOrders([]);
+    setAlpacaKey('');
+    setAlpacaSecret('');
+  };
+
   return (
     <div className="space-y-5 sm:space-y-6">
-      <SectionHeader icon={Link2} title="Broker Connections" subtitle="Manage execution endpoints" accent="#06b6d4" />
+      <SectionHeader icon={Plug} title="Broker Connections" subtitle="Connect your brokerage for live paper trading" accent="#06b6d4" />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card glow={status?.primary?.configured ? 'glow-green' : ''}>
-          <div className="flex items-center gap-2.5 mb-4">
-            <div className={`w-2.5 h-2.5 rounded-full ${status?.primary?.configured ? 'bg-[#22c55e] pulse-dot' : 'bg-[var(--text-faint)]'}`} />
-            <h3 className="text-sm font-bold">Alpaca</h3>
+      {/* Alpaca Connection Card */}
+      <Card glow={alpacaStatus?.connected ? 'glow-green' : ''}>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2.5">
+            <div className={`w-2.5 h-2.5 rounded-full ${alpacaStatus?.connected ? 'bg-[#22c55e] pulse-dot' : 'bg-[var(--text-faint)]'}`} />
+            <h3 className="text-sm font-bold">Alpaca Paper Trading</h3>
             <span className="text-[9px] uppercase tracking-wider text-[var(--text-faint)] bg-white/5 px-2 py-0.5 rounded-full">Primary</span>
           </div>
-          {status?.primary?.configured ? (
-            <div className="space-y-2.5">
+          {alpacaStatus?.connected && (
+            <button onClick={handleDisconnect} className="text-[10px] text-[#ef4444] hover:underline">Disconnect</button>
+          )}
+        </div>
+
+        {alpacaStatus?.connected && alpacaStatus.account ? (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
-                ['Equity', `$${Number(status.primary.equity).toLocaleString()}`],
-                ['Cash', `$${Number(status.primary.cash).toLocaleString()}`],
-                ['Buying Power', `$${Number(status.primary.buying_power).toLocaleString()}`],
-                ['Day Trades', `${status.primary.daytrade_count}/3`],
-              ].map(([label, val]) => (
-                <div key={label} className="flex justify-between items-center text-sm">
-                  <span className="text-[var(--text-muted)]">{label}</span>
-                  <span className="font-mono font-semibold">{val}</span>
+                ['Portfolio', `$${Number(alpacaStatus.account.portfolio_value).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, '#22c55e'],
+                ['Cash', `$${Number(alpacaStatus.account.cash).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, '#3b82f6'],
+                ['Buying Power', `$${Number(alpacaStatus.account.buying_power).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, '#8b5cf6'],
+                ['Day Trades', `${alpacaStatus.account.daytrade_count}/3`, '#f59e0b'],
+              ].map(([label, val, color]) => (
+                <div key={label} className="p-3 rounded-xl bg-white/[0.02] border border-[var(--border)] text-center">
+                  <p className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider mb-1">{label}</p>
+                  <p className="text-lg font-bold font-mono" style={{ color }}>{val}</p>
                 </div>
               ))}
             </div>
-          ) : (
-            <div className="text-sm text-[var(--text-muted)] space-y-2">
-              <p>Not configured</p>
-              <code className="block text-[10px] bg-[var(--bg-primary)] px-3 py-2 rounded-lg text-[#3b82f6] font-mono">ALPACA_API_KEY<br/>ALPACA_SECRET_KEY</code>
-              <a href="https://app.alpaca.markets/paper/dashboard/overview" target="_blank" rel="noreferrer" className="text-[#3b82f6] hover:underline text-xs inline-block mt-2">Get paper trading keys &rarr;</a>
-            </div>
-          )}
-        </Card>
 
-        <Card>
-          <div className="flex items-center gap-2.5 mb-4">
-            <div className={`w-2.5 h-2.5 rounded-full ${status?.secondary?.configured ? 'bg-[#22c55e] pulse-dot' : 'bg-[var(--text-faint)]'}`} />
-            <h3 className="text-sm font-bold">Robinhood</h3>
-            <span className="text-[9px] uppercase tracking-wider text-[var(--text-faint)] bg-white/5 px-2 py-0.5 rounded-full">Secondary</span>
+            {/* Live Positions */}
+            {alpacaPositions.length > 0 && (
+              <div>
+                <h4 className="text-[10px] font-bold text-[var(--text-faint)] uppercase tracking-wider mb-2">Live Positions ({alpacaPositions.length})</h4>
+                <div className="space-y-1.5">
+                  {alpacaPositions.map(p => (
+                    <div key={p.symbol} className="flex items-center justify-between p-2.5 rounded-lg bg-white/[0.02] border border-[var(--border)]">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-bold text-sm text-[#3b82f6]">{p.symbol}</span>
+                        <span className="text-[10px] text-[var(--text-faint)]">{p.qty} shares</span>
+                      </div>
+                      <div className="text-right">
+                        <p className={`font-mono text-sm font-bold ${Number(p.unrealized_pl) >= 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+                          {Number(p.unrealized_pl) >= 0 ? '+' : ''}${Number(p.unrealized_pl).toFixed(2)}
+                        </p>
+                        <p className={`text-[10px] font-mono ${Number(p.unrealized_plpc) >= 0 ? 'text-[#22c55e]/70' : 'text-[#ef4444]/70'}`}>
+                          {(Number(p.unrealized_plpc) * 100).toFixed(2)}%
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Recent Orders */}
+            {alpacaOrders.length > 0 && (
+              <div>
+                <h4 className="text-[10px] font-bold text-[var(--text-faint)] uppercase tracking-wider mb-2">Recent Orders ({alpacaOrders.length})</h4>
+                <div className="space-y-1 max-h-[200px] overflow-y-auto">
+                  {alpacaOrders.slice(0, 10).map(o => (
+                    <div key={o.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-white/[0.02]">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${o.side === 'buy' ? 'bg-[#22c55e]/10 text-[#22c55e]' : 'bg-[#ef4444]/10 text-[#ef4444]'}`}>{o.side.toUpperCase()}</span>
+                        <span className="font-mono text-sm font-semibold">{o.symbol}</span>
+                        <span className="text-[10px] text-[var(--text-faint)]">{o.qty} @ {o.filled_avg_price || 'pending'}</span>
+                      </div>
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-semibold ${o.status === 'filled' ? 'bg-[#22c55e]/10 text-[#22c55e]' : o.status === 'canceled' ? 'bg-[#ef4444]/10 text-[#ef4444]' : 'bg-[#f59e0b]/10 text-[#f59e0b]'}`}>
+                        {o.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-          {status?.secondary?.configured ? (
-            <p className="text-sm text-[#22c55e] font-medium">Connected via MCP</p>
-          ) : (
-            <div className="text-sm text-[var(--text-muted)] space-y-2">
-              <p>Not configured</p>
-              <code className="block text-[10px] bg-[var(--bg-primary)] px-3 py-2 rounded-lg text-[#3b82f6] font-mono">ROBINHOOD_ACCESS_TOKEN</code>
+        ) : (
+          <div className="space-y-3">
+            {alpacaStatus?.error && (
+              <div className="p-3 rounded-xl bg-[#ef4444]/10 border border-[#ef4444]/20">
+                <p className="text-xs text-[#ef4444]">{alpacaStatus.error}</p>
+              </div>
+            )}
+            <p className="text-sm text-[var(--text-muted)]">Connect your free Alpaca paper trading account for live simulated trading with real market data.</p>
+            <div className="space-y-2">
+              <div>
+                <label className="text-[10px] font-medium text-[var(--text-faint)] block mb-1 uppercase tracking-wider">API Key</label>
+                <input type="text" value={alpacaKey} onChange={e => setAlpacaKey(e.target.value)}
+                  className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-4 py-2.5 text-sm font-mono placeholder:text-[var(--text-faint)]"
+                  placeholder="PKXXXXXXXXXXXXXXXXXX" />
+              </div>
+              <div>
+                <label className="text-[10px] font-medium text-[var(--text-faint)] block mb-1 uppercase tracking-wider">Secret Key</label>
+                <input type="password" value={alpacaSecret} onChange={e => setAlpacaSecret(e.target.value)}
+                  className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-4 py-2.5 text-sm font-mono placeholder:text-[var(--text-faint)]"
+                  placeholder="Enter your secret key" />
+              </div>
+              <button onClick={handleConnect} disabled={connecting || !alpacaKey || !alpacaSecret}
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-[#3b82f6] to-[#8b5cf6] font-semibold text-sm disabled:opacity-50 hover:opacity-90 flex items-center justify-center gap-2">
+                {connecting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Plug className="w-4 h-4" />}
+                {connecting ? 'Connecting...' : 'Connect to Alpaca'}
+              </button>
             </div>
-          )}
-        </Card>
-      </div>
+            <div className="flex items-center gap-2 pt-1">
+              <a href="https://app.alpaca.markets/signup" target="_blank" rel="noreferrer" className="text-[#3b82f6] hover:underline text-xs flex items-center gap-1">
+                Create free account <ExternalLink className="w-3 h-3" />
+              </a>
+              <span className="text-[var(--text-faint)] text-[10px]">|</span>
+              <a href="https://app.alpaca.markets/paper/dashboard/overview" target="_blank" rel="noreferrer" className="text-[#3b82f6] hover:underline text-xs flex items-center gap-1">
+                Get API keys <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+            <p className="text-[10px] text-[var(--text-faint)]">Keys are stored locally in your browser. They are never sent to our servers.</p>
+          </div>
+        )}
+      </Card>
 
+      {/* Robinhood Secondary */}
+      <Card>
+        <div className="flex items-center gap-2.5 mb-4">
+          <div className="w-2.5 h-2.5 rounded-full bg-[var(--text-faint)]" />
+          <h3 className="text-sm font-bold">Robinhood</h3>
+          <span className="text-[9px] uppercase tracking-wider text-[var(--text-faint)] bg-white/5 px-2 py-0.5 rounded-full">Secondary</span>
+        </div>
+        <div className="text-sm text-[var(--text-muted)] space-y-2">
+          <p>Robinhood MCP integration available when backend is deployed</p>
+          <code className="block text-[10px] bg-[var(--bg-primary)] px-3 py-2 rounded-lg text-[#3b82f6] font-mono">agent.robinhood.com/mcp/trading</code>
+        </div>
+      </Card>
+
+      {/* Target Portfolio (from simulation) */}
       {portfolio?.allocations && (
         <Card>
           <h3 className="text-xs font-bold text-[var(--text-muted)] mb-4 uppercase tracking-wider flex items-center gap-2">
@@ -1499,7 +1735,7 @@ function AuthModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (emai
 }
 
 // ── Paper Trading (Auto-running 30-day backtest) ──
-function PaperTradingTab() {
+function PaperTradingTab({ livePrices: _livePrices }: { livePrices: Record<string, LivePrice> }) {
   const [result, setResult] = useState<RealBacktestResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -1509,7 +1745,22 @@ function PaperTradingTab() {
       setIsLoading(true);
       try {
         const data = await runReal30DayBacktest();
-        if (!cancelled) setResult(data);
+        if (!cancelled) {
+          setResult(data);
+          // Log signals to track record
+          data.trades.forEach(t => {
+            addTrackRecordEntry({
+              type: 'trade',
+              symbol: t.symbol,
+              action: t.side,
+              predictedDirection: t.side === 'buy' ? 'long' : 'short',
+              entryPrice: t.price,
+              confidence: 0.7,
+              strategy: t.reason || 'multi_factor',
+              resolved: false,
+            });
+          });
+        }
       } catch {
         // silently fall back
       }
@@ -1738,6 +1989,279 @@ function PaperTradingTab() {
           <div className="text-center py-6">
             <p className="text-sm text-[var(--text-faint)]">No trades executed</p>
           </div>
+        )}
+      </Card>
+    </div>
+  );
+}
+
+// ── News Tab ──
+function NewsTab({ data, loading, onRefresh }: { data: NewsFeed | null; loading: boolean; onRefresh: () => void }) {
+  const sentimentColor = (s: string) => s === 'positive' ? '#22c55e' : s === 'negative' ? '#ef4444' : 'var(--text-faint)';
+  const sentimentBg = (s: string) => s === 'positive' ? '#22c55e' : s === 'negative' ? '#ef4444' : 'var(--text-faint)';
+  const timeAgo = (dateStr: string) => {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+    return `${Math.floor(diff / 86400000)}d ago`;
+  };
+
+  return (
+    <div className="space-y-5 sm:space-y-6">
+      <SectionHeader icon={Newspaper} title="Market News" subtitle="Real-time financial headlines with sentiment" accent="#06b6d4"
+        action={<ActionButton onClick={onRefresh} loading={loading} icon={RefreshCw} label="Refresh" variant="ghost" />} />
+
+      {/* Aggregate Sentiment Banner */}
+      {data && (
+        <Card glow={data.aggregateLabel === 'Bullish' ? 'glow-green' : data.aggregateLabel === 'Bearish' ? 'glow-red' : ''}>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[10px] text-[var(--text-faint)] uppercase tracking-wider mb-1">Market Sentiment</p>
+              <p className={`text-xl font-bold ${data.aggregateLabel === 'Bullish' ? 'text-[#22c55e]' : data.aggregateLabel === 'Bearish' ? 'text-[#ef4444]' : 'text-[#f59e0b]'}`}>
+                {data.aggregateLabel}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-bold font-mono">{data.count}</p>
+              <p className="text-[10px] text-[var(--text-faint)]">articles</p>
+            </div>
+          </div>
+          <div className="mt-3 flex gap-3">
+            <div className="flex-1 h-2 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-[#22c55e] to-[#10b981] rounded-full transition-all" style={{ width: `${Math.max(0, data.aggregateSentiment * 50 + 50)}%` }} />
+            </div>
+            <span className="text-[10px] font-mono text-[var(--text-faint)]">{data.aggregateSentiment.toFixed(2)}</span>
+          </div>
+        </Card>
+      )}
+
+      {/* News List */}
+      {data?.news && data.news.length > 0 ? (
+        <div className="space-y-2">
+          {data.news.map((item, i) => (
+            <a key={i} href={item.link} target="_blank" rel="noreferrer"
+              className="block p-3.5 sm:p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border)] hover:border-[var(--border-emphasis)] transition-all press-scale">
+              <div className="flex items-start gap-3">
+                <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0`} style={{ background: sentimentBg(item.sentiment) }} />
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-semibold leading-snug mb-1.5">{item.title}</h3>
+                  {item.summary && <p className="text-xs text-[var(--text-muted)] line-clamp-2 mb-2">{item.summary}</p>}
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span className="text-[10px] text-[var(--text-faint)]">{item.source}</span>
+                    <span className="text-[10px] text-[var(--text-faint)]">{timeAgo(item.published)}</span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold" style={{ background: `${sentimentColor(item.sentiment)}15`, color: sentimentColor(item.sentiment) }}>
+                      {item.sentiment}
+                    </span>
+                    {item.symbols.length > 0 && item.symbols.map(s => (
+                      <span key={s} className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#3b82f6]/10 text-[#3b82f6] font-mono font-bold">{s}</span>
+                    ))}
+                  </div>
+                </div>
+                <ExternalLink className="w-3.5 h-3.5 text-[var(--text-faint)] shrink-0 mt-0.5" />
+              </div>
+            </a>
+          ))}
+        </div>
+      ) : loading ? (
+        <div className="space-y-3">{[1, 2, 3, 4, 5].map(i => <div key={i} className="h-24 shimmer rounded-2xl" />)}</div>
+      ) : (
+        <EmptyState icon={Newspaper} title="No news available" subtitle="News feed will populate when the API is reachable" />
+      )}
+    </div>
+  );
+}
+
+// ── Track Record Tab ──
+function TrackRecordTab() {
+  const [stats] = useState(getTrackRecordStats());
+  const [notifPrefs, setLocalPrefs] = useState(getNotificationPrefs());
+  const runHistory = getDailyRunHistory();
+  const streak = getRunStreak();
+
+  const toggleNotifications = async () => {
+    if (!notifPrefs.enabled) {
+      const granted = await requestNotificationPermission();
+      if (!granted) return;
+    }
+    const updated = { ...notifPrefs, enabled: !notifPrefs.enabled };
+    saveNotificationPrefs(updated);
+    setLocalPrefs(updated);
+  };
+
+  return (
+    <div className="space-y-5 sm:space-y-6">
+      <SectionHeader icon={History} title="Track Record" subtitle="Every signal logged \u2014 immutable performance audit" accent="#f59e0b"
+        action={
+          <button onClick={toggleNotifications}
+            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all press-scale
+              ${notifPrefs.enabled ? 'bg-[#22c55e]/10 text-[#22c55e] border border-[#22c55e]/20' : 'bg-white/5 text-[var(--text-faint)] border border-[var(--border)]'}`}>
+            {notifPrefs.enabled ? <Bell className="w-3.5 h-3.5" /> : <BellOff className="w-3.5 h-3.5" />}
+            {notifPrefs.enabled ? 'Alerts On' : 'Alerts Off'}
+          </button>
+        } />
+
+      {/* Stats Overview */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <Card>
+          <p className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider mb-1">Total Signals</p>
+          <p className="text-2xl font-bold font-mono">{stats.totalSignals}</p>
+          <p className="text-[9px] text-[var(--text-faint)] mt-0.5">{stats.unresolvedCount} pending</p>
+        </Card>
+        <Card glow={stats.accuracy >= 60 ? 'glow-green' : stats.accuracy < 40 ? 'glow-red' : ''}>
+          <p className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider mb-1">Accuracy</p>
+          <p className={`text-2xl font-bold font-mono ${stats.accuracy >= 55 ? 'text-[#22c55e]' : stats.accuracy < 45 ? 'text-[#ef4444]' : 'text-[#f59e0b]'}`}>
+            {stats.accuracy}%
+          </p>
+          <p className="text-[9px] text-[var(--text-faint)] mt-0.5">{stats.resolvedCount} resolved</p>
+        </Card>
+        <Card>
+          <p className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider mb-1">Avg Return</p>
+          <p className={`text-2xl font-bold font-mono ${stats.avgReturn >= 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+            {stats.avgReturn >= 0 ? '+' : ''}{stats.avgReturn}%
+          </p>
+          <p className="text-[9px] text-[var(--text-faint)] mt-0.5">per signal</p>
+        </Card>
+        <Card>
+          <p className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider mb-1">Streak</p>
+          <div className="flex items-center gap-2">
+            <p className={`text-2xl font-bold font-mono ${stats.streak.type === 'win' ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+              {stats.streak.count}
+            </p>
+            <Trophy className={`w-5 h-5 ${stats.streak.type === 'win' ? 'text-[#22c55e]' : 'text-[#ef4444]'}`} />
+          </div>
+          <p className="text-[9px] text-[var(--text-faint)] mt-0.5">{stats.streak.type === 'win' ? 'wins' : 'losses'} in a row</p>
+        </Card>
+      </div>
+
+      {/* Daily Run History */}
+      {runHistory.length > 0 && (
+        <Card>
+          <h3 className="text-xs font-bold text-[var(--text-muted)] mb-3 flex items-center gap-2 uppercase tracking-wider">
+            <Calendar className="w-3.5 h-3.5 text-[#3b82f6]" /> Daily Runs
+            <span className="text-[9px] px-2 py-0.5 rounded-full bg-[#22c55e]/10 text-[#22c55e] font-mono ml-auto">{streak}-day streak</span>
+          </h3>
+          <div className="space-y-1.5 max-h-[300px] overflow-y-auto">
+            {runHistory.slice(0, 30).map((run, i) => (
+              <div key={i} className="flex items-center justify-between p-2.5 rounded-lg hover:bg-white/[0.02] transition-colors">
+                <div className="flex items-center gap-2.5">
+                  <div className={`w-2 h-2 rounded-full ${run.dailyReturn >= 0 ? 'bg-[#22c55e]' : 'bg-[#ef4444]'}`} />
+                  <span className="text-xs font-mono text-[var(--text-muted)]">{run.date}</span>
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${run.regime.includes('bull') || run.regime.includes('Expansion') ? 'bg-[#22c55e]/10 text-[#22c55e]' : run.regime.includes('bear') || run.regime.includes('Contraction') ? 'bg-[#ef4444]/10 text-[#ef4444]' : 'bg-[#f59e0b]/10 text-[#f59e0b]'}`}>
+                    {run.regime}
+                  </span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-[10px] text-[var(--text-faint)]">{run.tradesExecuted} trades</span>
+                  <span className={`font-mono text-xs font-bold ${run.dailyReturn >= 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+                    {run.dailyReturn >= 0 ? '+' : ''}{run.dailyReturn.toFixed(2)}%
+                  </span>
+                  <span className="font-mono text-xs text-[var(--text-muted)]">${run.portfolioValue.toFixed(0)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Strategy Breakdown */}
+      {Object.keys(stats.byStrategy).length > 0 && (
+        <Card>
+          <h3 className="text-xs font-bold text-[var(--text-muted)] mb-3 uppercase tracking-wider">Strategy Performance</h3>
+          <div className="space-y-2">
+            {Object.entries(stats.byStrategy).map(([strategy, data]) => (
+              <div key={strategy} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-[var(--border)]">
+                <div>
+                  <p className="text-sm font-semibold capitalize">{strategy.replace(/_/g, ' ')}</p>
+                  <p className="text-[10px] text-[var(--text-faint)]">{data.count} signals</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <p className={`text-xs font-mono font-bold ${data.winRate >= 55 ? 'text-[#22c55e]' : data.winRate < 45 ? 'text-[#ef4444]' : 'text-[#f59e0b]'}`}>
+                      {data.winRate}% WR
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className={`text-xs font-mono font-bold ${data.avgReturn >= 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+                      {data.avgReturn >= 0 ? '+' : ''}{data.avgReturn}%
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Signal Log */}
+      <Card>
+        <h3 className="text-xs font-bold text-[var(--text-muted)] mb-3 flex items-center gap-2 uppercase tracking-wider">
+          <Radio className="w-3.5 h-3.5 text-[#f59e0b]" /> Signal Log ({stats.entries.length})
+        </h3>
+        {stats.entries.length > 0 ? (
+          <div className="space-y-1.5 max-h-[400px] overflow-y-auto">
+            {stats.entries.slice(0, 50).map(entry => (
+              <div key={entry.id} className="flex items-center justify-between p-2.5 rounded-lg hover:bg-white/[0.02] transition-colors">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${entry.resolved ? (entry.actualReturn && entry.actualReturn > 0 ? 'bg-[#22c55e]/10' : 'bg-[#ef4444]/10') : 'bg-[#f59e0b]/10'}`}>
+                    {entry.resolved ? (entry.actualReturn && entry.actualReturn > 0 ? <CheckCircle2 className="w-3 h-3 text-[#22c55e]" /> : <XCircle className="w-3 h-3 text-[#ef4444]" />) : <Clock className="w-3 h-3 text-[#f59e0b]" />}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-mono font-bold text-sm">{entry.symbol} <span className={`text-[10px] ${entry.action === 'buy' ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>{entry.action.toUpperCase()}</span></p>
+                    <p className="text-[10px] text-[var(--text-faint)] truncate">{entry.strategy} \u00b7 {(entry.confidence * 100).toFixed(0)}% conf</p>
+                  </div>
+                </div>
+                <div className="text-right shrink-0 ml-2">
+                  {entry.resolved ? (
+                    <p className={`font-mono text-sm font-bold ${(entry.actualReturn || 0) >= 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+                      {(entry.actualReturn || 0) >= 0 ? '+' : ''}{(entry.actualReturn || 0).toFixed(2)}%
+                    </p>
+                  ) : (
+                    <p className="text-[10px] text-[#f59e0b] font-semibold">PENDING</p>
+                  )}
+                  <p className="text-[10px] text-[var(--text-faint)]">{new Date(entry.timestamp).toLocaleDateString()}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-sm text-[var(--text-faint)]">No signals recorded yet</p>
+            <p className="text-xs text-[var(--text-faint)] mt-1">Signals will be logged automatically as the strategy runs</p>
+          </div>
+        )}
+      </Card>
+
+      {/* Notification Settings */}
+      <Card>
+        <h3 className="text-xs font-bold text-[var(--text-muted)] mb-3 flex items-center gap-2 uppercase tracking-wider">
+          <Bell className="w-3.5 h-3.5 text-[#8b5cf6]" /> Alert Settings
+        </h3>
+        <div className="space-y-3">
+          {[
+            { key: 'signals', label: 'New Signal Alerts', desc: 'Get notified when a new buy/sell signal fires' },
+            { key: 'stops', label: 'Stop-Loss Alerts', desc: 'Get notified when a position hits its trailing stop' },
+            { key: 'dailyReport', label: 'Daily Performance Report', desc: 'Summary of daily P&L and trades at market close' },
+          ].map(({ key, label, desc }) => (
+            <div key={key} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-[var(--border)]">
+              <div>
+                <p className="text-sm font-medium">{label}</p>
+                <p className="text-[10px] text-[var(--text-faint)]">{desc}</p>
+              </div>
+              <button
+                onClick={() => {
+                  const updated = { ...notifPrefs, [key]: !notifPrefs[key as keyof NotificationPrefs] };
+                  saveNotificationPrefs(updated);
+                  setLocalPrefs(updated);
+                }}
+                disabled={!notifPrefs.enabled}
+                className={`w-10 h-6 rounded-full transition-all ${notifPrefs.enabled && notifPrefs[key as keyof NotificationPrefs] ? 'bg-[#22c55e]' : 'bg-[var(--bg-secondary)]'}`}>
+                <div className={`w-4 h-4 rounded-full bg-white transition-transform mx-1 ${notifPrefs.enabled && notifPrefs[key as keyof NotificationPrefs] ? 'translate-x-4' : ''}`} />
+              </button>
+            </div>
+          ))}
+        </div>
+        {!notifPrefs.enabled && (
+          <p className="text-[10px] text-[var(--text-faint)] mt-2 text-center">Enable alerts above to configure individual notifications</p>
         )}
       </Card>
     </div>

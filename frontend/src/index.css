@@ -280,3 +280,46 @@ input:focus, select:focus {
 @media (min-width: 768px) {
   .mobile-only { display: none !important; }
 }
+
+/* Live price ticker scroll animation */
+@keyframes ticker-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-ticker {
+  animation: ticker-scroll 40s linear infinite;
+}
+.animate-ticker:hover {
+  animation-play-state: paused;
+}
+
+/* Scale-in animation for dropdowns */
+@keyframes scale-in {
+  0% { opacity: 0; transform: scale(0.95) translateY(8px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+.scale-in {
+  animation: scale-in 0.2s ease-out;
+}
+
+/* Line clamp utility */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Live pulse indicator */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+.pulse-dot {
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+/* Notification toggle thumb */
+.toggle-thumb {
+  transition: transform 0.2s ease;
+}
