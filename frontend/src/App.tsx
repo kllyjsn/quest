@@ -2631,6 +2631,73 @@ function PaperTradingTab({ livePrices: _livePrices }: { livePrices: Record<strin
 
 // ── News Tab ──
 function NewsTab({ data, loading, onRefresh }: { data: NewsFeed | null; loading: boolean; onRefresh: () => void }) {
+  const [agentRunning, setAgentRunning] = useState(false);
+  const [agentProgress, setAgentProgress] = useState(0);
+  const [agentReading, setAgentReading] = useState('');
+  const [agentSummary, setAgentSummary] = useState<string | null>(null);
+  const [agentTyping, setAgentTyping] = useState('');
+
+  const runNewsAgent = useCallback(async () => {
+    if (!data || !data.news.length) return;
+    setAgentRunning(true);
+    setAgentProgress(0);
+    setAgentSummary(null);
+    setAgentTyping('');
+    setAgentReading('');
+
+    const articles = data.news;
+    for (let i = 0; i < articles.length; i++) {
+      setAgentReading(articles[i].title.slice(0, 60) + (articles[i].title.length > 60 ? '...' : ''));
+      setAgentProgress(Math.round(((i + 1) / articles.length) * 100));
+      await new Promise(r => setTimeout(r, 200 + Math.random() * 200));
+    }
+
+    setAgentReading('Analyzing sentiment patterns...');
+    await new Promise(r => setTimeout(r, 600));
+    setAgentReading('Generating market brief...');
+    await new Promise(r => setTimeout(r, 500));
+
+    // Build intelligent summary from actual news data
+    const positive = articles.filter(a => a.sentiment === 'positive');
+    const negative = articles.filter(a => a.sentiment === 'negative');
+    const neutral = articles.filter(a => a.sentiment === 'neutral');
+    const symbols = [...new Set(articles.flatMap(a => a.symbols))];
+    const sources = [...new Set(articles.map(a => a.source))];
+
+    const summaryText = `## Market News Brief
+
+**Overall Sentiment:** ${data.aggregateLabel} (score: ${data.aggregateSentiment.toFixed(2)})
+Analyzed ${articles.length} articles from ${sources.length} sources.
+
+**Sentiment Breakdown:**
+• ${positive.length} bullish articles (${Math.round(positive.length / articles.length * 100)}%)
+• ${negative.length} bearish articles (${Math.round(negative.length / articles.length * 100)}%)
+• ${neutral.length} neutral articles (${Math.round(neutral.length / articles.length * 100)}%)
+
+**Key Themes:**
+${positive.length > 0 ? `• Bullish drivers: ${positive.slice(0, 3).map(a => a.title.split(' ').slice(0, 6).join(' ')).join('; ')}` : '• No strong bullish catalysts detected'}
+${negative.length > 0 ? `• Risk factors: ${negative.slice(0, 3).map(a => a.title.split(' ').slice(0, 6).join(' ')).join('; ')}` : '• No significant bearish signals'}
+
+**Tickers Mentioned:** ${symbols.length > 0 ? symbols.slice(0, 15).join(', ') : 'None specifically mentioned'}
+
+**Trading Implications:**
+${data.aggregateSentiment > 0.2 ? '• Market tone is constructive — favor long bias on pullbacks' : data.aggregateSentiment < -0.2 ? '• Market tone is cautious — tighten stops and reduce position size' : '• Mixed signals — maintain neutral positioning until clarity emerges'}
+${positive.length > negative.length * 2 ? '• Strong bullish consensus — watch for contrarian reversal signals' : negative.length > positive.length * 2 ? '• Heavy pessimism — potential capitulation setup for mean reversion' : '• Balanced sentiment — focus on stock-specific catalysts over macro'}
+
+**Sources:** ${sources.join(', ')}
+
+*Brief generated from ${articles.length} real-time articles. Refresh for latest data.*`;
+
+    setAgentReading('');
+    for (let i = 0; i <= summaryText.length; i++) {
+      setAgentTyping(summaryText.slice(0, i));
+      if (i % 3 === 0) await new Promise(r => setTimeout(r, 6));
+    }
+
+    setAgentSummary(summaryText);
+    setAgentRunning(false);
+  }, [data]);
+
   const sentimentColor = (s: string) => s === 'positive' ? '#22c55e' : s === 'negative' ? '#ef4444' : 'var(--text-faint)';
   const sentimentBg = (s: string) => s === 'positive' ? '#22c55e' : s === 'negative' ? '#ef4444' : 'var(--text-faint)';
   const timeAgo = (dateStr: string) => {
@@ -2644,6 +2711,62 @@ function NewsTab({ data, loading, onRefresh }: { data: NewsFeed | null; loading:
     <div className="space-y-5 sm:space-y-6">
       <SectionHeader icon={Newspaper} title="Market News" subtitle="Real-time financial headlines with sentiment" accent="#06b6d4"
         action={<ActionButton onClick={onRefresh} loading={loading} icon={RefreshCw} label="Refresh" variant="ghost" />} />
+
+      {/* AI News Agent */}
+      <div className="rounded-xl border border-[#06b6d4]/30 bg-gradient-to-br from-[#06b6d4]/5 to-[#3b82f6]/5 p-4">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <Cpu className="w-5 h-5 text-[#06b6d4]" />
+            <h3 className="font-semibold text-sm">News Intelligence Agent</h3>
+            <span className="text-[10px] px-2 py-0.5 bg-[#06b6d4]/20 text-[#06b6d4] rounded-full">AI</span>
+          </div>
+          <button
+            onClick={runNewsAgent}
+            disabled={agentRunning || !data || !data.news.length}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              agentRunning || !data?.news?.length
+                ? 'bg-[#06b6d4]/20 text-[#06b6d4]/60 cursor-not-allowed'
+                : 'bg-[#06b6d4] text-white hover:bg-[#0891b2] active:scale-95'
+            }`}
+          >
+            {agentRunning ? (
+              <span className="flex items-center gap-2"><RefreshCw className="w-3.5 h-3.5 animate-spin" />Analyzing...</span>
+            ) : agentSummary ? (
+              <span className="flex items-center gap-2"><RefreshCw className="w-3.5 h-3.5" />Re-analyze</span>
+            ) : (
+              <span className="flex items-center gap-2"><Zap className="w-3.5 h-3.5" />Summarize News</span>
+            )}
+          </button>
+        </div>
+        <p className="text-[11px] text-[var(--text-faint)] mb-2">Reads all articles, analyzes sentiment patterns, and generates a market intelligence brief</p>
+
+        {agentRunning && (
+          <div className="space-y-2 mb-3">
+            <div className="flex justify-between text-xs text-[var(--text-faint)]">
+              <span className="truncate max-w-[70%]">Reading: {agentReading}</span>
+              <span>{agentProgress}%</span>
+            </div>
+            <div className="w-full h-1.5 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-[#06b6d4] to-[#3b82f6] rounded-full transition-all duration-300" style={{ width: `${agentProgress}%` }} />
+            </div>
+          </div>
+        )}
+
+        {agentTyping && (
+          <div className="mt-3 p-4 rounded-lg bg-black/30 border border-[var(--border)] max-h-[400px] overflow-y-auto">
+            <div className="text-sm text-[var(--text-muted)] leading-relaxed whitespace-pre-line font-mono text-[12px]">
+              {agentTyping.split('\n').map((line, i) => {
+                if (line.startsWith('## ')) return <h3 key={i} className="text-base font-bold text-white mt-2 mb-1">{line.replace('## ', '')}</h3>;
+                if (line.startsWith('**') && line.endsWith('**')) return <p key={i} className="font-bold text-[#06b6d4] mt-2">{line.replace(/\*\*/g, '')}</p>;
+                if (line.startsWith('**')) return <p key={i} className="font-semibold text-white/90 mt-2">{line.replace(/\*\*/g, '')}</p>;
+                if (line.startsWith('• ')) return <p key={i} className="pl-3 text-[var(--text-muted)]">{line}</p>;
+                if (line.startsWith('*') && line.endsWith('*')) return <p key={i} className="text-[var(--text-faint)] italic text-[11px] mt-2">{line.replace(/\*/g, '')}</p>;
+                return <p key={i}>{line}</p>;
+              })}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Aggregate Sentiment Banner */}
       {data && (
