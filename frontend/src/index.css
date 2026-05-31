@@ -272,10 +272,45 @@ input:focus, select:focus {
 /* Hide on mobile, show on desktop */
 @media (max-width: 767px) {
   .desktop-only { display: none !important; }
-  /* Tighter card padding on mobile */
-  .mobile-tight { padding: 14px !important; }
   /* Stack elements vertically on mobile */
-  .mobile-stack { flex-direction: column !important; gap: 4px !important; }
+  .mobile-stack { flex-direction: column !important; gap: 6px !important; }
+
+  /* ── Robinhood-level mobile spacing ── */
+
+  /* Main content: 20px horizontal padding (like Robinhood), generous top/bottom */
+  main { padding-left: 20px !important; padding-right: 20px !important; padding-top: 20px !important; }
+
+  /* Section spacing: 24px between major sections */
+  main > .space-y-5, main > .space-y-6 { gap: 24px !important; }
+  .space-y-5 > * + * { margin-top: 20px !important; }
+  .space-y-6 > * + * { margin-top: 24px !important; }
+
+  /* Cards: 16px internal padding minimum, 12px gap between list items */
+  .space-y-2 > * + * { margin-top: 12px !important; }
+  .space-y-3 > * + * { margin-top: 14px !important; }
+
+  /* Bottom nav: taller, more breathing room */
+  nav.fixed { height: 68px !important; }
+  nav.fixed > div { height: 68px !important; padding-left: 8px !important; padding-right: 8px !important; }
+
+  /* Bottom nav labels: slightly larger for readability */
+  nav.fixed button span { font-size: 10px !important; letter-spacing: 0.01em; }
+
+  /* Minimum touch target enforcement */
+  button, a, [role="button"] { min-height: 44px; }
+
+  /* Content bottom padding to clear taller nav */
+  main { padding-bottom: 88px !important; }
+
+  /* Stat metric grids: more gap */
+  .grid-cols-2 { gap: 12px !important; }
+  .grid-cols-3 { gap: 10px !important; }
+
+  /* Card internals: comfortable reading */
+  [class*="rounded-2xl"][class*="bg-[var(--bg-card)]"] { padding: 16px !important; }
+
+  /* Header: slightly taller on mobile for breathing room */
+  header > div:first-child { height: 56px !important; }
 }
 @media (min-width: 768px) {
   .mobile-only { display: none !important; }

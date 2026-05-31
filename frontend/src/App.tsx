@@ -423,7 +423,7 @@ function App() {
       )}
 
       {/* Main content */}
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 pb-24 md:pb-6 slide-up">
+      <main className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 py-5 sm:py-6 pb-28 md:pb-6 slide-up">
         {tab === 'finder' && <TradeFinderTab data={tradeFinderData} loading={finderLoading} onRefresh={loadFinder} trackingStats={trackingStats} trackedRecs={trackedRecs} walkForwardData={walkForwardData} wfLoading={wfLoading} />}
         {tab === 'dashboard' && <DashboardTab regime={regime} rankings={rankings} sectors={sectors} onSelectSymbol={loadTechnicals} technicals={technicals} selectedSymbol={selectedSymbol} />}
         {tab === 'signals' && <SignalsTab signals={signals} loading={loading} onRefresh={loadSignals} onSelectSymbol={loadTechnicals} />}
@@ -470,13 +470,13 @@ function App() {
 
       {/* Mobile bottom nav — shows 5 primary tabs + "More" */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 glass border-t border-[var(--border)] z-50 safe-bottom">
-        <div className="flex justify-around items-center h-[60px] px-1">
+        <div className="flex justify-around items-center h-[68px] px-2">
           {TABS.filter(t => MOBILE_TABS.includes(t.id)).map(({ id, icon: Icon, shortLabel }) => (
             <button key={id} onClick={() => { setTab(id); setShowMoreTabs(false); }}
               className={`flex flex-col items-center justify-center gap-[3px] min-w-[44px] min-h-[44px] rounded-xl transition-all press-scale
                 ${tab === id ? 'text-[#3b82f6] nav-pill-active' : 'text-[var(--text-faint)]'}`}>
               <Icon className={`w-[22px] h-[22px] transition-transform ${tab === id ? 'text-[#3b82f6] scale-110' : ''}`} />
-              <span className={`text-[9px] leading-none font-semibold ${tab === id ? 'text-[#3b82f6]' : ''}`}>{shortLabel}</span>
+              <span className={`text-[10px] leading-none font-semibold ${tab === id ? 'text-[#3b82f6]' : ''}`}>{shortLabel}</span>
             </button>
           ))}
           {/* More button */}
@@ -484,7 +484,7 @@ function App() {
             className={`flex flex-col items-center justify-center gap-[3px] min-w-[44px] min-h-[44px] rounded-xl transition-all press-scale
               ${!MOBILE_TABS.includes(tab) ? 'text-[#3b82f6] nav-pill-active' : 'text-[var(--text-faint)]'}`}>
             <Layers className="w-[22px] h-[22px]" />
-            <span className="text-[9px] leading-none font-semibold">More</span>
+            <span className="text-[10px] leading-none font-semibold">More</span>
           </button>
         </div>
         {/* More tabs dropdown */}
@@ -521,7 +521,7 @@ function App() {
 
 function Card({ children, className = '', glow = '' }: { children: React.ReactNode; className?: string; glow?: string }) {
   return (
-    <div className={`bg-[var(--bg-card)] rounded-2xl p-3.5 sm:p-5 border border-[var(--border)] hover:border-[var(--border-emphasis)] transition-all card-hover gradient-border press-scale ${glow} ${className}`}>
+    <div className={`bg-[var(--bg-card)] rounded-2xl p-4 sm:p-5 border border-[var(--border)] hover:border-[var(--border-emphasis)] transition-all card-hover gradient-border press-scale ${glow} ${className}`}>
       {children}
     </div>
   );
@@ -544,14 +544,14 @@ function MetricCard({ label, value, sub, icon: Icon, accent = '#3b82f6' }: { lab
 
 function SectionHeader({ icon: Icon, title, subtitle, accent = '#3b82f6', action }: { icon: any; title: string; subtitle?: string; accent?: string; action?: React.ReactNode }) {
   return (
-    <div className="flex items-start sm:items-center justify-between gap-3 mb-5">
+    <div className="flex items-start sm:items-center justify-between gap-3 mb-6">
       <div className="flex items-center gap-3 min-w-0">
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${accent}12`, color: accent }}>
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${accent}12`, color: accent }}>
           <Icon className="w-5 h-5" />
         </div>
         <div className="min-w-0">
-          <h2 className="text-base sm:text-lg font-bold truncate">{title}</h2>
-          {subtitle && <p className="text-xs text-[var(--text-faint)] mt-0.5 truncate">{subtitle}</p>}
+          <h2 className="text-lg sm:text-lg font-bold truncate">{title}</h2>
+          {subtitle && <p className="text-[11px] sm:text-xs text-[var(--text-faint)] mt-0.5 truncate">{subtitle}</p>}
         </div>
       </div>
       {action}
@@ -631,7 +631,7 @@ function TradeFinderTab({ data, loading, onRefresh, trackingStats, trackedRecs, 
   }) || [];
 
   return (
-    <div className="space-y-5 sm:space-y-6">
+    <div className="space-y-6 sm:space-y-6">
       <SectionHeader icon={Compass} title="Trade Finder" subtitle="Real-time opportunity scanner with AI-powered analysis" accent="#8b5cf6"
         action={<ActionButton onClick={onRefresh} loading={loading} icon={RefreshCw} label="Scan Now" variant="primary" />} />
 
@@ -663,7 +663,7 @@ function TradeFinderTab({ data, loading, onRefresh, trackingStats, trackedRecs, 
       )}
 
       {/* Filter Bar */}
-      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+      <div className="flex gap-2.5 overflow-x-auto pb-2 -mx-1 px-1">
         {[
           { id: 'all', label: 'All', icon: '🔍' },
           { id: 'scalp', label: '1-3 Days', icon: '⚡' },
@@ -672,7 +672,7 @@ function TradeFinderTab({ data, loading, onRefresh, trackingStats, trackedRecs, 
           { id: 'trend', label: '1-3 Months', icon: '🚀' },
         ].map(f => (
           <button key={f.id} onClick={() => setFilterHorizon(f.id)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${filterHorizon === f.id ? 'bg-[#8b5cf6] text-white' : 'bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-muted)] hover:border-[#8b5cf6]/50'}`}>
+            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${filterHorizon === f.id ? 'bg-[#8b5cf6] text-white' : 'bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-muted)] hover:border-[#8b5cf6]/50'}`}>
             <span>{f.icon}</span> {f.label}
           </button>
         ))}
@@ -680,12 +680,12 @@ function TradeFinderTab({ data, loading, onRefresh, trackingStats, trackedRecs, 
 
       {/* Sector Rotation Quick View */}
       {data && data.sectorRotation.length > 0 && (
-        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+        <div className="flex gap-2.5 overflow-x-auto pb-2 -mx-1 px-1">
           {data.sectorRotation.slice(0, 6).map(s => (
-            <div key={s.sector} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border)] whitespace-nowrap shrink-0">
-              <div className={`w-2 h-2 rounded-full ${s.recommendation === 'Overweight' ? 'bg-[#22c55e]' : s.recommendation === 'Neutral' ? 'bg-[#f59e0b]' : 'bg-[#ef4444]'}`} />
-              <span className="text-[10px] font-medium text-[var(--text-muted)]">{s.sector}</span>
-              <span className="text-[10px] font-bold font-mono" style={{ color: s.strength > 55 ? '#22c55e' : s.strength > 40 ? '#f59e0b' : '#ef4444' }}>{s.strength}</span>
+            <div key={s.sector} className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border)] whitespace-nowrap shrink-0">
+              <div className={`w-2.5 h-2.5 rounded-full ${s.recommendation === 'Overweight' ? 'bg-[#22c55e]' : s.recommendation === 'Neutral' ? 'bg-[#f59e0b]' : 'bg-[#ef4444]'}`} />
+              <span className="text-[11px] font-medium text-[var(--text-muted)]">{s.sector}</span>
+              <span className="text-[11px] font-bold font-mono" style={{ color: s.strength > 55 ? '#22c55e' : s.strength > 40 ? '#f59e0b' : '#ef4444' }}>{s.strength}</span>
             </div>
           ))}
         </div>
@@ -718,30 +718,30 @@ function TradeFinderTab({ data, loading, onRefresh, trackingStats, trackedRecs, 
 
               {trackingStats.resolved > 0 ? (
                 <>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
-                    <div className="p-2.5 rounded-xl bg-[#22c55e]/5 border border-[#22c55e]/20 text-center">
-                      <p className="text-[9px] text-[#22c55e]/70 uppercase font-semibold">Measured Win Rate</p>
-                      <p className="font-mono font-bold text-xl text-[#22c55e]">{trackingStats.winRate.toFixed(1)}%</p>
-                      <p className="text-[8px] text-[var(--text-faint)]">{trackingStats.wins}W / {trackingStats.losses}L</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                    <div className="p-3 rounded-xl bg-[#22c55e]/5 border border-[#22c55e]/20 text-center">
+                      <p className="text-[10px] text-[#22c55e]/70 uppercase font-semibold">Measured Win Rate</p>
+                      <p className="font-mono font-bold text-xl text-[#22c55e] mt-1">{trackingStats.winRate.toFixed(1)}%</p>
+                      <p className="text-[9px] text-[var(--text-faint)] mt-0.5">{trackingStats.wins}W / {trackingStats.losses}L</p>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-[#3b82f6]/5 border border-[#3b82f6]/20 text-center">
-                      <p className="text-[9px] text-[#3b82f6]/70 uppercase font-semibold">Avg Return</p>
-                      <p className={`font-mono font-bold text-xl ${trackingStats.avgReturn >= 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+                    <div className="p-3 rounded-xl bg-[#3b82f6]/5 border border-[#3b82f6]/20 text-center">
+                      <p className="text-[10px] text-[#3b82f6]/70 uppercase font-semibold">Avg Return</p>
+                      <p className={`font-mono font-bold text-xl mt-1 ${trackingStats.avgReturn >= 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
                         {trackingStats.avgReturn >= 0 ? '+' : ''}{trackingStats.avgReturn.toFixed(2)}%
                       </p>
-                      <p className="text-[8px] text-[var(--text-faint)]">per trade</p>
+                      <p className="text-[9px] text-[var(--text-faint)] mt-0.5">per trade</p>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-[#f59e0b]/5 border border-[#f59e0b]/20 text-center">
-                      <p className="text-[9px] text-[#f59e0b]/70 uppercase font-semibold">Profit Factor</p>
-                      <p className="font-mono font-bold text-xl text-[#f59e0b]">{trackingStats.profitFactor.toFixed(2)}x</p>
-                      <p className="text-[8px] text-[var(--text-faint)]">gross W/L</p>
+                    <div className="p-3 rounded-xl bg-[#f59e0b]/5 border border-[#f59e0b]/20 text-center">
+                      <p className="text-[10px] text-[#f59e0b]/70 uppercase font-semibold">Profit Factor</p>
+                      <p className="font-mono font-bold text-xl text-[#f59e0b] mt-1">{trackingStats.profitFactor.toFixed(2)}x</p>
+                      <p className="text-[9px] text-[var(--text-faint)] mt-0.5">gross W/L</p>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-[#8b5cf6]/5 border border-[#8b5cf6]/20 text-center">
-                      <p className="text-[9px] text-[#8b5cf6]/70 uppercase font-semibold">MTF Edge</p>
+                    <div className="p-3 rounded-xl bg-[#8b5cf6]/5 border border-[#8b5cf6]/20 text-center">
+                      <p className="text-[10px] text-[#8b5cf6]/70 uppercase font-semibold">MTF Edge</p>
                       <p className="font-mono font-bold text-xl text-[#8b5cf6]">
                         {trackingStats.mtfWinRate > 0 ? `${trackingStats.mtfWinRate.toFixed(0)}%` : '--'}
                       </p>
-                      <p className="text-[8px] text-[var(--text-faint)]">vs {trackingStats.nonMtfWinRate.toFixed(0)}% non-MTF</p>
+                      <p className="text-[9px] text-[var(--text-faint)] mt-0.5">vs {trackingStats.nonMtfWinRate.toFixed(0)}% non-MTF</p>
                     </div>
                   </div>
 
@@ -800,26 +800,26 @@ function TradeFinderTab({ data, loading, onRefresh, trackingStats, trackedRecs, 
               ) : walkForwardData ? (
                 <>
                   {/* Summary Stats */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
-                    <div className="p-2.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-center">
-                      <p className="text-[9px] text-[var(--text-faint)] uppercase font-semibold">Trades Tested</p>
-                      <p className="font-mono font-bold text-lg">{walkForwardData.totalTrades}</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                    <div className="p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-center">
+                      <p className="text-[10px] text-[var(--text-faint)] uppercase font-semibold">Trades Tested</p>
+                      <p className="font-mono font-bold text-lg mt-1">{walkForwardData.totalTrades}</p>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-center">
-                      <p className="text-[9px] text-[var(--text-faint)] uppercase font-semibold">Score-Return r</p>
-                      <p className={`font-mono font-bold text-lg ${walkForwardData.scoreCorrelation > 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+                    <div className="p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-center">
+                      <p className="text-[10px] text-[var(--text-faint)] uppercase font-semibold">Score-Return r</p>
+                      <p className={`font-mono font-bold text-lg mt-1 ${walkForwardData.scoreCorrelation > 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
                         {walkForwardData.scoreCorrelation > 0 ? '+' : ''}{walkForwardData.scoreCorrelation.toFixed(3)}
                       </p>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-center">
-                      <p className="text-[9px] text-[var(--text-faint)] uppercase font-semibold">High vs Low Edge</p>
-                      <p className={`font-mono font-bold text-lg ${walkForwardData.highScoreEdge > 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+                    <div className="p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-center">
+                      <p className="text-[10px] text-[var(--text-faint)] uppercase font-semibold">High vs Low Edge</p>
+                      <p className={`font-mono font-bold text-lg mt-1 ${walkForwardData.highScoreEdge > 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
                         {walkForwardData.highScoreEdge > 0 ? '+' : ''}{walkForwardData.highScoreEdge.toFixed(1)}%
                       </p>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-center">
-                      <p className="text-[9px] text-[var(--text-faint)] uppercase font-semibold">t-Statistic</p>
-                      <p className={`font-mono font-bold text-lg ${Math.abs(walkForwardData.tStatistic) > 1.96 ? 'text-[#22c55e]' : 'text-[#f59e0b]'}`}>
+                    <div className="p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-center">
+                      <p className="text-[10px] text-[var(--text-faint)] uppercase font-semibold">t-Statistic</p>
+                      <p className={`font-mono font-bold text-lg mt-1 ${Math.abs(walkForwardData.tStatistic) > 1.96 ? 'text-[#22c55e]' : 'text-[#f59e0b]'}`}>
                         {walkForwardData.tStatistic.toFixed(2)}
                       </p>
                     </div>
@@ -908,7 +908,7 @@ function TradeOpportunityCard({ opportunity: opp, rank, expanded, onToggle, acti
   return (
     <div className={`rounded-2xl border transition-all overflow-hidden ${expanded ? 'border-[#8b5cf6]/40 bg-[var(--bg-card)]' : 'border-[var(--border)] bg-[var(--bg-card)] hover:border-[var(--border-emphasis)]'}`}>
       {/* Header — always visible */}
-      <button onClick={onToggle} className="w-full p-3.5 sm:p-4 text-left">
+      <button onClick={onToggle} className="w-full p-4 sm:p-4 text-left">
         <div className="flex items-center gap-3">
           {/* Rank badge */}
           <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 font-bold text-sm" style={{ background: `${actionColor(opp.action)}15`, color: actionColor(opp.action) }}>
@@ -929,7 +929,7 @@ function TradeOpportunityCard({ opportunity: opp, rank, expanded, onToggle, acti
                 {horizonIcon(opp.timeHorizon.type)} {opp.timeHorizon.label}
               </span>
             </div>
-            <div className="flex items-center gap-3 text-[10px] text-[var(--text-faint)]">
+            <div className="flex items-center gap-3 text-[11px] text-[var(--text-faint)] mt-1">
               <span>{opp.sector}</span>
               <span className="font-mono">${opp.currentPrice.toFixed(2)}</span>
               <span className="text-[#22c55e] font-semibold">{opp.historicalWinRate}% win</span>
@@ -954,9 +954,9 @@ function TradeOpportunityCard({ opportunity: opp, rank, expanded, onToggle, acti
 
       {/* Expanded Detail */}
       {expanded && (
-        <div className="px-3.5 sm:px-4 pb-4 space-y-4 border-t border-[var(--border)] pt-4">
+        <div className="px-4 sm:px-4 pb-5 space-y-4 border-t border-[var(--border)] pt-4">
           {/* Price Levels */}
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-3">
             <div className="p-3 rounded-xl bg-[#22c55e]/5 border border-[#22c55e]/20 text-center">
               <p className="text-[9px] text-[#22c55e]/70 uppercase tracking-wider font-semibold mb-1">Target</p>
               <p className="font-mono font-bold text-sm text-[#22c55e]">${opp.targetPrice.toFixed(2)}</p>
@@ -975,7 +975,7 @@ function TradeOpportunityCard({ opportunity: opp, rank, expanded, onToggle, acti
           </div>
 
           {/* Time Horizon + Position Size */}
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-3">
             <div className="p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)]">
               <div className="flex items-center gap-2 mb-1">
                 <Timer className="w-3.5 h-3.5 text-[#8b5cf6]" />
@@ -995,24 +995,24 @@ function TradeOpportunityCard({ opportunity: opp, rank, expanded, onToggle, acti
           </div>
 
           {/* Accuracy Metrics — NEW */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <div className="p-2.5 rounded-xl bg-[#22c55e]/5 border border-[#22c55e]/20 text-center">
-              <p className="text-[9px] text-[#22c55e]/70 uppercase tracking-wider font-semibold mb-0.5">Win Rate</p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="p-3 rounded-xl bg-[#22c55e]/5 border border-[#22c55e]/20 text-center">
+              <p className="text-[10px] text-[#22c55e]/70 uppercase tracking-wider font-semibold mb-1">Win Rate</p>
               <p className="font-mono font-bold text-lg text-[#22c55e]">{opp.historicalWinRate}%</p>
-              <p className="text-[8px] text-[var(--text-faint)]">historical similar</p>
+              <p className="text-[9px] text-[var(--text-faint)] mt-0.5">historical similar</p>
             </div>
-            <div className="p-2.5 rounded-xl bg-[#8b5cf6]/5 border border-[#8b5cf6]/20 text-center">
-              <p className="text-[9px] text-[#8b5cf6]/70 uppercase tracking-wider font-semibold mb-0.5">Edge Score</p>
+            <div className="p-3 rounded-xl bg-[#8b5cf6]/5 border border-[#8b5cf6]/20 text-center">
+              <p className="text-[10px] text-[#8b5cf6]/70 uppercase tracking-wider font-semibold mb-1">Edge Score</p>
               <p className="font-mono font-bold text-lg text-[#8b5cf6]">{opp.edgeScore > 0 ? '+' : ''}{opp.edgeScore}</p>
-              <p className="text-[8px] text-[var(--text-faint)]">vol-adjusted</p>
+              <p className="text-[9px] text-[var(--text-faint)] mt-0.5">vol-adjusted</p>
             </div>
-            <div className="p-2.5 rounded-xl bg-[#3b82f6]/5 border border-[#3b82f6]/20 text-center">
-              <p className="text-[9px] text-[#3b82f6]/70 uppercase tracking-wider font-semibold mb-0.5">vs Sector</p>
+            <div className="p-3 rounded-xl bg-[#3b82f6]/5 border border-[#3b82f6]/20 text-center">
+              <p className="text-[10px] text-[#3b82f6]/70 uppercase tracking-wider font-semibold mb-1">vs Sector</p>
               <p className="font-mono font-bold text-lg text-[#3b82f6]">{opp.relativeStrength > 1 ? '+' : ''}{((opp.relativeStrength - 1) * 100).toFixed(0)}%</p>
-              <p className="text-[8px] text-[var(--text-faint)]">rel. strength</p>
+              <p className="text-[9px] text-[var(--text-faint)] mt-0.5">rel. strength</p>
             </div>
-            <div className="p-2.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-center">
-              <p className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider font-semibold mb-0.5">Entry</p>
+            <div className="p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-center">
+              <p className="text-[10px] text-[var(--text-faint)] uppercase tracking-wider font-semibold mb-1">Entry</p>
               <p className={`font-bold text-sm capitalize ${opp.entryQuality === 'optimal' ? 'text-[#22c55e]' : opp.entryQuality === 'good' ? 'text-[#3b82f6]' : opp.entryQuality === 'extended' ? 'text-[#ef4444]' : 'text-[#f59e0b]'}`}>{opp.entryQuality}</p>
               <p className="text-[8px] text-[var(--text-faint)]">{opp.momentumPersistence}w momentum</p>
             </div>
