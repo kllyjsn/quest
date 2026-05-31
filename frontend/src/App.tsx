@@ -276,7 +276,16 @@ function App() {
     } catch {}
   };
 
-
+  // Auto-load tab data when switching tabs
+  useEffect(() => {
+    if (tab === 'signals' && signals.length === 0) loadSignals();
+    else if (tab === 'backtest' && !backtestResult) loadBacktest();
+    else if (tab === 'broker' && !brokerStatus) loadBroker();
+    else if (tab === 'research' && !researchData) loadResearch();
+    else if (tab === 'risk' && !correlationMatrix) loadCorrelation();
+    else if (tab === 'news' && !newsData) loadNews();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab]);
 
   const handleLogin = async (email: string, password: string, isRegister: boolean) => {
     try {
