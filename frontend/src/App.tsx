@@ -13,7 +13,7 @@ import {
   LayoutDashboard, LineChart, FlaskConical, ShieldCheck,
   Newspaper, History, Bell, BellOff,
   ExternalLink, CheckCircle2, XCircle, Calendar, Plug,
-  Trophy, Radio, Search, Compass, Timer, BarChart3,
+  Trophy, Radio, Search, Compass, Timer, BarChart3, BookOpen,
 } from 'lucide-react';
 import * as api from './lib/api';
 import {
@@ -43,7 +43,7 @@ import {
   notifyDailyReport,
 } from './lib/realtime';
 
-type Tab = 'dashboard' | 'signals' | 'backtest' | 'risk' | 'broker' | 'paper' | 'research' | 'news' | 'track' | 'finder';
+type Tab = 'dashboard' | 'signals' | 'backtest' | 'risk' | 'broker' | 'paper' | 'research' | 'news' | 'track' | 'finder' | 'docs';
 
 interface RegimeData {
   regime: string;
@@ -73,6 +73,7 @@ const TABS: { id: Tab; icon: any; label: string; shortLabel: string }[] = [
   { id: 'backtest', icon: FlaskConical, label: 'Backtest', shortLabel: 'Test' },
   { id: 'risk', icon: ShieldCheck, label: 'Risk', shortLabel: 'Risk' },
   { id: 'research', icon: Cpu, label: 'Research', shortLabel: 'Lab' },
+  { id: 'docs', icon: BookOpen, label: 'Docs', shortLabel: 'Docs' },
 ];
 
 // Mobile-only bottom nav shows a subset
@@ -432,6 +433,7 @@ function App() {
         {tab === 'paper' && <PaperTradingTab livePrices={livePrices} />}
         {tab === 'news' && <NewsTab data={newsData} loading={loading} onRefresh={loadNews} />}
         {tab === 'track' && <TrackRecordTab />}
+        {tab === 'docs' && <DocsTab />}
       </main>
 
       {/* Live Price Ticker */}
@@ -2850,6 +2852,494 @@ function TrackRecordTab() {
           <p className="text-[10px] text-[var(--text-faint)] mt-2 text-center">Enable alerts above to configure individual notifications</p>
         )}
       </Card>
+    </div>
+  );
+}
+
+// ── Documentation Tab ──
+function DocsTab() {
+  const [expanded, setExpanded] = useState<string | null>('overview');
+
+  const sections = [
+    {
+      id: 'overview',
+      title: 'Platform Overview',
+      icon: Compass,
+      content: `Quest is an institutional-grade quantitative trading research platform. It combines multi-factor signal generation, statistical validation, and risk management into a single interface.
+
+**What Quest Does:**
+• Scans 380+ S&P 500 stocks across all 11 GICS sectors
+• Generates trade signals using 7 technical indicators with IC-weighted scoring
+• Validates signals through walk-forward cross-validation and deflated Sharpe analysis
+• Manages risk via correlation filtering, ATR-based stops, and regime-adaptive exposure
+• Tracks recommendation accuracy over time with measured win rates
+
+**Data Sources:**
+• Real market data from Yahoo Finance (when available)
+• Synthetic fallback data for offline/demo usage
+• Live price streaming with 30-second polling
+• News sentiment from RSS feeds
+
+**Architecture:**
+• Frontend: React + TypeScript + Recharts (runs standalone)
+• Backend: FastAPI + SQLite (optional, for persistent accounts)
+• All computations run client-side — no server required for core functionality
+• LocalStorage persistence for settings, trades, and track record`
+    },
+    {
+      id: 'finder',
+      title: 'Trade Finder',
+      icon: Compass,
+      content: `The Trade Finder is your primary tool for identifying high-probability trade opportunities in real-time.
+
+**How Scoring Works:**
+Stocks are scored 0-100 using IC-weighted factors:
+• Momentum (28%) — Jegadeesh-Titman 6-month momentum, skip last week
+• Quality (22%) — R² trend consistency (higher = more predictable price action)
+• RSI (18%) — Relative Strength Index for overbought/oversold detection
+• MACD (12%) — Moving Average Convergence Divergence signal strength
+• Bollinger (8%) — Bollinger Band %B position and squeeze detection
+• Volume (7%) — Relative volume vs 20-day average
+• Relative Strength (5%) — Performance vs sector peers
+
+**Multi-Timeframe Confirmation:**
+Trades flagged "STRONG BUY" require BOTH daily AND weekly timeframe alignment. This eliminates false signals. MTF-aligned trades get a +15% score bonus.
+
+**Hold Period Determination:**
+• ⚡ 1-3 Days: High volatility + mean reversion setup
+• 🎯 3-7 Days: Standard swing with momentum confirmation
+• 📊 2-4 Weeks: Position trade with quality + trend
+• 🚀 1-3 Months: Strong persistent momentum + sector leadership
+
+**Entry Quality:**
+Rates how close current price is to optimal entry:
+• Optimal — at support with pullback
+• Good — near support zone
+• Fair — mid-range, acceptable
+• Extended — chasing, penalized -15%
+
+**Best Practices:**
+1. Focus on scores 65+ with 3-7 day or 2-4 week horizons
+2. Check "Live Tracking" to see measured win rates by score bucket
+3. Use "Walk-Forward Validation" to verify the model predicts returns
+4. Filter by time horizon to match your trading style
+5. Tap any trade to see full technical analysis, catalysts, and risks`
+    },
+    {
+      id: 'paper',
+      title: 'Paper Trading',
+      icon: LineChart,
+      content: `Paper Trading runs a full 30-day walk-forward backtest using real market data. It auto-runs on page load — no clicking required.
+
+**How It Works:**
+1. Fetches 2 months of daily price data for 20 diversified stocks
+2. Runs the multi-factor ranking model every trading day
+3. Buys top-ranked stocks, sells when they drop from the top N
+4. Applies 2.5× ATR trailing stops for downside protection
+5. Tracks equity curve, drawdown, and per-trade performance
+
+**Key Metrics:**
+• Total Return — portfolio growth over 30 days
+• Sharpe Ratio — risk-adjusted return (>1.5 is good, >2.5 is excellent)
+• Sortino Ratio — downside-adjusted return (penalizes losses, not volatility)
+• Max Drawdown — worst peak-to-trough decline
+• Win Rate — % of trades that made money
+• Profit Factor — gross wins / gross losses (>1.5 is profitable)
+
+**Risk Controls:**
+• ATR-based trailing stops (2.5× Average True Range)
+• Maximum 8 positions at any time
+• Risk parity sizing (inverse-volatility weighting)
+• Correlation filtering (max 0.7 pairwise)
+• Regime-conditional factor weights
+
+**Tips:**
+• Click "Refresh" to clear cache and re-run with fresh data
+• The equity curve shows your hypothetical portfolio growth
+• The trade log shows every entry/exit with P&L
+• "Real Data" badge confirms actual Yahoo Finance prices`
+    },
+    {
+      id: 'dashboard',
+      title: 'Dashboard',
+      icon: LayoutDashboard,
+      content: `The Dashboard provides a comprehensive market overview with regime detection, factor rankings, and sector analysis.
+
+**Regime Detection:**
+Classifies the overall market as:
+• Bull — sustained uptrend, favor momentum strategies
+• Bear — sustained downtrend, favor quality/defensive
+• Sideways — choppy, use mean-reversion and tighter stops
+
+The confidence percentage indicates regime clarity (higher = more decisive market).
+
+**Stock Rankings:**
+All 380+ stocks ranked by composite multi-factor score:
+• Momentum — recent price trend strength
+• Quality — trend consistency (R²)
+• Mean Reversion — RSI-based oversold/overbought
+• Volatility — lower vol = higher rank (risk-adjusted)
+
+Click any stock to see its technical detail card with price chart, RSI, MACD, and momentum.
+
+**Sector Rotation:**
+Shows all 11 GICS sectors ranked by performance. Identifies which sectors are leading (overweight) vs lagging (underweight). This drives sector-level allocation decisions.
+
+**Radar Chart:**
+Visual summary of the top stock's factor exposures across all dimensions.`
+    },
+    {
+      id: 'signals',
+      title: 'Signals',
+      icon: Crosshair,
+      content: `The Signal Scanner detects actionable buy/sell signals across the full stock universe using multiple strategies.
+
+**Signal Types:**
+• Momentum — strong uptrend with quality confirmation (mom >5%, R² >0.6)
+• Bollinger Squeeze — volatility compression predicting explosive breakout
+• Multi-Factor — 67%+ alignment across momentum/MACD/quality/volatility
+• Overbought (Sell) — RSI >70, suggesting profit-taking zone
+• Degrading Momentum (Sell) — signal confidence dropped below 30%
+
+**Reading Signals:**
+• Confidence % — how strong the signal is (81% = very high conviction)
+• Strategy label — which method triggered the signal
+• Buy vs Sell — color-coded green/red with directional reasoning
+
+**Signal Strength Chart:**
+Bar chart showing the relative strength of each signal. Helps prioritize which signals to act on first.
+
+**Best Practices:**
+1. Focus on 81% confidence signals for highest probability
+2. Cross-reference with Trade Finder for full analysis
+3. Use Bollinger squeeze signals for breakout anticipation
+4. Sell signals are warnings, not necessarily immediate exits
+5. Multiple simultaneous buy signals on one stock = very high conviction`
+    },
+    {
+      id: 'news',
+      title: 'News & Sentiment',
+      icon: Newspaper,
+      content: `The News tab provides real-time market news with AI-powered sentiment analysis.
+
+**Features:**
+• Headlines from Yahoo Finance RSS feeds
+• Sentiment scoring: Bullish / Bearish / Neutral per article
+• Time-stamped for recency
+• Click any headline to read the full article
+
+**Sentiment Analysis:**
+Articles are scored based on keyword analysis:
+• Bullish: growth, beats, rally, upgrade, breakthrough
+• Bearish: crash, decline, downgrade, layoffs, recession
+• Neutral: reports, announces, plans, considers
+
+**How to Use:**
+1. Check news before acting on signals — catalysts matter
+2. Bearish headlines on a stock with buy signals = proceed with caution
+3. Bullish news + technical confirmation = highest conviction
+4. Use news to understand WHY a stock is moving`
+    },
+    {
+      id: 'track',
+      title: 'Track Record',
+      icon: History,
+      content: `Track Record provides an immutable log of system performance over time.
+
+**What's Tracked:**
+• Every signal generated with timestamp and entry price
+• Actual outcomes (win/loss) based on whether target or stop was hit
+• Strategy-level breakdown (which approaches work best)
+• Win/loss streaks for pattern recognition
+• Daily run history (has the system run consistently?)
+
+**Key Metrics:**
+• Measured Accuracy — actual hit rate over time
+• Avg Return — mean P&L per signal
+• Win Streaks — consecutive wins (indicates strong regime alignment)
+• By Strategy — which signal types perform best
+
+**Alert System:**
+Configure push notifications for:
+• New Signals — get notified when a strong buy/sell appears
+• Stop Losses — alerts when a position hits its stop
+• Daily Report — end-of-day summary of performance
+
+**Building Credibility:**
+The Track Record is what transforms Quest from "another backtest tool" into a provably accurate system. After 30+ days of tracked recommendations, you'll have measured, defensible win rates.`
+    },
+    {
+      id: 'broker',
+      title: 'Broker Connection',
+      icon: Plug,
+      content: `Connect your Alpaca paper trading account to see live portfolio data and execute trades.
+
+**Setup (Free, 2 minutes):**
+1. Create account at https://app.alpaca.markets/signup
+2. Go to Paper Trading → API Keys
+3. Generate a new key pair
+4. Enter API Key + Secret in the Broker tab
+5. Keys are stored ONLY in your browser's localStorage
+
+**What You Get:**
+• Live account balance and buying power
+• Current positions with real-time P&L
+• Order history and fill status
+• Target allocation with rebalance suggestions
+
+**Security:**
+• Keys never leave your browser
+• Paper trading only (no real money at risk)
+• You can clear keys at any time
+• No PDT rules on paper accounts
+
+**Target Allocation:**
+Quest calculates an optimal portfolio based on current signals and shows what orders you'd need to place to match it. This bridges the gap between signals and execution.`
+    },
+    {
+      id: 'backtest',
+      title: 'Backtest Engine',
+      icon: FlaskConical,
+      content: `The Backtest tab runs a full walk-forward simulation with institutional-grade metrics.
+
+**Methodology:**
+• Walk-forward: re-ranks and rebalances every 5 trading days
+• 15bps round-trip transaction costs (realistic for retail)
+• ATR-based trailing stops (2.5× ATR)
+• Risk parity position sizing
+• Correlation filtering (max 0.7 between positions)
+• Portfolio drawdown protection (reduces exposure in drawdowns)
+
+**Metrics Explained:**
+• CAGR — Compound Annual Growth Rate
+• Sharpe — return per unit of total risk (>1.5 = good)
+• Sortino — return per unit of downside risk (>2.0 = good)
+• Max DD — maximum peak-to-trough decline
+• Win Rate — % of profitable trades
+• Profit Factor — gross wins / gross losses
+
+**Monte Carlo Simulation:**
+Runs 500 simulations with randomized ordering to generate:
+• Probability cone of future outcomes
+• Confidence bands (5th, 25th, 50th, 75th, 95th percentile)
+• Worst-case and best-case scenarios
+
+**Performance Attribution:**
+Factor decomposition showing what drives returns:
+• How much is market beta (just riding the market up)
+• How much is sector rotation
+• How much is genuine alpha (stock selection skill)
+
+**Key Insight:**
+If attribution shows >70% is beta, the strategy is just leveraged S&P 500. True alpha should be 30%+ of total return.`
+    },
+    {
+      id: 'risk',
+      title: 'Risk Management',
+      icon: ShieldCheck,
+      content: `The Risk tab shows position limits, drawdown protection tiers, and correlation analysis.
+
+**Position Limits:**
+• Max positions: 8 (prevents over-diversification)
+• Max per sector: 40% (prevents concentration)
+• Max single position: 15% of portfolio
+• Min cash reserve: 10%
+
+**Drawdown Protection Tiers:**
+• Green (0-5% DD): Full exposure, normal operations
+• Yellow (5-10% DD): Reduce new entries by 50%
+• Orange (10-15% DD): Only close positions, no new entries
+• Red (15-25% DD): Emergency — close weakest positions
+• Ruin Stop (>25% DD): Full liquidation, wait for regime change
+
+**Correlation Matrix Heatmap:**
+Visual showing pairwise Pearson correlations between holdings. Color-coded:
+• Green = low correlation (good diversification)
+• Yellow = moderate correlation (monitor)
+• Red = high correlation (concentration risk)
+
+The system automatically rejects new positions with >0.7 correlation to existing holdings.
+
+**Hierarchical Risk Parity:**
+Modern portfolio construction that:
+1. Clusters correlated stocks together
+2. Allocates between clusters first (tree structure)
+3. Then allocates within clusters by inverse volatility
+4. Results in better diversification than Markowitz`
+    },
+    {
+      id: 'research',
+      title: 'Research Lab',
+      icon: Cpu,
+      content: `The Research Lab provides institutional-grade statistical validation of the trading strategy.
+
+**Walk-Forward k-Fold CV:**
+Splits historical data into 5 folds, trains on 4, tests on 1. Reports:
+• Train vs Test Sharpe per fold
+• Overfit Ratio (test/train — closer to 1.0 = less overfit)
+• Verdict: ROBUST / MODERATE / OVERFIT
+
+**Deflated Sharpe Ratio (Bailey & Lopez de Prado):**
+Adjusts observed Sharpe for:
+• Number of trials (multiple hypothesis testing)
+• Non-normality (skew and kurtosis)
+• Autocorrelation in returns
+Reports: haircut %, p-value, probability of overfitting
+
+**PCA Risk Decomposition:**
+Decomposes total return into:
+• Systematic risk (market beta, sector rotation, size/growth)
+• Idiosyncratic alpha (genuine stock-picking skill)
+If alpha is <20%, the strategy may just be leveraged beta.
+
+**Historical Stress Tests:**
+How your portfolio would perform under:
+• 2008 GFC (-50-70%)
+• COVID Crash 2020 (-30-40%)
+• 2022 Rate Shock (-25-35%)
+• Dot-com Bust (-70-85%)
+• Flash Crash (-15-20%)
+
+**Factor IC Analysis:**
+Information Coefficient per factor — measures actual predictive power:
+• IC > 0.03 with t-stat > 1.96 = statistically significant
+• ICIR (IC / std) shows signal stability
+• Factors with negative IC should be removed or inverted
+
+**Macro Regime:**
+Current economic environment based on VIX, credit spreads, yield curve:
+• Risk-On (Expansion): favor momentum, 70% equities
+• Risk-Off (Contraction): favor quality/defensive, 30% equities
+• Transition: balanced, reduce position sizes
+
+**Transaction Cost Model (Almgren-Chriss):**
+Estimates realistic trading costs including:
+• Market impact (moving price with your order)
+• Spread costs
+• Annual drag at current turnover
+• Recommendations for optimal rebalance frequency`
+    },
+    {
+      id: 'getting-started',
+      title: 'Getting Started Guide',
+      icon: Target,
+      content: `**Recommended Workflow:**
+
+**Day 1: Explore**
+1. Open Trade Finder — see today's top opportunities
+2. Tap a few trades to read the full analysis
+3. Check the Dashboard for market regime and rankings
+4. Look at Signals for all active buy/sell signals
+
+**Day 2-7: Learn**
+5. Read the Backtest results — understand historical performance
+6. Check Research Lab — verify the strategy isn't overfit
+7. Look at Risk Management — understand the guardrails
+8. Monitor Track Record — watch measured accuracy build
+
+**Week 2+: Act**
+9. Connect Alpaca paper trading (free, no real money)
+10. Use Trade Finder to identify best opportunities
+11. Compare with Broker tab's target allocation
+12. Track results in Track Record tab
+
+**Week 4+: Validate**
+13. Review measured win rates in Live Tracking
+14. Check Walk-Forward Validation for model confidence
+15. Compare your actual fills vs system's recommended entries
+16. Decide if you want to trade with real capital
+
+**Pro Tips:**
+• Don't trade every signal — focus on 65+ scores with 3-7 day horizon
+• Always check the Research tab before trusting backtest results
+• The correlation matrix tells you when you're over-concentrated
+• News context matters — a great signal during earnings week is risky
+• Paper trade for 30+ days before considering real capital
+• Higher time horizon trades (2-4 weeks) tend to be more reliable
+• Multi-timeframe-confirmed trades win more than single-timeframe`
+    },
+    {
+      id: 'methodology',
+      title: 'Methodology & Limitations',
+      icon: AlertTriangle,
+      content: `**What Makes Quest Different:**
+• IC-weighted scoring (not equal-weight indicators)
+• Walk-forward validation (not just in-sample backtest)
+• Multi-timeframe confirmation (daily + weekly must agree)
+• Adaptive thresholds (tighter in high-vol, looser in low-vol)
+• Live recommendation tracking (measured, not estimated, accuracy)
+
+**Known Limitations:**
+• Yahoo Finance data has 15-min delay (not real-time)
+• No fundamental data (P/E, earnings, revenue) in scoring yet
+• Single-asset class (US equities only — no options, futures, crypto)
+• No intraday signals (daily timeframe minimum)
+• Transaction costs are estimated, not measured
+• Synthetic data fallback when API is unreachable (simulated, not real)
+
+**What This Is NOT:**
+• Not financial advice — this is a research tool
+• Not guaranteed returns — past performance ≠ future results
+• Not a replacement for a financial advisor
+• Not suitable for retirement funds without professional guidance
+
+**Statistical Confidence:**
+The Research Lab tells you exactly how much to trust the results:
+• Deflated Sharpe p-value < 0.05 = statistically significant alpha
+• Walk-forward overfit ratio > 0.7 = strategy generalizes well
+• Factor IC t-stat > 1.96 = factor has real predictive power
+
+If ANY of these fail, the strategy may be curve-fit to historical data. The honest reporting of these metrics is what makes Quest research-grade.`
+    }
+  ];
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3 mb-6">
+        <BookOpen className="w-6 h-6 text-[#3b82f6]" />
+        <div>
+          <h2 className="text-xl font-bold">Documentation</h2>
+          <p className="text-sm text-[var(--text-faint)]">Complete platform guide — how everything works and how to get the most out of Quest</p>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        {sections.map(section => {
+          const Icon = section.icon;
+          const isOpen = expanded === section.id;
+          return (
+            <div key={section.id} className="rounded-xl border border-[var(--border)] overflow-hidden transition-all">
+              <button
+                onClick={() => setExpanded(isOpen ? null : section.id)}
+                className="w-full flex items-center gap-3 p-4 text-left hover:bg-white/[0.02] transition-colors"
+              >
+                <Icon className="w-5 h-5 text-[#3b82f6] shrink-0" />
+                <span className="font-medium flex-1">{section.title}</span>
+                <ChevronDown className={`w-4 h-4 text-[var(--text-faint)] transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {isOpen && (
+                <div className="px-4 pb-4 border-t border-[var(--border)]">
+                  <div className="pt-3 text-sm text-[var(--text-muted)] leading-relaxed whitespace-pre-line docs-content">
+                    {section.content.split('\n').map((line, i) => {
+                      if (line.startsWith('**') && line.endsWith('**')) {
+                        return <h4 key={i} className="font-bold text-white mt-3 mb-1">{line.replace(/\*\*/g, '')}</h4>;
+                      }
+                      if (line.startsWith('• ')) {
+                        return <p key={i} className="pl-3 py-0.5">• {line.slice(2)}</p>;
+                      }
+                      if (line.match(/^\d+\./)) {
+                        return <p key={i} className="pl-3 py-0.5">{line}</p>;
+                      }
+                      if (line.trim() === '') return <div key={i} className="h-2" />;
+                      return <p key={i} className="py-0.5">{line}</p>;
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
