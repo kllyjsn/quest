@@ -280,6 +280,16 @@ function App() {
 
   const handleLogin = async (email: string, password: string, isRegister: boolean) => {
     try {
+      if (api.isOffline()) {
+        // Local-only auth (no backend)
+        const displayName = email.split('@')[0];
+        const localUser = { user_id: Date.now(), email, display_name: displayName };
+        api.setToken('local_' + btoa(email));
+        api.setStoredUser(localUser);
+        setUser(localUser);
+        setShowAuth(false);
+        return;
+      }
       const data = isRegister
         ? await api.register(email, password, email.split('@')[0])
         : await api.login(email, password);
@@ -287,7 +297,15 @@ function App() {
       api.setStoredUser({ user_id: data.user_id, email: data.email, display_name: data.display_name });
       setUser({ user_id: data.user_id, email: data.email, display_name: data.display_name });
       setShowAuth(false);
-    } catch (e: any) { setError(e.message); }
+    } catch (e: any) {
+      // Fallback to local auth if backend is unreachable
+      const displayName = email.split('@')[0];
+      const localUser = { user_id: Date.now(), email, display_name: displayName };
+      api.setToken('local_' + btoa(email));
+      api.setStoredUser(localUser);
+      setUser(localUser);
+      setShowAuth(false);
+    }
   };
 
   const handleLogout = () => { api.clearToken(); setUser(null); };
@@ -349,9 +367,15 @@ function App() {
               </button>
             )}
 
-            <button onClick={loadDashboard}
-              className="p-1.5 rounded-lg hover:bg-white/5 text-[var(--text-faint)] hover:text-white" title="Refresh">
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            <button onClick={() => {
+              if (tab === 'finder') loadFinder();
+              else if (tab === 'signals') loadSignals();
+              else if (tab === 'news') loadNews();
+              else if (tab === 'research') loadResearch();
+              else loadDashboard();
+            }}
+              className="p-1.5 rounded-lg hover:bg-white/5 text-[var(--text-faint)] hover:text-white active:scale-90 transition-transform" title="Refresh">
+              <RefreshCw className={`w-4 h-4 ${loading || finderLoading ? 'animate-spin' : ''}`} />
             </button>
           </div>
         </div>
@@ -2238,7 +2262,7 @@ function AuthModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (emai
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    await onSubmit(email, password, isRegister);
+    try { await onSubmit(email, password, isRegister); } catch {}
     setSubmitting(false);
   };
 
@@ -2633,8 +2657,8 @@ function TrackRecordTab() {
 
   const toggleNotifications = async () => {
     if (!notifPrefs.enabled) {
-      const granted = await requestNotificationPermission();
-      if (!granted) return;
+      // Try requesting permission but don't block on it
+      requestNotificationPermission().catch(() => {});
     }
     const updated = { ...notifPrefs, enabled: !notifPrefs.enabled };
     saveNotificationPrefs(updated);

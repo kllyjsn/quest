@@ -2001,32 +2001,36 @@ export async function generateDeflatedSharpe(): Promise<DeflatedSharpeResult> {
   const trials = 10; // assume we tested ~10 strategy variants
   const expectedMaxSharpe = Math.sqrt(2 * Math.log(trials)) * (1 - 1 / (4 * Math.max(n, 20)) + 1 / (32 * Math.max(n, 20) ** 2));
 
-  // Adjust for non-normality
-  const srStd = Math.sqrt((1 - skew * observedSharpe + (kurtosis / 4) * observedSharpe ** 2) / n);
+  // Adjust for non-normality — clamp inputs to avoid NaN
+  const cappedSharpe = Math.min(Math.abs(observedSharpe), 5) * Math.sign(observedSharpe);
+  const srVariance = Math.max(0.0001, (1 - skew * cappedSharpe + (kurtosis / 4) * cappedSharpe ** 2) / Math.max(n, 1));
+  const srStd = Math.sqrt(srVariance);
   const deflatedSharpe = observedSharpe - expectedMaxSharpe * srStd;
 
   // P-value using normal approximation
   const zScore = deflatedSharpe / Math.max(srStd, 0.001);
-  const pValue = 1 - normalCDF(zScore);
+  const pValue = 1 - normalCDF(Math.min(Math.max(zScore, -10), 10));
 
   // Haircut percentage (how much of observed Sharpe is likely noise)
-  const haircut = Math.max(0, Math.min(100, (1 - deflatedSharpe / Math.max(observedSharpe, 0.01)) * 100));
+  const haircut = Math.max(0, Math.min(100, observedSharpe > 0.01 ? (1 - deflatedSharpe / observedSharpe) * 100 : 50));
 
   // Probability of overfitting (CSCV approximation)
   const probOverfit = Math.min(0.99, Math.max(0.01, pValue * 2 + (haircut / 100) * 0.3));
 
   // Minimum track record (Bailey & Lopez de Prado)
-  const minMonths = Math.max(1, Math.ceil((1 + (kurtosis / 4) * observedSharpe ** 2 - skew * observedSharpe) / (observedSharpe ** 2 / 4) / 21));
+  const srDenom = Math.max(cappedSharpe ** 2 / 4, 0.01);
+  const minMonths = Math.max(1, Math.min(120, Math.ceil((1 + (kurtosis / 4) * cappedSharpe ** 2 - skew * cappedSharpe) / srDenom / 21)));
 
+  const safeNum = (v: number, fallback = 0) => isFinite(v) ? v : fallback;
   return {
-    observed_sharpe: Math.round(observedSharpe * 100) / 100,
-    deflated_sharpe: Math.round(deflatedSharpe * 100) / 100,
-    p_value: Math.round(pValue * 1000) / 1000,
-    haircut_pct: Math.round(haircut * 10) / 10,
+    observed_sharpe: safeNum(Math.round(observedSharpe * 100) / 100),
+    deflated_sharpe: safeNum(Math.round(deflatedSharpe * 100) / 100),
+    p_value: safeNum(Math.round(pValue * 1000) / 1000, 0.5),
+    haircut_pct: safeNum(Math.round(haircut * 10) / 10, 50),
     trials_equivalent: trials,
-    is_significant: pValue < 0.05 && deflatedSharpe > 0,
-    prob_overfit: Math.round(probOverfit * 100) / 100,
-    min_track_record_months: minMonths,
+    is_significant: isFinite(pValue) && pValue < 0.05 && isFinite(deflatedSharpe) && deflatedSharpe > 0,
+    prob_overfit: safeNum(Math.round(probOverfit * 100) / 100, 0.5),
+    min_track_record_months: safeNum(minMonths, 6),
   };
 }
 
