@@ -823,7 +823,7 @@ function TradeFinderTab({ data, loading, onRefresh, trackingStats, trackedRecs, 
           <div className="w-12 h-12 rounded-2xl bg-[#8b5cf6]/10 flex items-center justify-center mx-auto mb-4">
             <Search className="w-6 h-6 text-[#8b5cf6] animate-pulse" />
           </div>
-          <p className="text-[var(--text-muted)] font-medium">Scanning 51 stocks with IC-weighted multi-factor model...</p>
+          <p className="text-[var(--text-muted)] font-medium">Scanning 500+ stocks with IC-weighted multi-factor model...</p>
           <p className="text-xs text-[var(--text-faint)] mt-1">Multi-timeframe confirmation · Relative strength · Adaptive volatility filters</p>
         </Card>
       )}

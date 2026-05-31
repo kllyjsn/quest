@@ -7,67 +7,350 @@
  */
 
 const STOCKS = [
-  // Technology
-  { symbol: 'NVDA', sector: 'Technology', basePrice: 135 },
+  // ═══ TECHNOLOGY (75) ═══
   { symbol: 'AAPL', sector: 'Technology', basePrice: 198 },
   { symbol: 'MSFT', sector: 'Technology', basePrice: 430 },
-  { symbol: 'GOOGL', sector: 'Technology', basePrice: 178 },
-  { symbol: 'META', sector: 'Technology', basePrice: 510 },
+  { symbol: 'NVDA', sector: 'Technology', basePrice: 135 },
   { symbol: 'AVGO', sector: 'Technology', basePrice: 175 },
-  { symbol: 'INTC', sector: 'Technology', basePrice: 30 },
-  { symbol: 'AMD', sector: 'Technology', basePrice: 160 },
-  { symbol: 'CRM', sector: 'Technology', basePrice: 265 },
   { symbol: 'ORCL', sector: 'Technology', basePrice: 155 },
+  { symbol: 'CRM', sector: 'Technology', basePrice: 265 },
+  { symbol: 'AMD', sector: 'Technology', basePrice: 160 },
   { symbol: 'ADBE', sector: 'Technology', basePrice: 520 },
   { symbol: 'NOW', sector: 'Technology', basePrice: 780 },
-  // Financials
+  { symbol: 'INTC', sector: 'Technology', basePrice: 30 },
+  { symbol: 'IBM', sector: 'Technology', basePrice: 190 },
+  { symbol: 'INTU', sector: 'Technology', basePrice: 630 },
+  { symbol: 'AMAT', sector: 'Technology', basePrice: 200 },
+  { symbol: 'TXN', sector: 'Technology', basePrice: 175 },
+  { symbol: 'LRCX', sector: 'Technology', basePrice: 730 },
+  { symbol: 'KLAC', sector: 'Technology', basePrice: 620 },
+  { symbol: 'SNPS', sector: 'Technology', basePrice: 520 },
+  { symbol: 'CDNS', sector: 'Technology', basePrice: 280 },
+  { symbol: 'PANW', sector: 'Technology', basePrice: 310 },
+  { symbol: 'MRVL', sector: 'Technology', basePrice: 70 },
+  { symbol: 'MSI', sector: 'Technology', basePrice: 365 },
+  { symbol: 'ADSK', sector: 'Technology', basePrice: 245 },
+  { symbol: 'FTNT', sector: 'Technology', basePrice: 75 },
+  { symbol: 'NXPI', sector: 'Technology', basePrice: 240 },
+  { symbol: 'ROP', sector: 'Technology', basePrice: 550 },
+  { symbol: 'FICO', sector: 'Technology', basePrice: 1600 },
+  { symbol: 'IT', sector: 'Technology', basePrice: 480 },
+  { symbol: 'MPWR', sector: 'Technology', basePrice: 650 },
+  { symbol: 'ANSS', sector: 'Technology', basePrice: 330 },
+  { symbol: 'ON', sector: 'Technology', basePrice: 80 },
+  { symbol: 'KEYS', sector: 'Technology', basePrice: 160 },
+  { symbol: 'CDW', sector: 'Technology', basePrice: 220 },
+  { symbol: 'FSLR', sector: 'Technology', basePrice: 180 },
+  { symbol: 'TYL', sector: 'Technology', basePrice: 450 },
+  { symbol: 'ZBRA', sector: 'Technology', basePrice: 290 },
+  { symbol: 'TRMB', sector: 'Technology', basePrice: 62 },
+  { symbol: 'PTC', sector: 'Technology', basePrice: 180 },
+  { symbol: 'VRSN', sector: 'Technology', basePrice: 185 },
+  { symbol: 'SWKS', sector: 'Technology', basePrice: 105 },
+  { symbol: 'TER', sector: 'Technology', basePrice: 110 },
+  { symbol: 'AKAM', sector: 'Technology', basePrice: 110 },
+  { symbol: 'GEN', sector: 'Technology', basePrice: 25 },
+  { symbol: 'JNPR', sector: 'Technology', basePrice: 37 },
+  { symbol: 'EPAM', sector: 'Technology', basePrice: 250 },
+  { symbol: 'QRVO', sector: 'Technology', basePrice: 105 },
+  { symbol: 'TSM', sector: 'Technology', basePrice: 165 },
+  { symbol: 'ASML', sector: 'Technology', basePrice: 680 },
+  { symbol: 'MU', sector: 'Technology', basePrice: 90 },
+  { symbol: 'MCHP', sector: 'Technology', basePrice: 80 },
+  { symbol: 'HPQ', sector: 'Technology', basePrice: 30 },
+  { symbol: 'HPE', sector: 'Technology', basePrice: 18 },
+  { symbol: 'CTSH', sector: 'Technology', basePrice: 75 },
+  { symbol: 'GLW', sector: 'Technology', basePrice: 32 },
+  { symbol: 'STX', sector: 'Technology', basePrice: 85 },
+  { symbol: 'WDC', sector: 'Technology', basePrice: 50 },
+  { symbol: 'NTAP', sector: 'Technology', basePrice: 90 },
+  // ═══ FINANCIALS (65) ═══
   { symbol: 'JPM', sector: 'Financials', basePrice: 205 },
   { symbol: 'V', sector: 'Financials', basePrice: 280 },
   { symbol: 'MA', sector: 'Financials', basePrice: 470 },
   { symbol: 'BAC', sector: 'Financials', basePrice: 38 },
   { symbol: 'GS', sector: 'Financials', basePrice: 440 },
-  // Health Care
+  { symbol: 'MS', sector: 'Financials', basePrice: 95 },
+  { symbol: 'WFC', sector: 'Financials', basePrice: 55 },
+  { symbol: 'SPGI', sector: 'Financials', basePrice: 470 },
+  { symbol: 'BLK', sector: 'Financials', basePrice: 780 },
+  { symbol: 'C', sector: 'Financials', basePrice: 55 },
+  { symbol: 'SCHW', sector: 'Financials', basePrice: 72 },
+  { symbol: 'CB', sector: 'Financials', basePrice: 255 },
+  { symbol: 'AXP', sector: 'Financials', basePrice: 230 },
+  { symbol: 'PGR', sector: 'Financials', basePrice: 195 },
+  { symbol: 'MMC', sector: 'Financials', basePrice: 200 },
+  { symbol: 'ICE', sector: 'Financials', basePrice: 135 },
+  { symbol: 'CME', sector: 'Financials', basePrice: 210 },
+  { symbol: 'AON', sector: 'Financials', basePrice: 335 },
+  { symbol: 'MCO', sector: 'Financials', basePrice: 390 },
+  { symbol: 'USB', sector: 'Financials', basePrice: 43 },
+  { symbol: 'TFC', sector: 'Financials', basePrice: 38 },
+  { symbol: 'PNC', sector: 'Financials', basePrice: 160 },
+  { symbol: 'AIG', sector: 'Financials', basePrice: 70 },
+  { symbol: 'MET', sector: 'Financials', basePrice: 72 },
+  { symbol: 'PRU', sector: 'Financials', basePrice: 110 },
+  { symbol: 'AFL', sector: 'Financials', basePrice: 85 },
+  { symbol: 'ALL', sector: 'Financials', basePrice: 160 },
+  { symbol: 'FITB', sector: 'Financials', basePrice: 38 },
+  { symbol: 'MTB', sector: 'Financials', basePrice: 155 },
+  { symbol: 'HBAN', sector: 'Financials', basePrice: 14 },
+  { symbol: 'COF', sector: 'Financials', basePrice: 145 },
+  { symbol: 'DFS', sector: 'Financials', basePrice: 125 },
+  { symbol: 'PYPL', sector: 'Financials', basePrice: 65 },
+  { symbol: 'FIS', sector: 'Financials', basePrice: 70 },
+  { symbol: 'MSCI', sector: 'Financials', basePrice: 560 },
+  { symbol: 'AJG', sector: 'Financials', basePrice: 240 },
+  { symbol: 'TRV', sector: 'Financials', basePrice: 210 },
+  { symbol: 'BRO', sector: 'Financials', basePrice: 85 },
+  // ═══ HEALTH CARE (65) ═══
   { symbol: 'UNH', sector: 'Health Care', basePrice: 530 },
   { symbol: 'LLY', sector: 'Health Care', basePrice: 790 },
   { symbol: 'JNJ', sector: 'Health Care', basePrice: 155 },
-  { symbol: 'PFE', sector: 'Health Care', basePrice: 28 },
   { symbol: 'ABBV', sector: 'Health Care', basePrice: 175 },
-  // Consumer Discretionary
+  { symbol: 'MRK', sector: 'Health Care', basePrice: 125 },
+  { symbol: 'TMO', sector: 'Health Care', basePrice: 560 },
+  { symbol: 'ABT', sector: 'Health Care', basePrice: 110 },
+  { symbol: 'DHR', sector: 'Health Care', basePrice: 250 },
+  { symbol: 'PFE', sector: 'Health Care', basePrice: 28 },
+  { symbol: 'AMGN', sector: 'Health Care', basePrice: 290 },
+  { symbol: 'BMY', sector: 'Health Care', basePrice: 50 },
+  { symbol: 'SYK', sector: 'Health Care', basePrice: 340 },
+  { symbol: 'GILD', sector: 'Health Care', basePrice: 80 },
+  { symbol: 'MDT', sector: 'Health Care', basePrice: 82 },
+  { symbol: 'ISRG', sector: 'Health Care', basePrice: 390 },
+  { symbol: 'VRTX', sector: 'Health Care', basePrice: 410 },
+  { symbol: 'REGN', sector: 'Health Care', basePrice: 920 },
+  { symbol: 'CI', sector: 'Health Care', basePrice: 340 },
+  { symbol: 'ELV', sector: 'Health Care', basePrice: 460 },
+  { symbol: 'HCA', sector: 'Health Care', basePrice: 280 },
+  { symbol: 'ZTS', sector: 'Health Care', basePrice: 185 },
+  { symbol: 'BSX', sector: 'Health Care', basePrice: 65 },
+  { symbol: 'BDX', sector: 'Health Care', basePrice: 240 },
+  { symbol: 'EW', sector: 'Health Care', basePrice: 80 },
+  { symbol: 'A', sector: 'Health Care', basePrice: 135 },
+  { symbol: 'IQV', sector: 'Health Care', basePrice: 220 },
+  { symbol: 'IDXX', sector: 'Health Care', basePrice: 520 },
+  { symbol: 'MTD', sector: 'Health Care', basePrice: 1250 },
+  { symbol: 'RMD', sector: 'Health Care', basePrice: 195 },
+  { symbol: 'DXCM', sector: 'Health Care', basePrice: 90 },
+  { symbol: 'ALGN', sector: 'Health Care', basePrice: 290 },
+  { symbol: 'HOLX', sector: 'Health Care', basePrice: 75 },
+  { symbol: 'WAT', sector: 'Health Care', basePrice: 310 },
+  { symbol: 'BIIB', sector: 'Health Care', basePrice: 230 },
+  { symbol: 'MOH', sector: 'Health Care', basePrice: 370 },
+  { symbol: 'CAH', sector: 'Health Care', basePrice: 105 },
+  { symbol: 'COR', sector: 'Health Care', basePrice: 230 },
+  // ═══ CONSUMER DISCRETIONARY (50) ═══
   { symbol: 'AMZN', sector: 'Consumer Discretionary', basePrice: 195 },
   { symbol: 'TSLA', sector: 'Consumer Discretionary', basePrice: 250 },
   { symbol: 'HD', sector: 'Consumer Discretionary', basePrice: 350 },
+  { symbol: 'MCD', sector: 'Consumer Discretionary', basePrice: 295 },
   { symbol: 'NKE', sector: 'Consumer Discretionary', basePrice: 95 },
   { symbol: 'SBUX', sector: 'Consumer Discretionary', basePrice: 92 },
-  // Consumer Staples
-  { symbol: 'PG', sector: 'Consumer Staples', basePrice: 165 },
-  { symbol: 'KO', sector: 'Consumer Staples', basePrice: 62 },
-  { symbol: 'PEP', sector: 'Consumer Staples', basePrice: 175 },
-  { symbol: 'COST', sector: 'Consumer Staples', basePrice: 720 },
-  // Communication Services
-  { symbol: 'NFLX', sector: 'Communication Services', basePrice: 640 },
-  { symbol: 'DIS', sector: 'Communication Services', basePrice: 105 },
-  { symbol: 'CMCSA', sector: 'Communication Services', basePrice: 42 },
-  // Energy
-  { symbol: 'XOM', sector: 'Energy', basePrice: 112 },
-  { symbol: 'CVX', sector: 'Energy', basePrice: 155 },
-  { symbol: 'COP', sector: 'Energy', basePrice: 112 },
-  // Industrials
+  { symbol: 'LOW', sector: 'Consumer Discretionary', basePrice: 240 },
+  { symbol: 'TJX', sector: 'Consumer Discretionary', basePrice: 100 },
+  { symbol: 'BKNG', sector: 'Consumer Discretionary', basePrice: 3700 },
+  { symbol: 'CMG', sector: 'Consumer Discretionary', basePrice: 65 },
+  { symbol: 'ORLY', sector: 'Consumer Discretionary', basePrice: 950 },
+  { symbol: 'AZO', sector: 'Consumer Discretionary', basePrice: 2700 },
+  { symbol: 'ROST', sector: 'Consumer Discretionary', basePrice: 145 },
+  { symbol: 'MAR', sector: 'Consumer Discretionary', basePrice: 240 },
+  { symbol: 'HLT', sector: 'Consumer Discretionary', basePrice: 200 },
+  { symbol: 'GM', sector: 'Consumer Discretionary', basePrice: 38 },
+  { symbol: 'F', sector: 'Consumer Discretionary', basePrice: 12 },
+  { symbol: 'DHI', sector: 'Consumer Discretionary', basePrice: 150 },
+  { symbol: 'LEN', sector: 'Consumer Discretionary', basePrice: 155 },
+  { symbol: 'PHM', sector: 'Consumer Discretionary', basePrice: 110 },
+  { symbol: 'YUM', sector: 'Consumer Discretionary', basePrice: 140 },
+  { symbol: 'LULU', sector: 'Consumer Discretionary', basePrice: 420 },
+  { symbol: 'RCL', sector: 'Consumer Discretionary', basePrice: 150 },
+  { symbol: 'DECK', sector: 'Consumer Discretionary', basePrice: 680 },
+  { symbol: 'ULTA', sector: 'Consumer Discretionary', basePrice: 440 },
+  { symbol: 'DPZ', sector: 'Consumer Discretionary', basePrice: 430 },
+  { symbol: 'POOL', sector: 'Consumer Discretionary', basePrice: 370 },
+  { symbol: 'BBY', sector: 'Consumer Discretionary', basePrice: 80 },
+  { symbol: 'EBAY', sector: 'Consumer Discretionary', basePrice: 45 },
+  { symbol: 'APTV', sector: 'Consumer Discretionary', basePrice: 85 },
+  { symbol: 'LVS', sector: 'Consumer Discretionary', basePrice: 48 },
+  { symbol: 'WYNN', sector: 'Consumer Discretionary', basePrice: 95 },
+  { symbol: 'GRMN', sector: 'Consumer Discretionary', basePrice: 135 },
+  { symbol: 'GPC', sector: 'Consumer Discretionary', basePrice: 145 },
+  // ═══ INDUSTRIALS (60) ═══
   { symbol: 'CAT', sector: 'Industrials', basePrice: 340 },
   { symbol: 'GE', sector: 'Industrials', basePrice: 165 },
   { symbol: 'HON', sector: 'Industrials', basePrice: 200 },
   { symbol: 'UPS', sector: 'Industrials', basePrice: 145 },
-  // Materials & Real Estate & Utilities
+  { symbol: 'UNP', sector: 'Industrials', basePrice: 250 },
+  { symbol: 'RTX', sector: 'Industrials', basePrice: 95 },
+  { symbol: 'BA', sector: 'Industrials', basePrice: 190 },
+  { symbol: 'LMT', sector: 'Industrials', basePrice: 450 },
+  { symbol: 'DE', sector: 'Industrials', basePrice: 400 },
+  { symbol: 'ADP', sector: 'Industrials', basePrice: 250 },
+  { symbol: 'ITW', sector: 'Industrials', basePrice: 260 },
+  { symbol: 'ETN', sector: 'Industrials', basePrice: 270 },
+  { symbol: 'EMR', sector: 'Industrials', basePrice: 105 },
+  { symbol: 'NOC', sector: 'Industrials', basePrice: 470 },
+  { symbol: 'GD', sector: 'Industrials', basePrice: 270 },
+  { symbol: 'WM', sector: 'Industrials', basePrice: 185 },
+  { symbol: 'CSX', sector: 'Industrials', basePrice: 35 },
+  { symbol: 'NSC', sector: 'Industrials', basePrice: 250 },
+  { symbol: 'FDX', sector: 'Industrials', basePrice: 260 },
+  { symbol: 'TT', sector: 'Industrials', basePrice: 260 },
+  { symbol: 'PH', sector: 'Industrials', basePrice: 450 },
+  { symbol: 'CTAS', sector: 'Industrials', basePrice: 560 },
+  { symbol: 'CARR', sector: 'Industrials', basePrice: 57 },
+  { symbol: 'PCAR', sector: 'Industrials', basePrice: 95 },
+  { symbol: 'FAST', sector: 'Industrials', basePrice: 65 },
+  { symbol: 'VRSK', sector: 'Industrials', basePrice: 240 },
+  { symbol: 'AME', sector: 'Industrials', basePrice: 175 },
+  { symbol: 'PWR', sector: 'Industrials', basePrice: 210 },
+  { symbol: 'ODFL', sector: 'Industrials', basePrice: 420 },
+  { symbol: 'IR', sector: 'Industrials', basePrice: 80 },
+  { symbol: 'ROK', sector: 'Industrials', basePrice: 280 },
+  { symbol: 'OTIS', sector: 'Industrials', basePrice: 90 },
+  { symbol: 'CPRT', sector: 'Industrials', basePrice: 48 },
+  { symbol: 'AXON', sector: 'Industrials', basePrice: 240 },
+  { symbol: 'RSG', sector: 'Industrials', basePrice: 175 },
+  { symbol: 'XYL', sector: 'Industrials', basePrice: 120 },
+  { symbol: 'WAB', sector: 'Industrials', basePrice: 130 },
+  { symbol: 'GWW', sector: 'Industrials', basePrice: 900 },
+  { symbol: 'HWM', sector: 'Industrials', basePrice: 55 },
+  { symbol: 'DOV', sector: 'Industrials', basePrice: 155 },
+  // ═══ CONSUMER STAPLES (30) ═══
+  { symbol: 'PG', sector: 'Consumer Staples', basePrice: 165 },
+  { symbol: 'KO', sector: 'Consumer Staples', basePrice: 62 },
+  { symbol: 'PEP', sector: 'Consumer Staples', basePrice: 175 },
+  { symbol: 'COST', sector: 'Consumer Staples', basePrice: 720 },
+  { symbol: 'WMT', sector: 'Consumer Staples', basePrice: 165 },
+  { symbol: 'PM', sector: 'Consumer Staples', basePrice: 100 },
+  { symbol: 'MO', sector: 'Consumer Staples', basePrice: 45 },
+  { symbol: 'MDLZ', sector: 'Consumer Staples', basePrice: 75 },
+  { symbol: 'CL', sector: 'Consumer Staples', basePrice: 85 },
+  { symbol: 'KMB', sector: 'Consumer Staples', basePrice: 130 },
+  { symbol: 'GIS', sector: 'Consumer Staples', basePrice: 70 },
+  { symbol: 'SYY', sector: 'Consumer Staples', basePrice: 75 },
+  { symbol: 'HSY', sector: 'Consumer Staples', basePrice: 195 },
+  { symbol: 'ADM', sector: 'Consumer Staples', basePrice: 75 },
+  { symbol: 'KDP', sector: 'Consumer Staples', basePrice: 33 },
+  { symbol: 'STZ', sector: 'Consumer Staples', basePrice: 245 },
+  { symbol: 'MKC', sector: 'Consumer Staples', basePrice: 75 },
+  { symbol: 'CHD', sector: 'Consumer Staples', basePrice: 100 },
+  { symbol: 'K', sector: 'Consumer Staples', basePrice: 60 },
+  { symbol: 'CLX', sector: 'Consumer Staples', basePrice: 150 },
+  { symbol: 'SJM', sector: 'Consumer Staples', basePrice: 125 },
+  { symbol: 'CAG', sector: 'Consumer Staples', basePrice: 30 },
+  { symbol: 'HRL', sector: 'Consumer Staples', basePrice: 32 },
+  { symbol: 'TSN', sector: 'Consumer Staples', basePrice: 55 },
+  { symbol: 'KR', sector: 'Consumer Staples', basePrice: 50 },
+  // ═══ COMMUNICATION SERVICES (25) ═══
+  { symbol: 'GOOGL', sector: 'Communication Services', basePrice: 178 },
+  { symbol: 'META', sector: 'Communication Services', basePrice: 510 },
+  { symbol: 'NFLX', sector: 'Communication Services', basePrice: 640 },
+  { symbol: 'DIS', sector: 'Communication Services', basePrice: 105 },
+  { symbol: 'CMCSA', sector: 'Communication Services', basePrice: 42 },
+  { symbol: 'T', sector: 'Communication Services', basePrice: 17 },
+  { symbol: 'VZ', sector: 'Communication Services', basePrice: 40 },
+  { symbol: 'TMUS', sector: 'Communication Services', basePrice: 165 },
+  { symbol: 'CHTR', sector: 'Communication Services', basePrice: 390 },
+  { symbol: 'EA', sector: 'Communication Services', basePrice: 140 },
+  { symbol: 'TTWO', sector: 'Communication Services', basePrice: 160 },
+  { symbol: 'WBD', sector: 'Communication Services', basePrice: 10 },
+  { symbol: 'PARA', sector: 'Communication Services', basePrice: 14 },
+  { symbol: 'OMC', sector: 'Communication Services', basePrice: 90 },
+  { symbol: 'IPG', sector: 'Communication Services', basePrice: 32 },
+  { symbol: 'LYV', sector: 'Communication Services', basePrice: 95 },
+  { symbol: 'MTCH', sector: 'Communication Services', basePrice: 35 },
+  // ═══ ENERGY (30) ═══
+  { symbol: 'XOM', sector: 'Energy', basePrice: 112 },
+  { symbol: 'CVX', sector: 'Energy', basePrice: 155 },
+  { symbol: 'COP', sector: 'Energy', basePrice: 112 },
+  { symbol: 'EOG', sector: 'Energy', basePrice: 125 },
+  { symbol: 'SLB', sector: 'Energy', basePrice: 50 },
+  { symbol: 'MPC', sector: 'Energy', basePrice: 155 },
+  { symbol: 'PSX', sector: 'Energy', basePrice: 130 },
+  { symbol: 'VLO', sector: 'Energy', basePrice: 135 },
+  { symbol: 'PXD', sector: 'Energy', basePrice: 230 },
+  { symbol: 'OXY', sector: 'Energy', basePrice: 60 },
+  { symbol: 'WMB', sector: 'Energy', basePrice: 37 },
+  { symbol: 'KMI', sector: 'Energy', basePrice: 18 },
+  { symbol: 'HES', sector: 'Energy', basePrice: 155 },
+  { symbol: 'DVN', sector: 'Energy', basePrice: 45 },
+  { symbol: 'HAL', sector: 'Energy', basePrice: 35 },
+  { symbol: 'BKR', sector: 'Energy', basePrice: 35 },
+  { symbol: 'FANG', sector: 'Energy', basePrice: 155 },
+  { symbol: 'TRGP', sector: 'Energy', basePrice: 90 },
+  { symbol: 'OKE', sector: 'Energy', basePrice: 70 },
+  { symbol: 'CTRA', sector: 'Energy', basePrice: 27 },
+  // ═══ MATERIALS (25) ═══
   { symbol: 'LIN', sector: 'Materials', basePrice: 440 },
   { symbol: 'APD', sector: 'Materials', basePrice: 290 },
+  { symbol: 'SHW', sector: 'Materials', basePrice: 340 },
+  { symbol: 'ECL', sector: 'Materials', basePrice: 200 },
+  { symbol: 'FCX', sector: 'Materials', basePrice: 42 },
+  { symbol: 'NEM', sector: 'Materials', basePrice: 42 },
+  { symbol: 'NUE', sector: 'Materials', basePrice: 170 },
+  { symbol: 'DOW', sector: 'Materials', basePrice: 55 },
+  { symbol: 'DD', sector: 'Materials', basePrice: 75 },
+  { symbol: 'PPG', sector: 'Materials', basePrice: 140 },
+  { symbol: 'VMC', sector: 'Materials', basePrice: 250 },
+  { symbol: 'MLM', sector: 'Materials', basePrice: 500 },
+  { symbol: 'CTVA', sector: 'Materials', basePrice: 52 },
+  { symbol: 'IFF', sector: 'Materials', basePrice: 80 },
+  { symbol: 'ALB', sector: 'Materials', basePrice: 110 },
+  { symbol: 'CE', sector: 'Materials', basePrice: 140 },
+  { symbol: 'EMN', sector: 'Materials', basePrice: 85 },
+  { symbol: 'PKG', sector: 'Materials', basePrice: 180 },
+  { symbol: 'IP', sector: 'Materials', basePrice: 37 },
+  { symbol: 'CF', sector: 'Materials', basePrice: 80 },
+  { symbol: 'MOS', sector: 'Materials', basePrice: 35 },
+  // ═══ REAL ESTATE (25) ═══
   { symbol: 'AMT', sector: 'Real Estate', basePrice: 210 },
   { symbol: 'PLD', sector: 'Real Estate', basePrice: 125 },
+  { symbol: 'EQIX', sector: 'Real Estate', basePrice: 800 },
+  { symbol: 'CCI', sector: 'Real Estate', basePrice: 110 },
+  { symbol: 'SPG', sector: 'Real Estate', basePrice: 145 },
+  { symbol: 'PSA', sector: 'Real Estate', basePrice: 290 },
+  { symbol: 'O', sector: 'Real Estate', basePrice: 55 },
+  { symbol: 'DLR', sector: 'Real Estate', basePrice: 135 },
+  { symbol: 'WELL', sector: 'Real Estate', basePrice: 100 },
+  { symbol: 'VICI', sector: 'Real Estate', basePrice: 30 },
+  { symbol: 'AVB', sector: 'Real Estate', basePrice: 195 },
+  { symbol: 'EQR', sector: 'Real Estate', basePrice: 65 },
+  { symbol: 'SBAC', sector: 'Real Estate', basePrice: 230 },
+  { symbol: 'WY', sector: 'Real Estate', basePrice: 33 },
+  { symbol: 'ARE', sector: 'Real Estate', basePrice: 120 },
+  { symbol: 'MAA', sector: 'Real Estate', basePrice: 145 },
+  { symbol: 'ESS', sector: 'Real Estate', basePrice: 250 },
+  { symbol: 'VTR', sector: 'Real Estate', basePrice: 48 },
+  { symbol: 'IRM', sector: 'Real Estate', basePrice: 65 },
+  { symbol: 'CBRE', sector: 'Real Estate', basePrice: 90 },
+  // ═══ UTILITIES (25) ═══
   { symbol: 'NEE', sector: 'Utilities', basePrice: 75 },
   { symbol: 'DUK', sector: 'Utilities', basePrice: 105 },
-  // Semiconductor & AI
-  { symbol: 'TSM', sector: 'Technology', basePrice: 165 },
-  { symbol: 'ASML', sector: 'Technology', basePrice: 680 },
-  { symbol: 'MRVL', sector: 'Technology', basePrice: 70 },
-  { symbol: 'SNPS', sector: 'Technology', basePrice: 520 },
+  { symbol: 'SO', sector: 'Utilities', basePrice: 75 },
+  { symbol: 'D', sector: 'Utilities', basePrice: 50 },
+  { symbol: 'AEP', sector: 'Utilities', basePrice: 90 },
+  { symbol: 'SRE', sector: 'Utilities', basePrice: 78 },
+  { symbol: 'EXC', sector: 'Utilities', basePrice: 42 },
+  { symbol: 'XEL', sector: 'Utilities', basePrice: 65 },
+  { symbol: 'ED', sector: 'Utilities', basePrice: 95 },
+  { symbol: 'WEC', sector: 'Utilities', basePrice: 92 },
+  { symbol: 'PCG', sector: 'Utilities', basePrice: 17 },
+  { symbol: 'EIX', sector: 'Utilities', basePrice: 70 },
+  { symbol: 'AWK', sector: 'Utilities', basePrice: 140 },
+  { symbol: 'DTE', sector: 'Utilities', basePrice: 115 },
+  { symbol: 'ETR', sector: 'Utilities', basePrice: 105 },
+  { symbol: 'ES', sector: 'Utilities', basePrice: 65 },
+  { symbol: 'FE', sector: 'Utilities', basePrice: 40 },
+  { symbol: 'PPL', sector: 'Utilities', basePrice: 28 },
+  { symbol: 'CMS', sector: 'Utilities', basePrice: 62 },
+  { symbol: 'AEE', sector: 'Utilities', basePrice: 85 },
+  { symbol: 'EVRG', sector: 'Utilities', basePrice: 55 },
+  { symbol: 'ATO', sector: 'Utilities', basePrice: 120 },
+  { symbol: 'LNT', sector: 'Utilities', basePrice: 55 },
+  { symbol: 'NI', sector: 'Utilities', basePrice: 28 },
+  { symbol: 'PNW', sector: 'Utilities', basePrice: 80 },
 ];
 
 const SECTORS = [
@@ -464,28 +747,48 @@ const CACHE_DURATION = 3600000; // 1 hour
 
 /** Fetch real 30-day price data via Netlify serverless function or local proxy. */
 async function fetchRealPrices(symbols: string[]): Promise<Record<string, PriceData>> {
-  const symbolStr = symbols.join(',');
-  // Try Netlify function path first, then local proxy
-  const urls = [
-    `/api/market-data?symbols=${symbolStr}&range=2mo&interval=1d`,
-    `/.netlify/functions/market-data?symbols=${symbolStr}&range=2mo&interval=1d`,
-  ];
+  // Batch into chunks of 25 (serverless function limit)
+  const BATCH_SIZE = 25;
+  const results: Record<string, PriceData> = {};
 
-  for (const url of urls) {
-    try {
-      const res = await fetch(url);
-      if (res.ok) {
-        const json = await res.json();
-        if (json.data && Object.keys(json.data).length > 0) {
-          return json.data;
+  // Process batches in parallel groups of 4 (100 symbols at a time)
+  const PARALLEL_BATCHES = 4;
+  const batches: string[][] = [];
+  for (let i = 0; i < symbols.length; i += BATCH_SIZE) {
+    batches.push(symbols.slice(i, i + BATCH_SIZE));
+  }
+
+  for (let g = 0; g < batches.length; g += PARALLEL_BATCHES) {
+    const group = batches.slice(g, g + PARALLEL_BATCHES);
+    const groupResults = await Promise.all(group.map(async (batch) => {
+      const symbolStr = batch.join(',');
+      const urls = [
+        `/api/market-data?symbols=${symbolStr}&range=2mo&interval=1d`,
+        `/.netlify/functions/market-data?symbols=${symbolStr}&range=2mo&interval=1d`,
+      ];
+
+      for (const url of urls) {
+        try {
+          const res = await fetch(url);
+          if (res.ok) {
+            const json = await res.json();
+            if (json.data && Object.keys(json.data).length > 0) {
+              return json.data as Record<string, PriceData>;
+            }
+          }
+        } catch {
+          // try next URL
         }
       }
-    } catch {
-      // try next URL
+      return {} as Record<string, PriceData>;
+    }));
+
+    for (const r of groupResults) {
+      Object.assign(results, r);
     }
   }
 
-  return {};
+  return results;
 }
 
 // ── Statistical Analysis Functions ──
@@ -2521,7 +2824,7 @@ export interface TradeFinderResult {
 }
 
 const TRADE_FINDER_CACHE_KEY = 'quest_trade_finder_cache';
-const TRADE_FINDER_CACHE_DURATION = 5 * 60 * 1000; // 5 min cache
+const TRADE_FINDER_CACHE_DURATION = 15 * 60 * 1000; // 15 min cache (500+ stocks = heavier API load)
 
 // Information Coefficient weights — derived from factor predictive power analysis
 // These represent how predictive each factor is for forward returns (higher = more predictive)
@@ -2864,7 +3167,7 @@ export async function findTradeOpportunities(portfolioSize = 10000): Promise<Tra
   const marketBias: 'bullish' | 'bearish' | 'neutral' = avgScore > 55 ? 'bullish' : avgScore < 40 ? 'bearish' : 'neutral';
 
   const result: TradeFinderResult = {
-    opportunities: opportunities.slice(0, 20),
+    opportunities: opportunities.slice(0, 30),
     marketCondition: regime === 'bull' ? 'Risk-On — Favorable for long positions' : regime === 'bear' ? 'Risk-Off — Defensive positioning recommended' : 'Mixed — Selective opportunities only',
     regime,
     scannedAt: Date.now(),

@@ -12,7 +12,7 @@ export default async (req: Request, _context: Context) => {
   const range = url.searchParams.get("range") || "1mo";
   const interval = url.searchParams.get("interval") || "1d";
 
-  const symbolList = symbols.split(",").slice(0, 25); // max 25 symbols
+  const symbolList = symbols.split(",").slice(0, 30); // max 30 symbols per request
 
   const headers = {
     "Content-Type": "application/json",
@@ -34,9 +34,9 @@ export default async (req: Request, _context: Context) => {
   try {
     const results: Record<string, { dates: string[]; closes: number[]; symbol: string }> = {};
 
-    // Fetch in parallel, batches of 5
-    for (let i = 0; i < symbolList.length; i += 5) {
-      const batch = symbolList.slice(i, i + 5);
+    // Fetch in parallel, batches of 10
+    for (let i = 0; i < symbolList.length; i += 10) {
+      const batch = symbolList.slice(i, i + 10);
       const fetches = batch.map(async (sym) => {
         const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?range=${range}&interval=${interval}`;
         const res = await fetch(yahooUrl, {
