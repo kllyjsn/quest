@@ -190,3 +190,93 @@ input:focus, select:focus {
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
   .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
 }
+
+/* ── Mobile-first enhancements ── */
+
+/* Horizontal scroll container (no scrollbar) */
+.scroll-x {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  gap: 10px;
+}
+.scroll-x::-webkit-scrollbar { display: none; }
+.scroll-x > * { scroll-snap-align: start; flex-shrink: 0; }
+
+/* Bottom nav active pill indicator */
+.nav-pill-active {
+  position: relative;
+}
+.nav-pill-active::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+}
+
+/* Mobile card press effect */
+.press-scale {
+  transition: transform 0.1s ease;
+}
+.press-scale:active {
+  transform: scale(0.97);
+}
+
+/* Accordion panel */
+.accordion-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.accordion-body.open {
+  grid-template-rows: 1fr;
+}
+.accordion-body > div {
+  overflow: hidden;
+}
+
+/* Mobile metric chip */
+.metric-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  min-width: 110px;
+}
+
+/* Swipe hint for scroll containers */
+@keyframes swipeHint {
+  0% { transform: translateX(0); opacity: 1; }
+  50% { transform: translateX(-8px); opacity: 0.6; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+.swipe-hint { animation: swipeHint 2s ease-in-out 1; }
+
+/* Mobile-friendly touch ripple */
+@keyframes ripple {
+  to { transform: scale(2); opacity: 0; }
+}
+
+/* Hide on mobile, show on desktop */
+@media (max-width: 767px) {
+  .desktop-only { display: none !important; }
+  /* Tighter card padding on mobile */
+  .mobile-tight { padding: 14px !important; }
+  /* Stack elements vertically on mobile */
+  .mobile-stack { flex-direction: column !important; gap: 4px !important; }
+}
+@media (min-width: 768px) {
+  .mobile-only { display: none !important; }
+}

@@ -7,7 +7,7 @@ import {
 import {
   Activity, TrendingUp, TrendingDown, Shield, Zap,
   Target, AlertTriangle, DollarSign, Layers, RefreshCw,
-  ChevronRight, ArrowUpRight, ArrowDownRight, Cpu,
+  ChevronRight, ChevronDown, ArrowUpRight, ArrowDownRight, Cpu,
   Eye, Crosshair, Gauge, PieChart as PieIcon,
   LogIn, LogOut, User, Clock, Flame, X,
   LayoutDashboard, LineChart, FlaskConical, ShieldCheck, Link2,
@@ -304,13 +304,13 @@ function App() {
 
       {/* Mobile bottom nav */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 glass border-t border-[var(--border)] z-50 safe-bottom">
-        <div className="grid grid-cols-6 h-16">
+        <div className="flex justify-around items-center h-[60px] px-1">
           {TABS.map(({ id, icon: Icon, shortLabel }) => (
             <button key={id} onClick={() => setTab(id)}
-              className={`flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors
-                ${tab === id ? 'text-[#3b82f6]' : 'text-[var(--text-faint)]'}`}>
-              <Icon className={`w-5 h-5 ${tab === id ? 'text-[#3b82f6]' : ''}`} />
-              {shortLabel}
+              className={`flex flex-col items-center justify-center gap-[3px] min-w-[44px] min-h-[44px] rounded-xl transition-all press-scale
+                ${tab === id ? 'text-[#3b82f6] nav-pill-active' : 'text-[var(--text-faint)]'}`}>
+              <Icon className={`w-[22px] h-[22px] transition-transform ${tab === id ? 'text-[#3b82f6] scale-110' : ''}`} />
+              <span className={`text-[9px] leading-none font-semibold ${tab === id ? 'text-[#3b82f6]' : ''}`}>{shortLabel}</span>
             </button>
           ))}
         </div>
@@ -325,7 +325,7 @@ function App() {
 
 function Card({ children, className = '', glow = '' }: { children: React.ReactNode; className?: string; glow?: string }) {
   return (
-    <div className={`bg-[var(--bg-card)] rounded-2xl p-4 sm:p-5 border border-[var(--border)] hover:border-[var(--border-emphasis)] transition-all card-hover gradient-border ${glow} ${className}`}>
+    <div className={`bg-[var(--bg-card)] rounded-2xl p-3.5 sm:p-5 border border-[var(--border)] hover:border-[var(--border-emphasis)] transition-all card-hover gradient-border press-scale ${glow} ${className}`}>
       {children}
     </div>
   );
@@ -447,8 +447,31 @@ function DashboardTab({ regime, rankings, sectors, onSelectSymbol, technicals, s
           <h3 className="text-xs font-semibold text-[var(--text-muted)] mb-4 flex items-center gap-2 uppercase tracking-wider">
             <TrendingUp className="w-3.5 h-3.5 text-[#22c55e]" /> Rankings
           </h3>
-          <div className="overflow-x-auto -mx-4 sm:-mx-5 px-4 sm:px-5">
-            <table className="w-full text-sm min-w-[480px]">
+          {/* Mobile: Card list */}
+          <div className="md:hidden space-y-2">
+            {topBuys.map((r: RankingEntry) => (
+              <button key={r.symbol} onClick={() => onSelectSymbol(r.symbol)}
+                className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-[var(--border)] press-scale text-left">
+                <div className="w-8 h-8 rounded-lg bg-[#3b82f6]/10 flex items-center justify-center shrink-0">
+                  <span className="font-mono font-bold text-[10px] text-[#3b82f6]">#{r.rank}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-mono font-bold text-sm text-[#3b82f6]">{r.symbol}</p>
+                  <div className="flex gap-3 mt-0.5">
+                    <span className={`text-[10px] font-mono ${r.momentum > 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>Mom {(r.momentum * 100).toFixed(1)}%</span>
+                    <span className="text-[10px] font-mono text-[#8b5cf6]">Q {r.quality.toFixed(3)}</span>
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className={`font-mono font-bold text-sm ${r.composite > 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>{r.composite.toFixed(3)}</p>
+                  <p className="text-[9px] text-[var(--text-faint)]">score</p>
+                </div>
+              </button>
+            ))}
+          </div>
+          {/* Desktop: Table */}
+          <div className="hidden md:block overflow-x-auto -mx-5 px-5">
+            <table className="w-full text-sm">
               <thead>
                 <tr className="text-[var(--text-faint)] text-[10px] uppercase tracking-wider border-b border-[var(--border)]">
                   <th className="text-left py-2.5 pr-2">#</th>
@@ -904,13 +927,36 @@ function LimitBar({ label, value, color }: { label: string; value: number; color
   );
 }
 
+// ── Research Panel (collapsible on mobile) ──
+function ResearchPanel({ title, badge, children, defaultOpen = false }: { title: string; badge?: string; children: React.ReactNode; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <Card className="!p-0 overflow-hidden">
+      <button onClick={() => setOpen(!open)} className="w-full flex items-center gap-3 p-3.5 sm:p-5 text-left press-scale">
+        <div className="flex-1 min-w-0">
+          <h3 className="text-[11px] sm:text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider truncate">{title}</h3>
+        </div>
+        {badge && <span className="text-[9px] px-2 py-0.5 rounded-full bg-[var(--bg-secondary)] text-[var(--text-faint)] font-mono shrink-0">{badge}</span>}
+        <ChevronDown className={`w-4 h-4 text-[var(--text-faint)] transition-transform shrink-0 ${open ? 'rotate-180' : ''}`} />
+      </button>
+      <div className={`accordion-body ${open ? 'open' : ''}`}>
+        <div>
+          <div className="px-3.5 pb-3.5 sm:px-5 sm:pb-5 pt-0">
+            {children}
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 // ── Research (Institutional Analytics) ──
 function ResearchTab({ data, loading, onRefresh }: any) {
   if (!data && loading) return (
     <div className="space-y-4">
       <SectionHeader icon={Cpu} title="Institutional Research" subtitle="Loading analytics..." accent="#8b5cf6"
         action={<ActionButton onClick={onRefresh} loading={loading} icon={RefreshCw} label="Refresh" />} />
-      {[1,2,3,4].map(i => <div key={i} className="h-48 shimmer rounded-2xl" />)}
+      {[1,2,3,4].map(i => <div key={i} className="h-32 sm:h-48 shimmer rounded-2xl" />)}
     </div>
   );
 
@@ -925,40 +971,70 @@ function ResearchTab({ data, loading, onRefresh }: any) {
   const { walkForward, deflatedSharpe, pca, stressTests, ic, hrp, macro, txCost } = data;
 
   return (
-    <div className="space-y-5 sm:space-y-6">
-      <SectionHeader icon={Cpu} title="Institutional Research" subtitle="Quant-grade statistical validation" accent="#8b5cf6"
+    <div className="space-y-3 sm:space-y-5">
+      <SectionHeader icon={Cpu} title="Research" subtitle="Institutional-grade validation" accent="#8b5cf6"
         action={<ActionButton onClick={onRefresh} loading={loading} icon={RefreshCw} label="Re-run" />} />
+
+      {/* Summary chips (mobile horizontal scroll) */}
+      <div className="scroll-x -mx-3.5 px-3.5 sm:hidden swipe-hint">
+        {walkForward && <div className="metric-chip"><p className="text-base font-bold" style={{ color: walkForward.is_robust ? '#22c55e' : '#ef4444' }}>{walkForward.is_robust ? 'ROBUST' : 'WEAK'}</p><p className="text-[9px] text-[var(--text-faint)] mt-0.5">Walk-Forward</p></div>}
+        {deflatedSharpe && <div className="metric-chip"><p className="text-base font-bold" style={{ color: deflatedSharpe.is_significant ? '#22c55e' : '#ef4444' }}>{deflatedSharpe.deflated_sharpe}</p><p className="text-[9px] text-[var(--text-faint)] mt-0.5">Deflated SR</p></div>}
+        {pca && <div className="metric-chip"><p className="text-base font-bold text-[#3b82f6]">{pca.systematic_risk_pct}%</p><p className="text-[9px] text-[var(--text-faint)] mt-0.5">Systematic</p></div>}
+        {stressTests && <div className="metric-chip"><p className="text-base font-bold text-[#ef4444]">{stressTests.tail_risk_var95}%</p><p className="text-[9px] text-[var(--text-faint)] mt-0.5">VaR 95%</p></div>}
+        {macro && <div className="metric-chip"><p className="text-[11px] font-bold" style={{ color: macro.regime.includes('Expansion') ? '#22c55e' : '#ef4444' }}>{macro.regime.includes('Expansion') ? 'Risk-On' : macro.regime.includes('Contraction') ? 'Risk-Off' : 'Mixed'}</p><p className="text-[9px] text-[var(--text-faint)] mt-0.5">Regime</p></div>}
+        {txCost && <div className="metric-chip"><p className="text-base font-bold text-[#f59e0b]">{txCost.total_portfolio_cost_bps}bps</p><p className="text-[9px] text-[var(--text-faint)] mt-0.5">Avg Cost</p></div>}
+      </div>
 
       {/* Walk-Forward Cross-Validation */}
       {walkForward && (
-        <Card>
-          <h3 className="text-xs font-bold text-[var(--text-muted)] mb-4 uppercase tracking-wider">Walk-Forward k-Fold Cross-Validation ({walkForward.folds.length} folds)</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-            <div className="text-center p-3 bg-[var(--bg-secondary)] rounded-xl">
-              <p className="text-lg font-bold" style={{ color: walkForward.avg_test_sharpe > 0.5 ? '#22c55e' : '#f59e0b' }}>{walkForward.avg_test_sharpe}</p>
+        <ResearchPanel title={`Walk-Forward CV (${walkForward.folds.length} folds)`} badge={walkForward.is_robust ? 'ROBUST' : 'WEAK'} defaultOpen>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4">
+            <div className="text-center p-2.5 sm:p-3 bg-[var(--bg-secondary)] rounded-xl">
+              <p className="text-base sm:text-lg font-bold" style={{ color: walkForward.avg_test_sharpe > 0.5 ? '#22c55e' : '#f59e0b' }}>{walkForward.avg_test_sharpe}</p>
               <p className="text-[9px] text-[var(--text-faint)]">Avg OOS Sharpe</p>
             </div>
-            <div className="text-center p-3 bg-[var(--bg-secondary)] rounded-xl">
-              <p className="text-lg font-bold text-[var(--text-primary)]">±{walkForward.sharpe_std}</p>
+            <div className="text-center p-2.5 sm:p-3 bg-[var(--bg-secondary)] rounded-xl">
+              <p className="text-base sm:text-lg font-bold text-[var(--text-primary)]">±{walkForward.sharpe_std}</p>
               <p className="text-[9px] text-[var(--text-faint)]">Sharpe Std</p>
             </div>
-            <div className="text-center p-3 bg-[var(--bg-secondary)] rounded-xl">
-              <p className="text-lg font-bold" style={{ color: walkForward.overfit_ratio < 0.5 ? '#22c55e' : '#ef4444' }}>{(walkForward.overfit_ratio * 100).toFixed(0)}%</p>
+            <div className="text-center p-2.5 sm:p-3 bg-[var(--bg-secondary)] rounded-xl">
+              <p className="text-base sm:text-lg font-bold" style={{ color: walkForward.overfit_ratio < 0.5 ? '#22c55e' : '#ef4444' }}>{(walkForward.overfit_ratio * 100).toFixed(0)}%</p>
               <p className="text-[9px] text-[var(--text-faint)]">Overfit Ratio</p>
             </div>
-            <div className="text-center p-3 bg-[var(--bg-secondary)] rounded-xl">
-              <p className="text-lg font-bold" style={{ color: walkForward.is_robust ? '#22c55e' : '#ef4444' }}>{walkForward.is_robust ? 'ROBUST' : 'WEAK'}</p>
+            <div className="text-center p-2.5 sm:p-3 bg-[var(--bg-secondary)] rounded-xl">
+              <p className="text-base sm:text-lg font-bold" style={{ color: walkForward.is_robust ? '#22c55e' : '#ef4444' }}>{walkForward.is_robust ? 'ROBUST' : 'WEAK'}</p>
               <p className="text-[9px] text-[var(--text-faint)]">Verdict</p>
             </div>
           </div>
-          <div className="overflow-x-auto">
+          {/* Mobile: Card per fold */}
+          <div className="md:hidden space-y-2">
+            {walkForward.folds.map((f: any) => (
+              <div key={f.fold} className="flex items-center gap-3 p-2.5 rounded-xl bg-white/[0.02] border border-[var(--border)]">
+                <div className="w-7 h-7 rounded-lg bg-[var(--bg-secondary)] flex items-center justify-center shrink-0">
+                  <span className="text-[10px] font-mono font-bold text-[var(--text-faint)]">F{f.fold}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-[var(--text-faint)]">OOS Sharpe</span>
+                    <span className="font-mono font-bold text-xs" style={{ color: f.test_sharpe > 0 ? '#22c55e' : '#ef4444' }}>{f.test_sharpe}</span>
+                  </div>
+                  <div className="flex items-center gap-3 mt-0.5">
+                    <span className="font-mono text-[10px]" style={{ color: f.test_return > 0 ? '#22c55e' : '#ef4444' }}>{f.test_return > 0 ? '+' : ''}{f.test_return}%</span>
+                    <span className="font-mono text-[10px] text-[#ef4444]">DD {f.test_max_dd}%</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          {/* Desktop: Table */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
                 <tr className="text-[var(--text-faint)] border-b border-[var(--border)]">
                   <th className="text-left py-2 px-1">Fold</th>
-                  <th className="text-left py-2 px-1">Train Period</th>
+                  <th className="text-left py-2 px-1">Train</th>
                   <th className="text-right py-2 px-1">Train Sharpe</th>
-                  <th className="text-left py-2 px-1">Test Period</th>
+                  <th className="text-left py-2 px-1">Test</th>
                   <th className="text-right py-2 px-1">OOS Sharpe</th>
                   <th className="text-right py-2 px-1">OOS Return</th>
                   <th className="text-right py-2 px-1">Max DD</th>
@@ -979,110 +1055,123 @@ function ResearchTab({ data, loading, onRefresh }: any) {
               </tbody>
             </table>
           </div>
-        </Card>
+        </ResearchPanel>
       )}
 
       {/* Deflated Sharpe Ratio */}
       {deflatedSharpe && (
-        <Card>
-          <h3 className="text-xs font-bold text-[var(--text-muted)] mb-4 uppercase tracking-wider">Deflated Sharpe Ratio (Bailey & Lopez de Prado)</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-            <div className="text-center p-3 bg-[var(--bg-secondary)] rounded-xl">
-              <p className="text-lg font-bold text-[var(--text-primary)]">{deflatedSharpe.observed_sharpe}</p>
-              <p className="text-[9px] text-[var(--text-faint)]">Observed Sharpe</p>
+        <ResearchPanel title="Deflated Sharpe Ratio" badge={deflatedSharpe.is_significant ? 'SIG' : 'N/S'}>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-3">
+            <div className="text-center p-2.5 bg-[var(--bg-secondary)] rounded-xl">
+              <p className="text-base font-bold text-[var(--text-primary)]">{deflatedSharpe.observed_sharpe}</p>
+              <p className="text-[9px] text-[var(--text-faint)]">Observed</p>
             </div>
-            <div className="text-center p-3 bg-[var(--bg-secondary)] rounded-xl">
-              <p className="text-lg font-bold" style={{ color: deflatedSharpe.deflated_sharpe > 0 ? '#22c55e' : '#ef4444' }}>{deflatedSharpe.deflated_sharpe}</p>
-              <p className="text-[9px] text-[var(--text-faint)]">Deflated Sharpe</p>
+            <div className="text-center p-2.5 bg-[var(--bg-secondary)] rounded-xl">
+              <p className="text-base font-bold" style={{ color: deflatedSharpe.deflated_sharpe > 0 ? '#22c55e' : '#ef4444' }}>{deflatedSharpe.deflated_sharpe}</p>
+              <p className="text-[9px] text-[var(--text-faint)]">Deflated</p>
             </div>
-            <div className="text-center p-3 bg-[var(--bg-secondary)] rounded-xl">
-              <p className="text-lg font-bold" style={{ color: deflatedSharpe.p_value < 0.05 ? '#22c55e' : '#ef4444' }}>{deflatedSharpe.p_value}</p>
+            <div className="text-center p-2.5 bg-[var(--bg-secondary)] rounded-xl">
+              <p className="text-base font-bold" style={{ color: deflatedSharpe.p_value < 0.05 ? '#22c55e' : '#ef4444' }}>{deflatedSharpe.p_value}</p>
               <p className="text-[9px] text-[var(--text-faint)]">p-value</p>
             </div>
-            <div className="text-center p-3 bg-[var(--bg-secondary)] rounded-xl">
-              <p className="text-lg font-bold" style={{ color: deflatedSharpe.is_significant ? '#22c55e' : '#ef4444' }}>{deflatedSharpe.is_significant ? 'YES' : 'NO'}</p>
-              <p className="text-[9px] text-[var(--text-faint)]">Significant (α=0.05)</p>
+            <div className="text-center p-2.5 bg-[var(--bg-secondary)] rounded-xl">
+              <p className="text-base font-bold" style={{ color: deflatedSharpe.is_significant ? '#22c55e' : '#ef4444' }}>{deflatedSharpe.is_significant ? 'YES' : 'NO'}</p>
+              <p className="text-[9px] text-[var(--text-faint)]">Significant</p>
             </div>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
-            <div><span className="text-[var(--text-faint)]">Haircut:</span> <span className="font-mono text-[#f59e0b]">{deflatedSharpe.haircut_pct}%</span></div>
-            <div><span className="text-[var(--text-faint)]">P(Overfit):</span> <span className="font-mono text-[#ef4444]">{(deflatedSharpe.prob_overfit * 100).toFixed(0)}%</span></div>
-            <div><span className="text-[var(--text-faint)]">Trials:</span> <span className="font-mono">{deflatedSharpe.trials_equivalent}</span></div>
-            <div><span className="text-[var(--text-faint)]">Min Track:</span> <span className="font-mono">{deflatedSharpe.min_track_record_months}mo</span></div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-[11px]">
+            <div className="p-2 rounded-lg bg-white/[0.02]"><span className="text-[var(--text-faint)]">Haircut </span><span className="font-mono text-[#f59e0b]">{deflatedSharpe.haircut_pct}%</span></div>
+            <div className="p-2 rounded-lg bg-white/[0.02]"><span className="text-[var(--text-faint)]">P(Overfit) </span><span className="font-mono text-[#ef4444]">{(deflatedSharpe.prob_overfit * 100).toFixed(0)}%</span></div>
+            <div className="p-2 rounded-lg bg-white/[0.02]"><span className="text-[var(--text-faint)]">Trials </span><span className="font-mono">{deflatedSharpe.trials_equivalent}</span></div>
+            <div className="p-2 rounded-lg bg-white/[0.02]"><span className="text-[var(--text-faint)]">Min Track </span><span className="font-mono">{deflatedSharpe.min_track_record_months}mo</span></div>
           </div>
-        </Card>
+        </ResearchPanel>
       )}
 
       {/* PCA Risk Decomposition */}
       {pca && (
-        <Card>
-          <h3 className="text-xs font-bold text-[var(--text-muted)] mb-4 uppercase tracking-wider">PCA Risk Decomposition</h3>
-          <div className="grid grid-cols-2 gap-3 mb-4">
-            <div className="text-center p-3 bg-[var(--bg-secondary)] rounded-xl">
-              <p className="text-xl font-bold text-[#3b82f6]">{pca.systematic_risk_pct}%</p>
-              <p className="text-[9px] text-[var(--text-faint)]">Systematic Risk</p>
+        <ResearchPanel title="PCA Risk Decomposition" badge={`${pca.systematic_risk_pct}% sys`}>
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-4">
+            <div className="text-center p-2.5 sm:p-3 bg-[var(--bg-secondary)] rounded-xl">
+              <p className="text-lg sm:text-xl font-bold text-[#3b82f6]">{pca.systematic_risk_pct}%</p>
+              <p className="text-[9px] text-[var(--text-faint)]">Systematic</p>
             </div>
-            <div className="text-center p-3 bg-[var(--bg-secondary)] rounded-xl">
-              <p className="text-xl font-bold text-[#8b5cf6]">{pca.idiosyncratic_risk_pct}%</p>
-              <p className="text-[9px] text-[var(--text-faint)]">Idiosyncratic (Alpha)</p>
+            <div className="text-center p-2.5 sm:p-3 bg-[var(--bg-secondary)] rounded-xl">
+              <p className="text-lg sm:text-xl font-bold text-[#8b5cf6]">{pca.idiosyncratic_risk_pct}%</p>
+              <p className="text-[9px] text-[var(--text-faint)]">Alpha</p>
             </div>
           </div>
           <div className="space-y-2">
             {pca.components.map((c: any) => (
-              <div key={c.id} className="flex items-center gap-3">
+              <div key={c.id} className="flex items-center gap-2 sm:gap-3">
                 <span className="w-6 text-xs font-mono text-[var(--text-faint)]">PC{c.id}</span>
-                <div className="flex-1 h-4 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
+                <div className="flex-1 h-3.5 sm:h-4 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
                   <div className="h-full rounded-full bg-gradient-to-r from-[#3b82f6] to-[#8b5cf6]" style={{ width: `${c.variance_pct}%` }} />
                 </div>
-                <span className="w-12 text-right text-xs font-mono">{c.variance_pct}%</span>
-                <span className="w-24 text-xs text-[var(--text-faint)] truncate">{c.interpretation}</span>
+                <span className="w-10 sm:w-12 text-right text-[10px] sm:text-xs font-mono">{c.variance_pct}%</span>
+                <span className="hidden sm:inline w-24 text-xs text-[var(--text-faint)] truncate">{c.interpretation}</span>
               </div>
             ))}
           </div>
-          <p className="mt-3 text-[10px] text-[var(--text-faint)]">Effective dimension: {pca.effective_dimension} factors explain 80%+ of variance. Idiosyncratic risk = true alpha opportunity.</p>
-        </Card>
+        </ResearchPanel>
       )}
 
       {/* Stress Tests */}
       {stressTests && (
-        <Card>
-          <h3 className="text-xs font-bold text-[var(--text-muted)] mb-4 uppercase tracking-wider">Historical Stress Tests</h3>
-          <div className="grid grid-cols-3 gap-3 mb-4">
+        <ResearchPanel title="Historical Stress Tests" badge={`VaR ${stressTests.tail_risk_var95}%`}>
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-4">
             <div className="text-center p-2 bg-[var(--bg-secondary)] rounded-xl">
               <p className="text-sm font-bold text-[#ef4444]">{stressTests.tail_risk_var95}%</p>
-              <p className="text-[8px] text-[var(--text-faint)]">VaR (95%)</p>
+              <p className="text-[8px] text-[var(--text-faint)]">VaR 95%</p>
             </div>
             <div className="text-center p-2 bg-[var(--bg-secondary)] rounded-xl">
               <p className="text-sm font-bold text-[#ef4444]">{stressTests.tail_risk_cvar95}%</p>
-              <p className="text-[8px] text-[var(--text-faint)]">CVaR / ES</p>
+              <p className="text-[8px] text-[var(--text-faint)]">CVaR</p>
             </div>
             <div className="text-center p-2 bg-[var(--bg-secondary)] rounded-xl">
               <p className="text-sm font-bold text-[#f59e0b]">{stressTests.current_vulnerability}%</p>
-              <p className="text-[8px] text-[var(--text-faint)]">Ann. Vol</p>
+              <p className="text-[8px] text-[var(--text-faint)]">Vol</p>
             </div>
           </div>
           <div className="space-y-2">
             {stressTests.scenarios.map((s: any) => (
               <div key={s.name} className="flex items-center gap-2 py-2 border-b border-[var(--border)]/30 last:border-0">
-                <div className="flex-1">
-                  <p className="text-xs font-medium">{s.name}</p>
-                  <p className="text-[9px] text-[var(--text-faint)]">{s.period} · VIX {s.vix_peak}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium truncate">{s.name}</p>
+                  <p className="text-[9px] text-[var(--text-faint)]">{s.period}</p>
                 </div>
-                <div className="text-right">
+                <div className="text-right shrink-0">
                   <p className="text-xs font-mono font-bold text-[#ef4444]">{s.portfolio_impact.toFixed(1)}%</p>
-                  <p className="text-[8px] text-[var(--text-faint)]">{s.recovery_days}d recovery</p>
+                  <p className="text-[8px] text-[var(--text-faint)]">{s.recovery_days}d</p>
                 </div>
               </div>
             ))}
           </div>
-        </Card>
+        </ResearchPanel>
       )}
 
       {/* Information Coefficient */}
       {ic && (
-        <Card>
-          <h3 className="text-xs font-bold text-[var(--text-muted)] mb-4 uppercase tracking-wider">Factor Information Coefficient (IC) Analysis</h3>
-          <div className="overflow-x-auto">
+        <ResearchPanel title="Factor IC Analysis" badge={`Best: ${ic.best_factor}`}>
+          {/* Mobile: Card per factor */}
+          <div className="md:hidden space-y-2">
+            {ic.factors.map((f: any) => (
+              <div key={f.name} className="p-2.5 rounded-xl bg-white/[0.02] border border-[var(--border)]">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs font-semibold">{f.name}</span>
+                  {f.is_significant ? <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#22c55e]/10 text-[#22c55e]">Sig</span> : <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#ef4444]/10 text-[#ef4444]">N/S</span>}
+                </div>
+                <div className="grid grid-cols-4 gap-1.5 text-center">
+                  <div><p className="font-mono text-[11px] font-bold" style={{ color: f.ic_mean > 0 ? '#22c55e' : '#ef4444' }}>{f.ic_mean.toFixed(3)}</p><p className="text-[8px] text-[var(--text-faint)]">IC</p></div>
+                  <div><p className="font-mono text-[11px] font-bold" style={{ color: f.icir > 0.5 ? '#22c55e' : '#f59e0b' }}>{f.icir.toFixed(2)}</p><p className="text-[8px] text-[var(--text-faint)]">ICIR</p></div>
+                  <div><p className="font-mono text-[11px] font-bold">{(f.hit_rate * 100).toFixed(0)}%</p><p className="text-[8px] text-[var(--text-faint)]">Hit</p></div>
+                  <div><p className="font-mono text-[11px] font-bold">{f.decay_halflife}d</p><p className="text-[8px] text-[var(--text-faint)]">Half</p></div>
+                </div>
+              </div>
+            ))}
+          </div>
+          {/* Desktop: Table */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
                 <tr className="text-[var(--text-faint)] border-b border-[var(--border)]">
@@ -1110,70 +1199,68 @@ function ResearchTab({ data, loading, onRefresh }: any) {
               </tbody>
             </table>
           </div>
-          <p className="mt-3 text-[10px] text-[var(--text-faint)]">Best: {ic.best_factor} · Worst: {ic.worst_factor} · Combined ICIR: {ic.combined_icir}</p>
-        </Card>
+          <p className="mt-3 text-[10px] text-[var(--text-faint)]">Combined ICIR: {ic.combined_icir}</p>
+        </ResearchPanel>
       )}
 
       {/* Hierarchical Risk Parity */}
       {hrp && (
-        <Card>
-          <h3 className="text-xs font-bold text-[var(--text-muted)] mb-4 uppercase tracking-wider">Hierarchical Risk Parity (Lopez de Prado)</h3>
-          <div className="grid grid-cols-2 gap-3 mb-4">
-            <div className="text-center p-3 bg-[var(--bg-secondary)] rounded-xl">
-              <p className="text-lg font-bold text-[#3b82f6]">{hrp.diversification_ratio}x</p>
-              <p className="text-[9px] text-[var(--text-faint)]">Diversification Ratio</p>
+        <ResearchPanel title="Hierarchical Risk Parity" badge={`${hrp.diversification_ratio}x div`}>
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-4">
+            <div className="text-center p-2.5 sm:p-3 bg-[var(--bg-secondary)] rounded-xl">
+              <p className="text-base sm:text-lg font-bold text-[#3b82f6]">{hrp.diversification_ratio}x</p>
+              <p className="text-[9px] text-[var(--text-faint)]">Diversification</p>
             </div>
-            <div className="text-center p-3 bg-[var(--bg-secondary)] rounded-xl">
-              <p className="text-lg font-bold text-[#8b5cf6]">{hrp.effective_n}</p>
+            <div className="text-center p-2.5 sm:p-3 bg-[var(--bg-secondary)] rounded-xl">
+              <p className="text-base sm:text-lg font-bold text-[#8b5cf6]">{hrp.effective_n}</p>
               <p className="text-[9px] text-[var(--text-faint)]">Effective N</p>
             </div>
           </div>
           <div className="space-y-1.5">
-            {hrp.weights.slice(0, 12).map((w: any) => (
+            {hrp.weights.slice(0, 10).map((w: any) => (
               <div key={w.symbol} className="flex items-center gap-2">
-                <span className="w-12 text-xs font-mono text-[var(--text-secondary)]">{w.symbol}</span>
+                <span className="w-10 sm:w-12 text-[11px] sm:text-xs font-mono text-[var(--text-secondary)]">{w.symbol}</span>
                 <div className="flex-1 h-3 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
                   <div className="h-full rounded-full" style={{ width: `${w.weight * 100 * 5}%`, background: `hsl(${w.cluster * 80 + 200}, 70%, 55%)` }} />
                 </div>
-                <span className="w-12 text-right text-[10px] font-mono">{(w.weight * 100).toFixed(1)}%</span>
+                <span className="w-10 sm:w-12 text-right text-[10px] font-mono">{(w.weight * 100).toFixed(1)}%</span>
               </div>
             ))}
           </div>
-          <div className="mt-3 flex gap-2 flex-wrap">
+          <div className="mt-3 flex gap-1.5 sm:gap-2 flex-wrap">
             {hrp.clusters.map((c: any) => (
-              <span key={c.id} className="text-[9px] px-2 py-1 rounded-full bg-[var(--bg-secondary)] text-[var(--text-faint)]">
-                C{c.id}: {c.symbols.slice(0, 3).join(', ')} (ρ={c.avg_correlation})
+              <span key={c.id} className="text-[8px] sm:text-[9px] px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full bg-[var(--bg-secondary)] text-[var(--text-faint)]">
+                C{c.id}: {c.symbols.slice(0, 2).join(', ')}
               </span>
             ))}
           </div>
-        </Card>
+        </ResearchPanel>
       )}
 
       {/* Macro Regime */}
       {macro && (
-        <Card>
-          <h3 className="text-xs font-bold text-[var(--text-muted)] mb-4 uppercase tracking-wider">Macro Regime Signals</h3>
-          <div className="flex items-center gap-3 mb-4 p-3 rounded-xl" style={{ background: macro.regime.includes('Expansion') ? 'rgba(34,197,94,0.08)' : macro.regime.includes('Contraction') ? 'rgba(239,68,68,0.08)' : 'rgba(245,158,11,0.08)' }}>
-            <div className="text-sm font-bold" style={{ color: macro.regime.includes('Expansion') ? '#22c55e' : macro.regime.includes('Contraction') ? '#ef4444' : '#f59e0b' }}>
+        <ResearchPanel title="Macro Regime Signals" badge={macro.regime.includes('Expansion') ? 'Risk-On' : macro.regime.includes('Contraction') ? 'Risk-Off' : 'Mixed'} defaultOpen>
+          <div className="flex items-center gap-3 mb-4 p-2.5 sm:p-3 rounded-xl" style={{ background: macro.regime.includes('Expansion') ? 'rgba(34,197,94,0.08)' : macro.regime.includes('Contraction') ? 'rgba(239,68,68,0.08)' : 'rgba(245,158,11,0.08)' }}>
+            <div className="text-xs sm:text-sm font-bold" style={{ color: macro.regime.includes('Expansion') ? '#22c55e' : macro.regime.includes('Contraction') ? '#ef4444' : '#f59e0b' }}>
               {macro.regime}
             </div>
-            <div className="ml-auto text-xs font-mono">{macro.confidence}% confidence</div>
+            <div className="ml-auto text-[11px] sm:text-xs font-mono">{macro.confidence}%</div>
           </div>
           <div className="space-y-2 mb-4">
             {macro.signals.map((s: any) => (
               <div key={s.name} className="flex items-center gap-2 py-1.5 border-b border-[var(--border)]/30 last:border-0">
-                <span className="w-2 h-2 rounded-full" style={{ background: s.signal === 'bullish' ? '#22c55e' : s.signal === 'bearish' ? '#ef4444' : '#f59e0b' }}></span>
-                <span className="flex-1 text-xs">{s.name}</span>
-                <span className="text-xs font-mono">{s.value > 0 ? '+' : ''}{s.value}%</span>
-                <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: s.signal === 'bullish' ? 'rgba(34,197,94,0.15)' : s.signal === 'bearish' ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)', color: s.signal === 'bullish' ? '#22c55e' : s.signal === 'bearish' ? '#ef4444' : '#f59e0b' }}>{s.signal}</span>
+                <span className="w-2 h-2 rounded-full shrink-0" style={{ background: s.signal === 'bullish' ? '#22c55e' : s.signal === 'bearish' ? '#ef4444' : '#f59e0b' }}></span>
+                <span className="flex-1 text-[11px] sm:text-xs truncate">{s.name}</span>
+                <span className="text-[11px] sm:text-xs font-mono shrink-0">{s.value > 0 ? '+' : ''}{s.value}%</span>
+                <span className="text-[9px] px-1.5 py-0.5 rounded shrink-0" style={{ background: s.signal === 'bullish' ? 'rgba(34,197,94,0.15)' : s.signal === 'bearish' ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)', color: s.signal === 'bullish' ? '#22c55e' : s.signal === 'bearish' ? '#ef4444' : '#f59e0b' }}>{s.signal}</span>
               </div>
             ))}
           </div>
-          <h4 className="text-[10px] font-bold text-[var(--text-faint)] mb-2 uppercase">Recommended Allocation</h4>
+          <h4 className="text-[10px] font-bold text-[var(--text-faint)] mb-2 uppercase">Allocation</h4>
           <div className="space-y-1.5">
             {macro.recommended_allocation.map((a: any) => (
               <div key={a.asset_class} className="flex items-center gap-2">
-                <span className="w-16 text-xs">{a.asset_class}</span>
+                <span className="w-14 sm:w-16 text-[11px] sm:text-xs truncate">{a.asset_class}</span>
                 <div className="flex-1 h-3 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
                   <div className="h-full rounded-full bg-gradient-to-r from-[#3b82f6] to-[#22c55e]" style={{ width: `${a.weight}%` }} />
                 </div>
@@ -1181,29 +1268,41 @@ function ResearchTab({ data, loading, onRefresh }: any) {
               </div>
             ))}
           </div>
-        </Card>
+        </ResearchPanel>
       )}
 
       {/* Transaction Cost Model */}
       {txCost && (
-        <Card>
-          <h3 className="text-xs font-bold text-[var(--text-muted)] mb-4 uppercase tracking-wider">Transaction Cost Model ({txCost.model})</h3>
-          <div className="grid grid-cols-3 gap-3 mb-4">
+        <ResearchPanel title={`Transaction Costs (${txCost.model})`} badge={`${txCost.annual_drag_pct}% drag`}>
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-3">
             <div className="text-center p-2 bg-[var(--bg-secondary)] rounded-xl">
-              <p className="text-sm font-bold" style={{ color: txCost.total_portfolio_cost_bps < 10 ? '#22c55e' : '#f59e0b' }}>{txCost.total_portfolio_cost_bps} bps</p>
-              <p className="text-[8px] text-[var(--text-faint)]">Avg Cost/Trade</p>
+              <p className="text-sm font-bold" style={{ color: txCost.total_portfolio_cost_bps < 10 ? '#22c55e' : '#f59e0b' }}>{txCost.total_portfolio_cost_bps}bps</p>
+              <p className="text-[8px] text-[var(--text-faint)]">Cost/Trade</p>
             </div>
             <div className="text-center p-2 bg-[var(--bg-secondary)] rounded-xl">
               <p className="text-sm font-bold" style={{ color: txCost.annual_drag_pct < 1 ? '#22c55e' : '#ef4444' }}>{txCost.annual_drag_pct}%</p>
-              <p className="text-[8px] text-[var(--text-faint)]">Annual Drag</p>
+              <p className="text-[8px] text-[var(--text-faint)]">Ann. Drag</p>
             </div>
             <div className="text-center p-2 bg-[var(--bg-secondary)] rounded-xl">
               <p className="text-sm font-bold text-[var(--text-primary)]">{txCost.turnover_assumption}x</p>
-              <p className="text-[8px] text-[var(--text-faint)]">Ann. Turnover</p>
+              <p className="text-[8px] text-[var(--text-faint)]">Turnover</p>
             </div>
           </div>
-          <p className="text-xs mb-3 p-2 rounded-lg bg-[var(--bg-secondary)] text-[var(--text-muted)]">{txCost.recommendation}</p>
-          <div className="overflow-x-auto">
+          <p className="text-[11px] mb-3 p-2.5 rounded-xl bg-[var(--bg-secondary)] text-[var(--text-muted)] leading-relaxed">{txCost.recommendation}</p>
+          {/* Mobile: Compact list */}
+          <div className="md:hidden space-y-1.5">
+            {txCost.estimates.slice(0, 8).map((e: any) => (
+              <div key={e.symbol} className="flex items-center justify-between py-1.5 border-b border-[var(--border)]/20 last:border-0">
+                <span className="font-mono text-xs font-bold text-[#3b82f6]">{e.symbol}</span>
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-[10px]">{e.total_cost_bps}bps</span>
+                  <span className="text-[10px] text-[var(--text-faint)]">{e.optimal_horizon_min}min</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          {/* Desktop: Full table */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-[10px]">
               <thead>
                 <tr className="text-[var(--text-faint)] border-b border-[var(--border)]">
@@ -1229,7 +1328,7 @@ function ResearchTab({ data, loading, onRefresh }: any) {
               </tbody>
             </table>
           </div>
-        </Card>
+        </ResearchPanel>
       )}
     </div>
   );
@@ -1450,28 +1549,28 @@ function PaperTradingTab() {
   return (
     <div className="space-y-5 sm:space-y-6">
       {/* Portfolio Hero */}
-      <div className="text-center py-4 sm:py-6">
-        <div className="flex items-center justify-center gap-2 mb-1">
-          <p className="text-xs text-[var(--text-faint)] uppercase tracking-wider font-medium flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5" /> 30-Day Paper Backtest
+      <div className="text-center py-3 sm:py-6">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <p className="text-[10px] sm:text-xs text-[var(--text-faint)] uppercase tracking-wider font-medium flex items-center gap-1.5">
+            <Clock className="w-3 sm:w-3.5 h-3 sm:h-3.5" /> 30-Day Paper Backtest
           </p>
-          <span className={`text-[9px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider ${result.data_source === 'real' ? 'bg-[#22c55e]/10 text-[#22c55e]' : 'bg-[#f59e0b]/10 text-[#f59e0b]'}`}>
+          <span className={`text-[8px] sm:text-[9px] px-1.5 sm:px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider ${result.data_source === 'real' ? 'bg-[#22c55e]/10 text-[#22c55e]' : 'bg-[#f59e0b]/10 text-[#f59e0b]'}`}>
             {result.data_source === 'real' ? 'Real Data' : 'Simulated'}
           </span>
         </div>
-        <p className="text-4xl sm:text-5xl font-bold font-mono tracking-tighter count-up">
+        <p className="text-[42px] sm:text-5xl font-bold font-mono tracking-tighter count-up leading-none">
           ${result.final_value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </p>
-        <div className={`inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full text-sm font-semibold
+        <div className={`inline-flex items-center gap-1.5 mt-2.5 px-3 py-1.5 rounded-full text-sm font-semibold
           ${isPositive ? 'bg-[#22c55e]/10 text-[#22c55e]' : 'bg-[#ef4444]/10 text-[#ef4444]'}`}>
           {isPositive ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
           {isPositive ? '+' : ''}{totalReturn.toFixed(2)}%
           <span className="text-[var(--text-faint)] font-normal text-xs ml-1">{result.days_simulated} days</span>
         </div>
 
-        <div className="flex items-center justify-center gap-3 mt-4">
+        <div className="flex items-center justify-center gap-3 mt-3 sm:mt-4">
           <button onClick={handleRefresh} disabled={isLoading}
-            className="flex items-center gap-2 px-5 py-2 rounded-xl border border-[var(--border)] text-sm font-medium text-[var(--text-muted)] hover:bg-white/5 hover:text-white disabled:opacity-50 transition-all">
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-[var(--border)] text-sm font-medium text-[var(--text-muted)] hover:bg-white/5 hover:text-white disabled:opacity-50 transition-all press-scale min-h-[44px]">
             <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
             {isLoading ? 'Running...' : 'Refresh'}
           </button>
@@ -1502,29 +1601,29 @@ function PaperTradingTab() {
         </Card>
       </div>
 
-      {/* Statistical Analysis Panel */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Card>
+      {/* Statistical Analysis Panel — horizontal scroll on mobile */}
+      <div className="scroll-x -mx-3.5 px-3.5 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-4 sm:gap-3">
+        <Card className="min-w-[140px] sm:min-w-0">
           <p className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider mb-1 font-medium">Regime</p>
           <p className={`text-sm font-bold ${result.regime === 'bull' ? 'text-[#22c55e]' : result.regime === 'bear' ? 'text-[#ef4444]' : 'text-[#f59e0b]'}`}>
-            {result.regime === 'bull' ? '🐂 Bull' : result.regime === 'bear' ? '🐻 Bear' : '↔️ Sideways'}
+            {result.regime === 'bull' ? 'Bull' : result.regime === 'bear' ? 'Bear' : 'Sideways'}
           </p>
-          <p className="text-[8px] text-[var(--text-faint)] mt-0.5">Adaptive factor weights</p>
+          <p className="text-[8px] text-[var(--text-faint)] mt-0.5">Adaptive weights</p>
         </Card>
-        <Card>
+        <Card className="min-w-[120px] sm:min-w-0">
           <p className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider mb-1 font-medium">Trades</p>
-          <p className="text-lg sm:text-xl font-bold font-mono">{result.total_trades}</p>
-          <p className="text-[8px] text-[var(--text-faint)] mt-0.5">Signal-confirmed entries</p>
+          <p className="text-lg font-bold font-mono">{result.total_trades}</p>
+          <p className="text-[8px] text-[var(--text-faint)] mt-0.5">Signal-confirmed</p>
         </Card>
-        <Card>
+        <Card className="min-w-[120px] sm:min-w-0">
           <p className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider mb-1 font-medium">Positions</p>
-          <p className="text-lg sm:text-xl font-bold font-mono text-[#8b5cf6]">{result.positions.length}</p>
-          <p className="text-[8px] text-[var(--text-faint)] mt-0.5">Correlation-filtered</p>
+          <p className="text-lg font-bold font-mono text-[#8b5cf6]">{result.positions.length}</p>
+          <p className="text-[8px] text-[var(--text-faint)] mt-0.5">Corr-filtered</p>
         </Card>
-        <Card>
+        <Card className="min-w-[120px] sm:min-w-0">
           <p className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider mb-1 font-medium">Risk Model</p>
           <p className="text-sm font-bold text-[#22c55e]">ATR Stops</p>
-          <p className="text-[8px] text-[var(--text-faint)] mt-0.5">2.5× ATR adaptive</p>
+          <p className="text-[8px] text-[var(--text-faint)] mt-0.5">2.5× adaptive</p>
         </Card>
       </div>
 
