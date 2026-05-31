@@ -288,34 +288,32 @@ function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
 
-  const handleLogin = async (email: string, password: string, isRegister: boolean) => {
+  const [welcomeMsg, setWelcomeMsg] = useState('');
+
+  const handleLogin = async (email: string, password: string, isRegister: boolean, displayName?: string) => {
+    const name = displayName || email.split('@')[0];
     try {
-      if (api.isOffline()) {
-        // Local-only auth (no backend)
-        const displayName = email.split('@')[0];
-        const localUser = { user_id: Date.now(), email, display_name: displayName };
-        api.setToken('local_' + btoa(email));
-        api.setStoredUser(localUser);
-        setUser(localUser);
+      if (!api.isOffline()) {
+        const data = isRegister
+          ? await api.register(email, password, name)
+          : await api.login(email, password);
+        api.setToken(data.access_token);
+        api.setStoredUser({ user_id: data.user_id, email: data.email, display_name: data.display_name });
+        setUser({ user_id: data.user_id, email: data.email, display_name: data.display_name });
         setShowAuth(false);
+        setWelcomeMsg(`Welcome${isRegister ? '' : ' back'}, ${data.display_name}!`);
+        setTimeout(() => setWelcomeMsg(''), 4000);
         return;
       }
-      const data = isRegister
-        ? await api.register(email, password, email.split('@')[0])
-        : await api.login(email, password);
-      api.setToken(data.access_token);
-      api.setStoredUser({ user_id: data.user_id, email: data.email, display_name: data.display_name });
-      setUser({ user_id: data.user_id, email: data.email, display_name: data.display_name });
-      setShowAuth(false);
-    } catch (e: any) {
-      // Fallback to local auth if backend is unreachable
-      const displayName = email.split('@')[0];
-      const localUser = { user_id: Date.now(), email, display_name: displayName };
-      api.setToken('local_' + btoa(email));
-      api.setStoredUser(localUser);
-      setUser(localUser);
-      setShowAuth(false);
-    }
+    } catch {}
+    // Local auth (works always — no backend needed)
+    const localUser = { user_id: Date.now(), email, display_name: name };
+    api.setToken('local_' + btoa(email));
+    api.setStoredUser(localUser);
+    setUser(localUser);
+    setShowAuth(false);
+    setWelcomeMsg(`Welcome${isRegister ? '' : ' back'}, ${name}!`);
+    setTimeout(() => setWelcomeMsg(''), 4000);
   };
 
   const handleLogout = () => { api.clearToken(); setUser(null); };
@@ -363,8 +361,11 @@ function App() {
 
             {user ? (
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#3b82f6] to-[#8b5cf6] flex items-center justify-center text-[10px] font-bold">
-                  {(user.display_name || user.email)?.[0]?.toUpperCase()}
+                <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-white/5">
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#3b82f6] to-[#8b5cf6] flex items-center justify-center text-[10px] font-bold">
+                    {(user.display_name || user.email)?.[0]?.toUpperCase()}
+                  </div>
+                  <span className="text-xs font-medium hidden sm:inline max-w-[100px] truncate">{user.display_name || user.email.split('@')[0]}</span>
                 </div>
                 <button onClick={handleLogout} className="p-1.5 rounded-lg hover:bg-white/5 text-[var(--text-faint)] hover:text-white" title="Log out">
                   <LogOut className="w-4 h-4" />
@@ -372,7 +373,7 @@ function App() {
               </div>
             ) : (
               <button onClick={() => setShowAuth(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#3b82f6] to-[#8b5cf6] text-xs font-semibold hover:opacity-90">
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#3b82f6] to-[#8b5cf6] text-xs font-semibold hover:opacity-90 active:scale-95 transition-transform">
                 <LogIn className="w-3.5 h-3.5" /> Sign In
               </button>
             )}
@@ -504,6 +505,14 @@ function App() {
       </nav>
 
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} onSubmit={handleLogin} />}
+
+      {/* Welcome toast */}
+      {welcomeMsg && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 px-6 py-3 bg-gradient-to-r from-[#22c55e]/90 to-[#16a34a]/90 backdrop-blur-md rounded-2xl shadow-2xl text-white font-semibold text-sm flex items-center gap-2 scale-in">
+          <CheckCircle2 className="w-4 h-4" />
+          {welcomeMsg}
+        </div>
+      )}
     </div>
   );
 }
@@ -2264,16 +2273,26 @@ function BrokerTab({ status: _status, portfolio }: any) {
 }
 
 // ── Auth Modal ──
-function AuthModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (email: string, password: string, isRegister: boolean) => void }) {
+function AuthModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (email: string, password: string, isRegister: boolean, displayName?: string) => void }) {
   const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    if (isRegister && !name.trim()) { setError('Please enter your name'); return; }
+    if (!email.includes('@')) { setError('Please enter a valid email'); return; }
+    if (password.length < 6) { setError('Password must be at least 6 characters'); return; }
     setSubmitting(true);
-    try { await onSubmit(email, password, isRegister); } catch {}
+    try {
+      await onSubmit(email, password, isRegister, name.trim() || undefined);
+    } catch (e: any) {
+      setError(e?.message || 'Something went wrong');
+    }
     setSubmitting(false);
   };
 
@@ -2282,41 +2301,68 @@ function AuthModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (emai
       <div className="bg-[var(--bg-card)] border-t sm:border border-[var(--border)] rounded-t-3xl sm:rounded-2xl p-6 sm:p-8 w-full sm:max-w-sm scale-in" onClick={e => e.stopPropagation()}>
         <div className="w-10 h-1 bg-white/10 rounded-full mx-auto mb-6 sm:hidden" />
 
+        {/* Close button */}
+        <button onClick={onClose} className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-white/5 text-[var(--text-faint)] hover:text-white">
+          <X className="w-4 h-4" />
+        </button>
+
         <div className="text-center mb-6">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#3b82f6] to-[#8b5cf6] flex items-center justify-center mx-auto mb-3">
-            <User className="w-5 h-5 text-white" />
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#3b82f6] to-[#8b5cf6] flex items-center justify-center mx-auto mb-3 shadow-lg shadow-[#3b82f6]/20">
+            <User className="w-6 h-6 text-white" />
           </div>
-          <h2 className="text-lg font-bold">{isRegister ? 'Create Account' : 'Welcome Back'}</h2>
-          <p className="text-xs text-[var(--text-faint)] mt-1">
-            {isRegister ? 'Start tracking your trades' : 'Sign in to your account'}
+          <h2 className="text-xl font-bold">{isRegister ? 'Create Your Account' : 'Welcome Back'}</h2>
+          <p className="text-sm text-[var(--text-faint)] mt-1">
+            {isRegister ? 'Get personalized trade recommendations' : 'Sign in to access your portfolio'}
           </p>
         </div>
 
+        {error && (
+          <div className="mb-4 px-3 py-2 bg-[#ef4444]/10 border border-[#ef4444]/20 rounded-lg text-xs text-[#ef4444] flex items-center gap-2">
+            <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-3">
+          {isRegister && (
+            <div>
+              <label className="text-[10px] font-medium text-[var(--text-faint)] block mb-1.5 uppercase tracking-wider">Your Name</label>
+              <input type="text" value={name} onChange={e => setName(e.target.value)}
+                className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm placeholder:text-[var(--text-faint)] focus:border-[#3b82f6]/50 focus:ring-1 focus:ring-[#3b82f6]/20 transition-all"
+                placeholder="Jason" required autoFocus />
+            </div>
+          )}
           <div>
-            <label className="text-[10px] font-medium text-[var(--text-faint)] block mb-1 uppercase tracking-wider">Email</label>
+            <label className="text-[10px] font-medium text-[var(--text-faint)] block mb-1.5 uppercase tracking-wider">Email</label>
             <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-              className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm placeholder:text-[var(--text-faint)]"
-              placeholder="you@example.com" required autoFocus />
+              className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm placeholder:text-[var(--text-faint)] focus:border-[#3b82f6]/50 focus:ring-1 focus:ring-[#3b82f6]/20 transition-all"
+              placeholder="you@example.com" required autoFocus={!isRegister} />
           </div>
           <div>
-            <label className="text-[10px] font-medium text-[var(--text-faint)] block mb-1 uppercase tracking-wider">Password</label>
+            <label className="text-[10px] font-medium text-[var(--text-faint)] block mb-1.5 uppercase tracking-wider">Password</label>
             <input type="password" value={password} onChange={e => setPassword(e.target.value)}
-              className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm placeholder:text-[var(--text-faint)]"
+              className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm placeholder:text-[var(--text-faint)] focus:border-[#3b82f6]/50 focus:ring-1 focus:ring-[#3b82f6]/20 transition-all"
               placeholder="Min 6 characters" required minLength={6} />
           </div>
           <button type="submit" disabled={submitting}
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-[#3b82f6] to-[#8b5cf6] font-semibold text-sm disabled:opacity-50 hover:opacity-90 mt-1">
-            {submitting ? 'Loading...' : isRegister ? 'Create Account' : 'Sign In'}
+            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#3b82f6] to-[#8b5cf6] font-semibold text-sm disabled:opacity-50 hover:opacity-90 active:scale-[0.98] transition-all mt-2 shadow-lg shadow-[#3b82f6]/20">
+            {submitting ? (
+              <span className="flex items-center justify-center gap-2"><RefreshCw className="w-4 h-4 animate-spin" /> Signing {isRegister ? 'up' : 'in'}...</span>
+            ) : isRegister ? 'Create Account' : 'Sign In'}
           </button>
         </form>
 
-        <p className="text-xs text-center text-[var(--text-faint)] mt-4">
-          {isRegister ? 'Already have an account?' : "Don't have an account?"}{' '}
-          <button onClick={() => setIsRegister(!isRegister)} className="text-[#3b82f6] hover:underline font-medium">
-            {isRegister ? 'Sign in' : 'Create one'}
-          </button>
-        </p>
+        <div className="mt-4 pt-4 border-t border-[var(--border)]">
+          <p className="text-xs text-center text-[var(--text-faint)]">
+            {isRegister ? 'Already have an account?' : "Don't have an account?"}{' '}
+            <button onClick={() => { setIsRegister(!isRegister); setError(''); }} className="text-[#3b82f6] hover:underline font-medium">
+              {isRegister ? 'Sign in' : 'Create one free'}
+            </button>
+          </p>
+          <p className="text-[10px] text-center text-[var(--text-faint)] mt-2 opacity-60">
+            Data saved locally in your browser. No credit card required.
+          </p>
+        </div>
       </div>
     </div>
   );
