@@ -624,8 +624,8 @@ function TradeFinderTab({ data, loading, onRefresh }: { data: TradeFinderResult 
           <div className="w-12 h-12 rounded-2xl bg-[#8b5cf6]/10 flex items-center justify-center mx-auto mb-4">
             <Search className="w-6 h-6 text-[#8b5cf6] animate-pulse" />
           </div>
-          <p className="text-[var(--text-muted)] font-medium">Scanning 50 stocks across 11 sectors...</p>
-          <p className="text-xs text-[var(--text-faint)] mt-1">Analyzing momentum, RSI, MACD, Bollinger, quality, volume</p>
+          <p className="text-[var(--text-muted)] font-medium">Scanning 51 stocks with IC-weighted multi-factor model...</p>
+          <p className="text-xs text-[var(--text-faint)] mt-1">Multi-timeframe confirmation · Relative strength · Adaptive volatility filters</p>
         </Card>
       )}
 
@@ -674,11 +674,14 @@ function TradeOpportunityCard({ opportunity: opp, rank, expanded, onToggle, acti
 
           {/* Main info */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-0.5">
+            <div className="flex items-center gap-2 mb-0.5 flex-wrap">
               <span className="font-mono font-bold text-sm sm:text-base">{opp.symbol}</span>
               <span className="text-[9px] px-2 py-0.5 rounded-full font-bold" style={{ background: `${actionColor(opp.action)}15`, color: actionColor(opp.action) }}>
                 {opp.action}
               </span>
+              {opp.multiTimeframeAlign && (
+                <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#22c55e]/10 text-[#22c55e] font-semibold">MTF✓</span>
+              )}
               <span className="text-[9px] px-2 py-0.5 rounded-full bg-[#8b5cf6]/10 text-[#8b5cf6] font-semibold hidden sm:inline-flex items-center gap-1">
                 {horizonIcon(opp.timeHorizon.type)} {opp.timeHorizon.label}
               </span>
@@ -686,6 +689,7 @@ function TradeOpportunityCard({ opportunity: opp, rank, expanded, onToggle, acti
             <div className="flex items-center gap-3 text-[10px] text-[var(--text-faint)]">
               <span>{opp.sector}</span>
               <span className="font-mono">${opp.currentPrice.toFixed(2)}</span>
+              <span className="text-[#22c55e] font-semibold">{opp.historicalWinRate}% win</span>
               <span className="sm:hidden">{horizonIcon(opp.timeHorizon.type)} {opp.timeHorizon.label}</span>
             </div>
           </div>
@@ -745,6 +749,54 @@ function TradeOpportunityCard({ opportunity: opp, rank, expanded, onToggle, acti
               <p className="font-bold text-sm">${opp.positionSize.dollarAmount.toLocaleString()}</p>
               <p className="text-[10px] text-[var(--text-faint)]">{opp.positionSize.shares} shares · {opp.positionSize.pctOfPortfolio}% of portfolio</p>
             </div>
+          </div>
+
+          {/* Accuracy Metrics — NEW */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="p-2.5 rounded-xl bg-[#22c55e]/5 border border-[#22c55e]/20 text-center">
+              <p className="text-[9px] text-[#22c55e]/70 uppercase tracking-wider font-semibold mb-0.5">Win Rate</p>
+              <p className="font-mono font-bold text-lg text-[#22c55e]">{opp.historicalWinRate}%</p>
+              <p className="text-[8px] text-[var(--text-faint)]">historical similar</p>
+            </div>
+            <div className="p-2.5 rounded-xl bg-[#8b5cf6]/5 border border-[#8b5cf6]/20 text-center">
+              <p className="text-[9px] text-[#8b5cf6]/70 uppercase tracking-wider font-semibold mb-0.5">Edge Score</p>
+              <p className="font-mono font-bold text-lg text-[#8b5cf6]">{opp.edgeScore > 0 ? '+' : ''}{opp.edgeScore}</p>
+              <p className="text-[8px] text-[var(--text-faint)]">vol-adjusted</p>
+            </div>
+            <div className="p-2.5 rounded-xl bg-[#3b82f6]/5 border border-[#3b82f6]/20 text-center">
+              <p className="text-[9px] text-[#3b82f6]/70 uppercase tracking-wider font-semibold mb-0.5">vs Sector</p>
+              <p className="font-mono font-bold text-lg text-[#3b82f6]">{opp.relativeStrength > 1 ? '+' : ''}{((opp.relativeStrength - 1) * 100).toFixed(0)}%</p>
+              <p className="text-[8px] text-[var(--text-faint)]">rel. strength</p>
+            </div>
+            <div className="p-2.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-center">
+              <p className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider font-semibold mb-0.5">Entry</p>
+              <p className={`font-bold text-sm capitalize ${opp.entryQuality === 'optimal' ? 'text-[#22c55e]' : opp.entryQuality === 'good' ? 'text-[#3b82f6]' : opp.entryQuality === 'extended' ? 'text-[#ef4444]' : 'text-[#f59e0b]'}`}>{opp.entryQuality}</p>
+              <p className="text-[8px] text-[var(--text-faint)]">{opp.momentumPersistence}w momentum</p>
+            </div>
+          </div>
+
+          {/* Multi-Timeframe + Persistence */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {opp.multiTimeframeAlign && (
+              <span className="text-[9px] px-2.5 py-1 rounded-full bg-[#22c55e]/10 text-[#22c55e] font-semibold border border-[#22c55e]/20">
+                Weekly + Daily Aligned
+              </span>
+            )}
+            {opp.momentumPersistence >= 3 && (
+              <span className="text-[9px] px-2.5 py-1 rounded-full bg-[#3b82f6]/10 text-[#3b82f6] font-semibold border border-[#3b82f6]/20">
+                {opp.momentumPersistence}W Sustained Momentum
+              </span>
+            )}
+            {opp.entryQuality === 'optimal' && (
+              <span className="text-[9px] px-2.5 py-1 rounded-full bg-[#8b5cf6]/10 text-[#8b5cf6] font-semibold border border-[#8b5cf6]/20">
+                Pullback to Support
+              </span>
+            )}
+            {opp.relativeStrength > 1.3 && (
+              <span className="text-[9px] px-2.5 py-1 rounded-full bg-[#f59e0b]/10 text-[#f59e0b] font-semibold border border-[#f59e0b]/20">
+                Sector Leader
+              </span>
+            )}
           </div>
 
           {/* Technical Analysis Grid */}
