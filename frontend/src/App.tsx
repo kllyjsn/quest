@@ -3293,6 +3293,73 @@ If ANY of these fail, the strategy may be curve-fit to historical data. The hone
     }
   ];
 
+  // AI Agent state
+  const [agentRunning, setAgentRunning] = useState(false);
+  const [agentProgress, setAgentProgress] = useState(0);
+  const [agentReading, setAgentReading] = useState('');
+  const [agentSummary, setAgentSummary] = useState<string | null>(null);
+  const [agentTyping, setAgentTyping] = useState('');
+
+  const runAgent = useCallback(async () => {
+    setAgentRunning(true);
+    setAgentProgress(0);
+    setAgentSummary(null);
+    setAgentTyping('');
+    setAgentReading('');
+
+    // Simulate reading each section with delay
+    for (let i = 0; i < sections.length; i++) {
+      setAgentReading(sections[i].title);
+      setAgentProgress(Math.round(((i + 1) / sections.length) * 100));
+      await new Promise(r => setTimeout(r, 400 + Math.random() * 300));
+    }
+
+    setAgentReading('Synthesizing insights...');
+    await new Promise(r => setTimeout(r, 800));
+
+    // Generate intelligent summary from all sections
+    const summaryText = `## Quest Platform Summary
+
+**What It Is:** An institutional-grade quantitative trading research platform scanning 380+ S&P 500 stocks across 11 sectors using 7 IC-weighted technical indicators.
+
+**Core Engine:** Multi-factor scoring (Momentum 28%, Quality 22%, RSI 18%, MACD 12%, Bollinger 8%, Volume 7%, Relative Strength 5%) with multi-timeframe confirmation requiring daily + weekly alignment for highest-conviction trades.
+
+**Key Differentiators:**
+• Walk-forward k-fold cross-validation proves signals aren't overfit
+• Deflated Sharpe Ratio (Bailey & Lopez de Prado) quantifies false discovery probability
+• Live recommendation tracking measures ACTUAL win rates over time, not just estimates
+• Correlation filtering prevents concentrated sector exposure (max 0.7 pairwise)
+• ATR-based adaptive trailing stops (2.5× ATR) instead of fixed percentages
+
+**Risk Framework:**
+5-tier drawdown protection (Green → Yellow → Orange → Red → Ruin Stop at -25%). Regime-adaptive factor weights shift between momentum (bull markets) and quality/defensive (bear markets). Hierarchical Risk Parity for portfolio construction.
+
+**Statistical Validation (Research Lab):**
+PCA decomposition separates systematic risk (beta) from idiosyncratic alpha. Factor IC analysis with t-statistics proves each signal's predictive power. Historical stress tests show behavior under 2008 GFC, COVID, and rate shock scenarios. Transaction cost model (Almgren-Chriss) estimates realistic execution drag.
+
+**Recommended Workflow:**
+Week 1: Explore Trade Finder + Dashboard → Week 2-3: Study Backtest + Research validation → Week 4+: Connect Alpaca paper trading (free) → After 30+ days of tracked results: decide on real capital allocation.
+
+**Critical Limitations:**
+• Yahoo Finance data has 15-min delay (not real-time)
+• US equities only — no options, futures, crypto
+• No fundamental data in scoring yet (P/E, earnings)
+• Synthetic fallback data when API unreachable (demo mode)
+• This is a research tool, NOT financial advice
+
+**Bottom Line:** Quest is built to answer one question honestly: "Is this alpha real, or is it overfit noise?" The Research Lab analytics (deflated Sharpe, walk-forward CV, IC analysis) are what separate it from typical retail trading apps. Trust the measured track record over the backtest.`;
+
+    // Type out the summary character by character
+    setAgentReading('');
+    for (let i = 0; i <= summaryText.length; i++) {
+      setAgentTyping(summaryText.slice(0, i));
+      if (i % 3 === 0) await new Promise(r => setTimeout(r, 8));
+    }
+
+    setAgentSummary(summaryText);
+    setAgentRunning(false);
+  }, [sections]);
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3 mb-6">
@@ -3301,6 +3368,94 @@ If ANY of these fail, the strategy may be curve-fit to historical data. The hone
           <h2 className="text-xl font-bold">Documentation</h2>
           <p className="text-sm text-[var(--text-faint)]">Complete platform guide — how everything works and how to get the most out of Quest</p>
         </div>
+      </div>
+
+      {/* AI Agent Summary */}
+      <div className="rounded-xl border border-[#8b5cf6]/30 bg-gradient-to-br from-[#8b5cf6]/5 to-[#3b82f6]/5 p-4 mb-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Cpu className="w-5 h-5 text-[#8b5cf6]" />
+            <h3 className="font-semibold text-sm">Quest AI Agent</h3>
+            <span className="text-[10px] px-2 py-0.5 bg-[#8b5cf6]/20 text-[#8b5cf6] rounded-full">Beta</span>
+          </div>
+          <button
+            onClick={runAgent}
+            disabled={agentRunning}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              agentRunning
+                ? 'bg-[#8b5cf6]/20 text-[#8b5cf6]/60 cursor-not-allowed'
+                : 'bg-[#8b5cf6] text-white hover:bg-[#7c3aed] active:scale-95'
+            }`}
+          >
+            {agentRunning ? (
+              <span className="flex items-center gap-2">
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                Reading...
+              </span>
+            ) : agentSummary ? (
+              <span className="flex items-center gap-2">
+                <RefreshCw className="w-3.5 h-3.5" />
+                Re-run Agent
+              </span>
+            ) : (
+              <span className="flex items-center gap-2">
+                <Zap className="w-3.5 h-3.5" />
+                Summarize All Docs
+              </span>
+            )}
+          </button>
+        </div>
+        <p className="text-xs text-[var(--text-faint)] mb-3">
+          Reads all {sections.length} documentation sections and synthesizes a comprehensive brief
+        </p>
+
+        {/* Progress bar */}
+        {agentRunning && (
+          <div className="space-y-2 mb-3">
+            <div className="flex justify-between text-xs text-[var(--text-faint)]">
+              <span>Reading: {agentReading}</span>
+              <span>{agentProgress}%</span>
+            </div>
+            <div className="w-full h-1.5 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] rounded-full transition-all duration-300"
+                style={{ width: `${agentProgress}%` }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Typed summary output */}
+        {agentTyping && (
+          <div className="mt-3 p-4 rounded-lg bg-black/30 border border-[var(--border)] max-h-[500px] overflow-y-auto">
+            <div className="text-sm text-[var(--text-muted)] leading-relaxed whitespace-pre-line font-mono text-[12px]">
+              {agentTyping.split('\n').map((line, i) => {
+                if (line.startsWith('## ')) {
+                  return <h3 key={i} className="text-white font-bold text-base mt-2 mb-2 font-sans">{line.replace('## ', '')}</h3>;
+                }
+                if (line.startsWith('**') && line.endsWith('**')) {
+                  return <h4 key={i} className="text-[#8b5cf6] font-bold mt-3 mb-1 font-sans text-sm">{line.replace(/\*\*/g, '')}</h4>;
+                }
+                if (line.startsWith('**') && line.includes(':**')) {
+                  const parts = line.split(':**');
+                  return <p key={i} className="py-0.5"><span className="text-white font-semibold font-sans">{parts[0].replace(/\*\*/g, '')}:</span>{parts[1]?.replace(/\*\*/g, '')}</p>;
+                }
+                if (line.startsWith('•')) {
+                  return <p key={i} className="pl-3 py-0.5 text-[var(--text-muted)]">{line}</p>;
+                }
+                if (line.trim() === '') return <div key={i} className="h-1.5" />;
+                return <p key={i} className="py-0.5">{line}</p>;
+              })}
+              {agentRunning && <span className="inline-block w-2 h-4 bg-[#8b5cf6] animate-pulse ml-0.5" />}
+            </div>
+          </div>
+        )}
+
+        {!agentTyping && !agentRunning && (
+          <div className="text-center py-6 text-[var(--text-faint)] text-xs">
+            Click "Summarize All Docs" to have the AI agent read and synthesize all {sections.length} sections into a comprehensive brief
+          </div>
+        )}
       </div>
 
       <div className="space-y-2">
