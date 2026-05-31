@@ -1,36 +1,36 @@
 @import "tailwindcss";
 
 :root {
-  --bg-primary: #0a0e17;
-  --bg-secondary: #111827;
-  --bg-card: #151c2c;
-  --bg-card-hover: #1a2236;
-  --bg-elevated: #1e2a3f;
-  --border: rgba(148, 163, 184, 0.08);
-  --border-emphasis: rgba(148, 163, 184, 0.16);
-  --text-primary: #f1f5f9;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
-  --text-faint: #64748b;
-  --accent-green: #22c55e;
-  --accent-green-dim: rgba(34, 197, 94, 0.1);
-  --accent-red: #ef4444;
-  --accent-red-dim: rgba(239, 68, 68, 0.1);
-  --accent-blue: #3b82f6;
+  --bg-primary: #0b0e11;
+  --bg-secondary: #12161c;
+  --bg-card: #161a21;
+  --bg-card-hover: #1c2028;
+  --bg-elevated: #1e2329;
+  --border: rgba(128, 142, 163, 0.10);
+  --border-emphasis: rgba(128, 142, 163, 0.20);
+  --text-primary: #eaecef;
+  --text-secondary: #b7bdc6;
+  --text-muted: #848e9c;
+  --text-faint: #5e6673;
+  --accent-green: #0ecb81;
+  --accent-green-dim: rgba(14, 203, 129, 0.08);
+  --accent-red: #f6465d;
+  --accent-red-dim: rgba(246, 70, 93, 0.08);
+  --accent-blue: #1e90ff;
   --accent-purple: #8b5cf6;
-  --accent-amber: #f59e0b;
-  --accent-cyan: #06b6d4;
-  --gradient-green: linear-gradient(135deg, #22c55e, #10b981);
-  --gradient-red: linear-gradient(135deg, #ef4444, #f97316);
-  --gradient-brand: linear-gradient(135deg, #3b82f6, #8b5cf6);
-  --gradient-gold: linear-gradient(135deg, #f59e0b, #d97706);
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
-  --shadow-card: 0 2px 8px rgba(0,0,0,0.3), 0 0 0 1px var(--border);
-  --shadow-elevated: 0 12px 40px rgba(0,0,0,0.5);
-  --radius-sm: 10px;
-  --radius-md: 14px;
-  --radius-lg: 18px;
-  --radius-xl: 24px;
+  --accent-amber: #f0b90b;
+  --accent-cyan: #00bcd4;
+  --gradient-green: linear-gradient(135deg, #0ecb81, #02a566);
+  --gradient-red: linear-gradient(135deg, #f6465d, #d9304a);
+  --gradient-brand: linear-gradient(135deg, #f0b90b, #d4a30a);
+  --gradient-gold: linear-gradient(135deg, #f0b90b, #c99400);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.5);
+  --shadow-card: 0 1px 4px rgba(0,0,0,0.4);
+  --shadow-elevated: 0 8px 24px rgba(0,0,0,0.6);
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -43,6 +43,13 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overscroll-behavior: none;
+  font-feature-settings: 'tnum' on, 'lnum' on;
+  letter-spacing: -0.01em;
+}
+
+/* Bloomberg-style monospace for all numeric/data content */
+.font-mono, [class*="font-mono"] {
+  font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace !important;
 }
 
 #root { min-height: 100vh; }
@@ -96,15 +103,15 @@ button, a, input, select { transition: all 0.15s ease; }
 .count-up { animation: countUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
 
 /* Glow effects */
-.glow-green { box-shadow: 0 0 20px rgba(34, 197, 94, 0.06), inset 0 1px 0 rgba(34, 197, 94, 0.1); }
-.glow-red { box-shadow: 0 0 20px rgba(239, 68, 68, 0.06), inset 0 1px 0 rgba(239, 68, 68, 0.1); }
-.glow-blue { box-shadow: 0 0 20px rgba(59, 130, 246, 0.06), inset 0 1px 0 rgba(59, 130, 246, 0.1); }
+.glow-green { box-shadow: inset 0 1px 0 rgba(14, 203, 129, 0.12); }
+.glow-red { box-shadow: inset 0 1px 0 rgba(246, 70, 93, 0.12); }
+.glow-blue { box-shadow: inset 0 1px 0 rgba(30, 144, 255, 0.12); }
 
 /* Glass */
 .glass {
-  background: rgba(10, 14, 23, 0.8);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  background: rgba(11, 14, 17, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 /* Chart styling */
@@ -124,11 +131,9 @@ input:focus, select:focus {
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
 }
 
-/* Grid subtle bg */
+/* Clean dark bg - no gradients */
 .mesh-bg {
-  background-image:
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(59, 130, 246, 0.05), transparent),
-    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(139, 92, 246, 0.03), transparent);
+  background-image: none;
 }
 
 /* Tab transition */
@@ -145,24 +150,13 @@ input:focus, select:focus {
 }
 .sparkle-line { animation: sparkle 3s ease-in-out infinite; }
 
-/* Gradient border glow */
+/* Gradient border glow - disabled for Bloomberg clean look */
 .gradient-border {
   position: relative;
 }
 .gradient-border::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(139, 92, 246, 0.3), rgba(34, 197, 94, 0.3));
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  -webkit-mask-composite: xor;
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  display: none;
 }
-.gradient-border:hover::before { opacity: 1; }
 
 /* Stagger animation for children */
 .stagger-in > * { animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
@@ -183,8 +177,8 @@ input:focus, select:focus {
 }
 
 /* Card hover lift */
-.card-hover { transition: transform 0.2s ease, box-shadow 0.2s ease; }
-.card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+.card-hover { transition: border-color 0.15s ease; }
+.card-hover:hover { border-color: var(--border-emphasis); }
 
 /* Safe area for mobile */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
@@ -216,10 +210,10 @@ input:focus, select:focus {
   top: -2px;
   left: 50%;
   transform: translateX(-50%);
-  width: 20px;
-  height: 3px;
-  border-radius: 2px;
-  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  width: 16px;
+  height: 2px;
+  border-radius: 1px;
+  background: #f0b90b;
 }
 
 /* Mobile card press effect */
@@ -249,11 +243,11 @@ input:focus, select:focus {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 10px 14px;
-  border-radius: 14px;
+  padding: 8px 12px;
+  border-radius: 6px;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  min-width: 110px;
+  min-width: 100px;
 }
 
 /* Swipe hint for scroll containers */
@@ -281,36 +275,33 @@ input:focus, select:focus {
   main { padding-left: 20px !important; padding-right: 20px !important; padding-top: 20px !important; }
 
   /* Section spacing: 24px between major sections */
-  main > .space-y-5, main > .space-y-6 { gap: 24px !important; }
-  .space-y-5 > * + * { margin-top: 20px !important; }
-  .space-y-6 > * + * { margin-top: 24px !important; }
+  .space-y-5 > * + * { margin-top: 22px !important; }
+  .space-y-6 > * + * { margin-top: 26px !important; }
 
-  /* Cards: 16px internal padding minimum, 12px gap between list items */
+  /* Cards: 14px gap between list items for breathing room */
   .space-y-2 > * + * { margin-top: 12px !important; }
-  .space-y-3 > * + * { margin-top: 14px !important; }
+  .space-y-3 > * + * { margin-top: 16px !important; }
 
-  /* Bottom nav: taller, more breathing room */
-  nav.fixed { height: 68px !important; }
-  nav.fixed > div { height: 68px !important; padding-left: 8px !important; padding-right: 8px !important; }
+  /* Bottom nav */
+  nav.fixed { height: 64px !important; }
+  nav.fixed > div { height: 64px !important; }
 
-  /* Bottom nav labels: slightly larger for readability */
-  nav.fixed button span { font-size: 10px !important; letter-spacing: 0.01em; }
+  /* Touch targets */
+  nav button, [data-touch="true"] { min-height: 44px; }
 
-  /* Minimum touch target enforcement */
-  button, a, [role="button"] { min-height: 44px; }
+  /* Content bottom padding to clear nav */
+  main { padding-bottom: 80px !important; }
 
-  /* Content bottom padding to clear taller nav */
-  main { padding-bottom: 88px !important; }
+  /* Prevent text overflow globally */
+  p, span, h1, h2, h3, h4, h5, h6, label { overflow-wrap: break-word; word-break: break-word; }
 
-  /* Stat metric grids: more gap */
-  .grid-cols-2 { gap: 12px !important; }
-  .grid-cols-3 { gap: 10px !important; }
+  /* Stat metric grids: generous gaps and prevent overflow */
+  .grid.grid-cols-2 { gap: 12px !important; }
+  .grid.grid-cols-3 { gap: 10px !important; }
+  .grid > div { overflow: hidden; }
 
-  /* Card internals: comfortable reading */
-  [class*="rounded-2xl"][class*="bg-[var(--bg-card)]"] { padding: 16px !important; }
-
-  /* Header: slightly taller on mobile for breathing room */
-  header > div:first-child { height: 56px !important; }
+  /* Scroll containers: ensure no overflow */
+  .scroll-x > div { min-width: 120px; }
 }
 @media (min-width: 768px) {
   .mobile-only { display: none !important; }

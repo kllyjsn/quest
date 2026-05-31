@@ -338,34 +338,34 @@ function App() {
       {/* ── Header ── */}
       <header className="glass border-b border-[var(--border)] sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#3b82f6] to-[#8b5cf6] flex items-center justify-center">
-              <Zap className="w-4 h-4 text-white" />
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-md bg-[#f0b90b] flex items-center justify-center">
+              <Zap className="w-3.5 h-3.5 text-[#0b0e11]" />
             </div>
             <div className="leading-none">
-              <h1 className="text-base font-bold tracking-tight">Quest</h1>
-              <p className="text-[9px] text-[var(--text-faint)] uppercase tracking-[0.2em] font-medium">Trading</p>
+              <h1 className="text-sm font-bold tracking-tight font-mono uppercase">Quest</h1>
+              <p className="text-[8px] text-[var(--text-faint)] uppercase tracking-[0.25em] font-medium">Terminal</p>
             </div>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
             {regime && (
-              <div className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold
-                ${regime.regime === 'bull' ? 'bg-[#22c55e]/10 text-[#22c55e]' :
-                  regime.regime === 'bear' ? 'bg-[#ef4444]/10 text-[#ef4444]' :
-                    'bg-[#f59e0b]/10 text-[#f59e0b]'}`}>
-                <span className={`w-1.5 h-1.5 rounded-full pulse-dot ${regime.regime === 'bull' ? 'bg-[#22c55e]' : regime.regime === 'bear' ? 'bg-[#ef4444]' : 'bg-[#f59e0b]'}`} />
+              <div className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono font-semibold
+                ${regime.regime === 'bull' ? 'bg-[#0ecb81]/8 text-[#0ecb81] border border-[#0ecb81]/20' :
+                  regime.regime === 'bear' ? 'bg-[#f6465d]/8 text-[#f6465d] border border-[#f6465d]/20' :
+                    'bg-[#f0b90b]/8 text-[#f0b90b] border border-[#f0b90b]/20'}`}>
+                <span className={`w-1.5 h-1.5 rounded-full pulse-dot ${regime.regime === 'bull' ? 'bg-[#0ecb81]' : regime.regime === 'bear' ? 'bg-[#f6465d]' : 'bg-[#f0b90b]'}`} />
                 {regime.regime.toUpperCase()} {(regime.confidence * 100).toFixed(0)}%
               </div>
             )}
 
             {user ? (
               <div className="flex items-center gap-2">
-                <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-white/5">
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#3b82f6] to-[#8b5cf6] flex items-center justify-center text-[10px] font-bold">
+                <div className="flex items-center gap-2 px-2 py-1 rounded-md bg-white/5 border border-[var(--border)]">
+                  <div className="w-6 h-6 rounded-md bg-[#f0b90b] flex items-center justify-center text-[9px] font-bold text-[#0b0e11]">
                     {(user.display_name || user.email)?.[0]?.toUpperCase()}
                   </div>
-                  <span className="text-xs font-medium hidden sm:inline max-w-[100px] truncate">{user.display_name || user.email.split('@')[0]}</span>
+                  <span className="text-[11px] font-mono hidden sm:inline max-w-[100px] truncate">{user.display_name || user.email.split('@')[0]}</span>
                 </div>
                 <button onClick={handleLogout} className="p-1.5 rounded-lg hover:bg-white/5 text-[var(--text-faint)] hover:text-white" title="Log out">
                   <LogOut className="w-4 h-4" />
@@ -373,7 +373,7 @@ function App() {
               </div>
             ) : (
               <button onClick={() => setShowAuth(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#3b82f6] to-[#8b5cf6] text-xs font-semibold hover:opacity-90 active:scale-95 transition-transform">
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#f0b90b] text-[#0b0e11] text-xs font-semibold hover:bg-[#d4a30a] active:scale-95 transition-transform">
                 <LogIn className="w-3.5 h-3.5" /> Sign In
               </button>
             )}
@@ -396,13 +396,13 @@ function App() {
           <div className="flex gap-1">
             {TABS.map(({ id, icon: Icon, label }) => (
               <button key={id} onClick={() => setTab(id)}
-                className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-t-lg transition-all
+                className={`relative flex items-center gap-2 px-3.5 py-2 text-[11px] font-semibold uppercase tracking-wider transition-all
                   ${tab === id
-                    ? 'text-white bg-white/5'
-                    : 'text-[var(--text-faint)] hover:text-[var(--text-muted)] hover:bg-white/[0.02]'}`}>
-                <Icon className="w-4 h-4" />
+                    ? 'text-[#f0b90b]'
+                    : 'text-[var(--text-faint)] hover:text-[var(--text-muted)]'}`}>
+                <Icon className="w-3.5 h-3.5" />
                 {label}
-                {tab === id && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-gradient-to-r from-[#3b82f6] to-[#8b5cf6] rounded-full" />}
+                {tab === id && <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#f0b90b]" />}
               </button>
             ))}
           </div>
@@ -412,10 +412,10 @@ function App() {
       {/* Error bar */}
       {error && (
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-3">
-          <div className="bg-[#ef4444]/8 border border-[#ef4444]/15 rounded-xl px-4 py-2.5 text-[#ef4444] text-sm flex items-center gap-2 slide-up">
+          <div className="bg-[#f6465d]/8 border border-[#f6465d]/15 rounded-md px-4 py-2.5 text-[#f6465d] text-xs font-mono flex items-center gap-2 slide-up">
             <AlertTriangle className="w-4 h-4 shrink-0" />
             <span className="flex-1 truncate">{error}</span>
-            <button onClick={() => setError('')} className="shrink-0 p-1 hover:bg-[#ef4444]/10 rounded-lg">
+            <button onClick={() => setError('')} className="shrink-0 p-1 hover:bg-[#f6465d]/10 rounded-lg">
               <X className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -444,7 +444,7 @@ function App() {
             <span key={p.symbol} className="inline-flex items-center gap-1.5 text-[10px] font-mono shrink-0">
               <span className="font-semibold text-[var(--text-secondary)]">{p.symbol}</span>
               <span className="text-[var(--text-primary)]">${p.price.toFixed(2)}</span>
-              <span className={p.changePct >= 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}>
+              <span className={p.changePct >= 0 ? 'text-[#0ecb81]' : 'text-[#f6465d]'}>
                 {p.changePct >= 0 ? '+' : ''}{p.changePct.toFixed(2)}%
               </span>
             </span>
@@ -460,7 +460,7 @@ function App() {
             <span key={`${p.symbol}-2`} className="inline-flex items-center gap-1.5 text-[10px] font-mono shrink-0">
               <span className="font-semibold text-[var(--text-secondary)]">{p.symbol}</span>
               <span className="text-[var(--text-primary)]">${p.price.toFixed(2)}</span>
-              <span className={p.changePct >= 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}>
+              <span className={p.changePct >= 0 ? 'text-[#0ecb81]' : 'text-[#f6465d]'}>
                 {p.changePct >= 0 ? '+' : ''}{p.changePct.toFixed(2)}%
               </span>
             </span>
@@ -470,33 +470,33 @@ function App() {
 
       {/* Mobile bottom nav — shows 5 primary tabs + "More" */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 glass border-t border-[var(--border)] z-50 safe-bottom">
-        <div className="flex justify-around items-center h-[72px] px-2">
+        <div className="flex justify-around items-center h-[64px] px-2">
           {TABS.filter(t => MOBILE_TABS.includes(t.id)).map(({ id, icon: Icon, shortLabel }) => (
             <button key={id} onClick={() => { setTab(id); setShowMoreTabs(false); }}
-              className={`flex flex-col items-center justify-center gap-[3px] min-w-[44px] min-h-[44px] rounded-xl transition-all press-scale
-                ${tab === id ? 'text-[#3b82f6] nav-pill-active' : 'text-[var(--text-faint)]'}`}>
-              <Icon className={`w-[22px] h-[22px] transition-transform ${tab === id ? 'text-[#3b82f6] scale-110' : ''}`} />
-              <span className={`text-[10px] leading-none font-semibold ${tab === id ? 'text-[#3b82f6]' : ''}`}>{shortLabel}</span>
+              className={`flex flex-col items-center justify-center gap-[2px] min-w-[44px] min-h-[44px] rounded-md transition-all
+                ${tab === id ? 'text-[#f0b90b] nav-pill-active' : 'text-[var(--text-faint)]'}`}>
+              <Icon className={`w-5 h-5 ${tab === id ? 'text-[#f0b90b]' : ''}`} />
+              <span className={`text-[9px] leading-none font-semibold uppercase tracking-wider ${tab === id ? 'text-[#f0b90b]' : ''}`}>{shortLabel}</span>
             </button>
           ))}
           {/* More button */}
           <button onClick={() => setShowMoreTabs(!showMoreTabs)}
-            className={`flex flex-col items-center justify-center gap-[3px] min-w-[44px] min-h-[44px] rounded-xl transition-all press-scale
-              ${!MOBILE_TABS.includes(tab) ? 'text-[#3b82f6] nav-pill-active' : 'text-[var(--text-faint)]'}`}>
-            <Layers className="w-[22px] h-[22px]" />
-            <span className="text-[10px] leading-none font-semibold">More</span>
+            className={`flex flex-col items-center justify-center gap-[2px] min-w-[44px] min-h-[44px] rounded-md transition-all
+              ${!MOBILE_TABS.includes(tab) ? 'text-[#f0b90b] nav-pill-active' : 'text-[var(--text-faint)]'}`}>
+            <Layers className="w-5 h-5" />
+            <span className="text-[9px] leading-none font-semibold uppercase tracking-wider">More</span>
           </button>
         </div>
         {/* More tabs dropdown */}
         {showMoreTabs && (
-          <div className="absolute bottom-[64px] left-2 right-2 glass border border-[var(--border)] rounded-2xl p-2 scale-in">
+          <div className="absolute bottom-[58px] left-2 right-2 glass border border-[var(--border)] rounded-lg p-2 scale-in">
             <div className="grid grid-cols-4 gap-1">
               {TABS.filter(t => !MOBILE_TABS.includes(t.id)).map(({ id, icon: Icon, shortLabel }) => (
                 <button key={id} onClick={() => { setTab(id); setShowMoreTabs(false); }}
-                  className={`flex flex-col items-center gap-1 p-3 rounded-xl press-scale
-                    ${tab === id ? 'text-[#3b82f6] bg-[#3b82f6]/10' : 'text-[var(--text-faint)] hover:bg-white/5'}`}>
-                  <Icon className="w-5 h-5" />
-                  <span className="text-[9px] font-semibold">{shortLabel}</span>
+                  className={`flex flex-col items-center gap-1 p-2.5 rounded-md
+                    ${tab === id ? 'text-[#f0b90b] bg-[#f0b90b]/8' : 'text-[var(--text-faint)] hover:bg-white/5'}`}>
+                  <Icon className="w-4.5 h-4.5" />
+                  <span className="text-[9px] font-semibold uppercase">{shortLabel}</span>
                 </button>
               ))}
             </div>
@@ -508,7 +508,7 @@ function App() {
 
       {/* Welcome toast */}
       {welcomeMsg && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 px-6 py-3 bg-gradient-to-r from-[#22c55e]/90 to-[#16a34a]/90 backdrop-blur-md rounded-2xl shadow-2xl text-white font-semibold text-sm flex items-center gap-2 scale-in">
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 px-5 py-2.5 bg-[#0ecb81] rounded-md shadow-lg text-[#0b0e11] font-semibold text-xs flex items-center gap-2 scale-in">
           <CheckCircle2 className="w-4 h-4" />
           {welcomeMsg}
         </div>
@@ -521,37 +521,37 @@ function App() {
 
 function Card({ children, className = '', glow = '' }: { children: React.ReactNode; className?: string; glow?: string }) {
   return (
-    <div className={`bg-[var(--bg-card)] rounded-2xl p-4 sm:p-5 border border-[var(--border)] hover:border-[var(--border-emphasis)] transition-all card-hover gradient-border press-scale ${glow} ${className}`}>
+    <div className={`bg-[var(--bg-card)] rounded-lg p-4 sm:p-5 border border-[var(--border)] hover:border-[var(--border-emphasis)] transition-all card-hover ${glow} ${className}`}>
       {children}
     </div>
   );
 }
 
-function MetricCard({ label, value, sub, icon: Icon, accent = '#3b82f6' }: { label: string; value: string; sub?: string; icon: any; accent?: string }) {
+function MetricCard({ label, value, sub, icon: Icon, accent = '#f0b90b' }: { label: string; value: string; sub?: string; icon: any; accent?: string }) {
   return (
     <Card>
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-[10px] sm:text-xs font-medium text-[var(--text-faint)] uppercase tracking-wider">{label}</span>
-        <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: `${accent}12`, color: accent }}>
-          <Icon className="w-4 h-4" />
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[10px] sm:text-[11px] font-medium text-[var(--text-faint)] uppercase tracking-[0.08em]">{label}</span>
+        <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{ background: `${accent}10`, color: accent }}>
+          <Icon className="w-3.5 h-3.5" />
         </div>
       </div>
-      <p className="text-xl sm:text-2xl font-bold tracking-tight count-up" style={{ color: accent === '#22c55e' || accent === '#ef4444' ? accent : 'var(--text-primary)' }}>{value}</p>
-      {sub && <p className="text-[10px] sm:text-xs text-[var(--text-faint)] mt-1.5 truncate">{sub}</p>}
+      <p className="text-xl sm:text-2xl font-semibold font-mono tracking-tight count-up" style={{ color: accent === '#0ecb81' || accent === '#f6465d' ? accent : 'var(--text-primary)' }}>{value}</p>
+      {sub && <p className="text-[10px] sm:text-xs text-[var(--text-faint)] mt-1 font-mono truncate">{sub}</p>}
     </Card>
   );
 }
 
-function SectionHeader({ icon: Icon, title, subtitle, accent = '#3b82f6', action }: { icon: any; title: string; subtitle?: string; accent?: string; action?: React.ReactNode }) {
+function SectionHeader({ icon: Icon, title, subtitle, accent = '#f0b90b', action }: { icon: any; title: string; subtitle?: string; accent?: string; action?: React.ReactNode }) {
   return (
-    <div className="flex items-start sm:items-center justify-between gap-3 mb-6">
+    <div className="flex items-start sm:items-center justify-between gap-3 mb-5">
       <div className="flex items-center gap-3 min-w-0">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${accent}12`, color: accent }}>
-          <Icon className="w-5 h-5" />
+        <div className="w-8 h-8 rounded-md flex items-center justify-center shrink-0" style={{ background: `${accent}10`, color: accent }}>
+          <Icon className="w-4 h-4" />
         </div>
         <div className="min-w-0">
-          <h2 className="text-lg sm:text-lg font-bold truncate">{title}</h2>
-          {subtitle && <p className="text-[11px] sm:text-xs text-[var(--text-faint)] mt-0.5 truncate">{subtitle}</p>}
+          <h2 className="text-sm sm:text-base font-semibold uppercase tracking-wide truncate">{title}</h2>
+          {subtitle && <p className="text-[10px] sm:text-xs text-[var(--text-faint)] mt-0.5 truncate">{subtitle}</p>}
         </div>
       </div>
       {action}
@@ -561,14 +561,14 @@ function SectionHeader({ icon: Icon, title, subtitle, accent = '#3b82f6', action
 
 function ActionButton({ onClick, loading, icon: Icon, label, variant = 'primary' }: { onClick: () => void; loading?: boolean; icon: any; label: string; variant?: 'primary' | 'green' | 'ghost' }) {
   const styles = {
-    primary: 'bg-gradient-to-r from-[#3b82f6] to-[#8b5cf6] text-white hover:opacity-90',
-    green: 'bg-gradient-to-r from-[#22c55e] to-[#10b981] text-white hover:opacity-90',
+    primary: 'bg-[#f0b90b] text-[#0b0e11] hover:bg-[#d4a30a]',
+    green: 'bg-[#0ecb81] text-[#0b0e11] hover:bg-[#02a566]',
     ghost: 'border border-[var(--border)] text-[var(--text-muted)] hover:bg-white/5 hover:text-white',
   };
   return (
     <button onClick={onClick} disabled={loading}
-      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-50 whitespace-nowrap shrink-0 ${styles[variant]}`}>
-      <Icon className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+      className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold transition-all disabled:opacity-50 whitespace-nowrap shrink-0 ${styles[variant]}`}>
+      <Icon className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
       <span className="hidden sm:inline">{label}</span>
       <span className="sm:hidden">{label.split(' ')[0]}</span>
     </button>
@@ -578,7 +578,7 @@ function ActionButton({ onClick, loading, icon: Icon, label, variant = 'primary'
 function EmptyState({ icon: Icon, title, subtitle }: { icon: any; title: string; subtitle?: string }) {
   return (
     <Card className="text-center py-12 sm:py-16">
-      <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center mx-auto mb-4">
+      <div className="w-14 h-14 rounded-lg bg-white/5 flex items-center justify-center mx-auto mb-4">
         <Icon className="w-7 h-7 text-[var(--text-faint)]" />
       </div>
       <p className="text-[var(--text-muted)] font-medium">{title}</p>
@@ -602,9 +602,9 @@ function TradeFinderTab({ data, loading, onRefresh, trackingStats, trackedRecs, 
 
   const actionColor = (action: string) => {
     switch (action) {
-      case 'STRONG BUY': return '#22c55e';
-      case 'BUY': return '#10b981';
-      case 'ACCUMULATE': return '#f59e0b';
+      case 'STRONG BUY': return '#0ecb81';
+      case 'BUY': return '#02a566';
+      case 'ACCUMULATE': return '#f0b90b';
       default: return '#6b7280';
     }
   };
@@ -620,9 +620,9 @@ function TradeFinderTab({ data, loading, onRefresh, trackingStats, trackedRecs, 
   };
 
   const signalDot = (signal: string) => {
-    if (signal === 'bullish' || signal === 'oversold' || signal === 'strong' || signal === 'squeeze' || signal === 'surge' || signal === 'above_avg' || signal === 'low') return '#22c55e';
-    if (signal === 'bearish' || signal === 'overbought' || signal === 'weak' || signal === 'high' || signal === 'below_avg') return '#ef4444';
-    return '#f59e0b';
+    if (signal === 'bullish' || signal === 'oversold' || signal === 'strong' || signal === 'squeeze' || signal === 'surge' || signal === 'above_avg' || signal === 'low') return '#0ecb81';
+    if (signal === 'bearish' || signal === 'overbought' || signal === 'weak' || signal === 'high' || signal === 'below_avg') return '#f6465d';
+    return '#f0b90b';
   };
 
   const filtered = data?.opportunities.filter(o => {
@@ -632,7 +632,7 @@ function TradeFinderTab({ data, loading, onRefresh, trackingStats, trackedRecs, 
 
   return (
     <div className="space-y-6 sm:space-y-6">
-      <SectionHeader icon={Compass} title="Trade Finder" subtitle="Real-time opportunity scanner with AI-powered analysis" accent="#8b5cf6"
+      <SectionHeader icon={Compass} title="Trade Finder" subtitle="Real-time opportunity scanner with AI-powered analysis" accent="#f0b90b"
         action={<ActionButton onClick={onRefresh} loading={loading} icon={RefreshCw} label="Scan Now" variant="primary" />} />
 
       {/* Market Condition Banner */}
@@ -641,12 +641,12 @@ function TradeFinderTab({ data, loading, onRefresh, trackingStats, trackedRecs, 
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
               <p className="text-[10px] text-[var(--text-faint)] uppercase tracking-wider mb-1">Market Condition</p>
-              <p className={`text-lg sm:text-xl font-bold ${data.marketBias === 'bullish' ? 'text-[#22c55e]' : data.marketBias === 'bearish' ? 'text-[#ef4444]' : 'text-[#f59e0b]'}`}>
+              <p className={`text-lg sm:text-xl font-bold ${data.marketBias === 'bullish' ? 'text-[#0ecb81]' : data.marketBias === 'bearish' ? 'text-[#f6465d]' : 'text-[#f0b90b]'}`}>
                 {data.marketCondition}
               </p>
             </div>
             <div className="text-right">
-              <p className="text-2xl font-bold font-mono text-[#8b5cf6]">{data.opportunities.length}</p>
+              <p className="text-2xl font-bold font-mono text-[#f0b90b]">{data.opportunities.length}</p>
               <p className="text-[10px] text-[var(--text-faint)]">opportunities found</p>
             </div>
           </div>
@@ -654,7 +654,7 @@ function TradeFinderTab({ data, loading, onRefresh, trackingStats, trackedRecs, 
             <span>Scanned: {data.totalScanned} stocks</span>
             <span>·</span>
             <span className="flex items-center gap-1">
-              {data.dataSource === 'real' ? <><Radio className="w-3 h-3 text-[#22c55e]" /> Live Data</> : 'Simulated'}
+              {data.dataSource === 'real' ? <><Radio className="w-3 h-3 text-[#0ecb81]" /> Live Data</> : 'Simulated'}
             </span>
             <span>·</span>
             <span>{new Date(data.scannedAt).toLocaleTimeString()}</span>
@@ -672,7 +672,7 @@ function TradeFinderTab({ data, loading, onRefresh, trackingStats, trackedRecs, 
           { id: 'trend', label: '1-3 Months', icon: '🚀' },
         ].map(f => (
           <button key={f.id} onClick={() => setFilterHorizon(f.id)}
-            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${filterHorizon === f.id ? 'bg-[#8b5cf6] text-white' : 'bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-muted)] hover:border-[#8b5cf6]/50'}`}>
+            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${filterHorizon === f.id ? 'bg-[#f0b90b] text-white' : 'bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-muted)] hover:border-[#f0b90b]/50'}`}>
             <span>{f.icon}</span> {f.label}
           </button>
         ))}
@@ -682,10 +682,10 @@ function TradeFinderTab({ data, loading, onRefresh, trackingStats, trackedRecs, 
       {data && data.sectorRotation.length > 0 && (
         <div className="flex gap-2.5 overflow-x-auto pb-2 -mx-1 px-1">
           {data.sectorRotation.slice(0, 6).map(s => (
-            <div key={s.sector} className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border)] whitespace-nowrap shrink-0">
-              <div className={`w-2.5 h-2.5 rounded-full ${s.recommendation === 'Overweight' ? 'bg-[#22c55e]' : s.recommendation === 'Neutral' ? 'bg-[#f59e0b]' : 'bg-[#ef4444]'}`} />
+            <div key={s.sector} className="flex items-center gap-2 px-3.5 py-2 rounded-md bg-[var(--bg-card)] border border-[var(--border)] whitespace-nowrap shrink-0">
+              <div className={`w-2.5 h-2.5 rounded-full ${s.recommendation === 'Overweight' ? 'bg-[#0ecb81]' : s.recommendation === 'Neutral' ? 'bg-[#f0b90b]' : 'bg-[#f6465d]'}`} />
               <span className="text-[11px] font-medium text-[var(--text-muted)]">{s.sector}</span>
-              <span className="text-[11px] font-bold font-mono" style={{ color: s.strength > 55 ? '#22c55e' : s.strength > 40 ? '#f59e0b' : '#ef4444' }}>{s.strength}</span>
+              <span className="text-[11px] font-bold font-mono" style={{ color: s.strength > 55 ? '#0ecb81' : s.strength > 40 ? '#f0b90b' : '#f6465d' }}>{s.strength}</span>
             </div>
           ))}
         </div>
@@ -697,11 +697,11 @@ function TradeFinderTab({ data, loading, onRefresh, trackingStats, trackedRecs, 
           {/* Toggle bar */}
           <div className="flex items-center gap-2">
             <button onClick={() => setShowValidation(false)}
-              className={`text-[10px] font-semibold px-3 py-1.5 rounded-full transition-all ${!showValidation ? 'bg-[#22c55e]/15 text-[#22c55e] border border-[#22c55e]/30' : 'text-[var(--text-faint)] hover:text-[var(--text-muted)]'}`}>
+              className={`text-[10px] font-semibold px-3 py-1.5 rounded-full transition-all ${!showValidation ? 'bg-[#0ecb81]/15 text-[#0ecb81] border border-[#0ecb81]/30' : 'text-[var(--text-faint)] hover:text-[var(--text-muted)]'}`}>
               Live Tracking
             </button>
             <button onClick={() => setShowValidation(true)}
-              className={`text-[10px] font-semibold px-3 py-1.5 rounded-full transition-all ${showValidation ? 'bg-[#8b5cf6]/15 text-[#8b5cf6] border border-[#8b5cf6]/30' : 'text-[var(--text-faint)] hover:text-[var(--text-muted)]'}`}>
+              className={`text-[10px] font-semibold px-3 py-1.5 rounded-full transition-all ${showValidation ? 'bg-[#f0b90b]/15 text-[#f0b90b] border border-[#f0b90b]/30' : 'text-[var(--text-faint)] hover:text-[var(--text-muted)]'}`}>
               Walk-Forward Validation
             </button>
           </div>
@@ -711,7 +711,7 @@ function TradeFinderTab({ data, loading, onRefresh, trackingStats, trackedRecs, 
             <Card>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-2">
-                  <Target className="w-3.5 h-3.5 text-[#22c55e]" /> Live Recommendation Tracker
+                  <Target className="w-3.5 h-3.5 text-[#0ecb81]" /> Live Recommendation Tracker
                 </h3>
                 <span className="text-[9px] text-[var(--text-faint)]">{trackingStats.totalTracked} tracked · {trackingStats.resolved} resolved</span>
               </div>
@@ -719,26 +719,26 @@ function TradeFinderTab({ data, loading, onRefresh, trackingStats, trackedRecs, 
               {trackingStats.resolved > 0 ? (
                 <>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-                    <div className="p-3.5 rounded-xl bg-[#22c55e]/5 border border-[#22c55e]/20 text-center overflow-hidden">
-                      <p className="text-[10px] text-[#22c55e]/70 uppercase font-semibold truncate">Win Rate</p>
-                      <p className="font-mono font-bold text-xl text-[#22c55e] mt-1.5">{trackingStats.winRate.toFixed(1)}%</p>
+                    <div className="p-3.5 rounded-md bg-[#0ecb81]/5 border border-[#0ecb81]/20 text-center overflow-hidden">
+                      <p className="text-[10px] text-[#0ecb81]/70 uppercase font-semibold truncate">Win Rate</p>
+                      <p className="font-mono font-bold text-xl text-[#0ecb81] mt-1.5">{trackingStats.winRate.toFixed(1)}%</p>
                       <p className="text-[10px] text-[var(--text-faint)] mt-1">{trackingStats.wins}W / {trackingStats.losses}L</p>
                     </div>
-                    <div className="p-3.5 rounded-xl bg-[#3b82f6]/5 border border-[#3b82f6]/20 text-center overflow-hidden">
-                      <p className="text-[10px] text-[#3b82f6]/70 uppercase font-semibold truncate">Avg Return</p>
-                      <p className={`font-mono font-bold text-xl mt-1.5 ${trackingStats.avgReturn >= 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+                    <div className="p-3.5 rounded-md bg-[#1e90ff]/5 border border-[#1e90ff]/20 text-center overflow-hidden">
+                      <p className="text-[10px] text-[#1e90ff]/70 uppercase font-semibold truncate">Avg Return</p>
+                      <p className={`font-mono font-bold text-xl mt-1.5 ${trackingStats.avgReturn >= 0 ? 'text-[#0ecb81]' : 'text-[#f6465d]'}`}>
                         {trackingStats.avgReturn >= 0 ? '+' : ''}{trackingStats.avgReturn.toFixed(2)}%
                       </p>
                       <p className="text-[10px] text-[var(--text-faint)] mt-1">per trade</p>
                     </div>
-                    <div className="p-3.5 rounded-xl bg-[#f59e0b]/5 border border-[#f59e0b]/20 text-center overflow-hidden">
-                      <p className="text-[10px] text-[#f59e0b]/70 uppercase font-semibold truncate">Profit Factor</p>
-                      <p className="font-mono font-bold text-xl text-[#f59e0b] mt-1.5">{trackingStats.profitFactor.toFixed(2)}x</p>
+                    <div className="p-3.5 rounded-md bg-[#f0b90b]/5 border border-[#f0b90b]/20 text-center overflow-hidden">
+                      <p className="text-[10px] text-[#f0b90b]/70 uppercase font-semibold truncate">Profit Factor</p>
+                      <p className="font-mono font-bold text-xl text-[#f0b90b] mt-1.5">{trackingStats.profitFactor.toFixed(2)}x</p>
                       <p className="text-[10px] text-[var(--text-faint)] mt-1">gross W/L</p>
                     </div>
-                    <div className="p-3.5 rounded-xl bg-[#8b5cf6]/5 border border-[#8b5cf6]/20 text-center overflow-hidden">
-                      <p className="text-[10px] text-[#8b5cf6]/70 uppercase font-semibold truncate">MTF Edge</p>
-                      <p className="font-mono font-bold text-xl text-[#8b5cf6] mt-1.5">
+                    <div className="p-3.5 rounded-md bg-[#f0b90b]/5 border border-[#f0b90b]/20 text-center overflow-hidden">
+                      <p className="text-[10px] text-[#f0b90b]/70 uppercase font-semibold truncate">MTF Edge</p>
+                      <p className="font-mono font-bold text-xl text-[#f0b90b] mt-1.5">
                         {trackingStats.mtfWinRate > 0 ? `${trackingStats.mtfWinRate.toFixed(0)}%` : '--'}
                       </p>
                       <p className="text-[10px] text-[var(--text-faint)] mt-1">vs {trackingStats.nonMtfWinRate.toFixed(0)}%</p>
@@ -752,7 +752,7 @@ function TradeFinderTab({ data, loading, onRefresh, trackingStats, trackedRecs, 
                       <div key={bucket} className="flex items-center gap-2 text-[10px]">
                         <span className="w-14 font-mono text-[var(--text-muted)]">{bucket}</span>
                         <div className="flex-1 h-2 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
-                          <div className="h-full rounded-full" style={{ width: `${stats.count > 0 ? (stats.wins / stats.count) * 100 : 0}%`, background: (stats.wins / stats.count) > 0.6 ? '#22c55e' : (stats.wins / stats.count) > 0.5 ? '#f59e0b' : '#ef4444' }} />
+                          <div className="h-full rounded-full" style={{ width: `${stats.count > 0 ? (stats.wins / stats.count) * 100 : 0}%`, background: (stats.wins / stats.count) > 0.6 ? '#0ecb81' : (stats.wins / stats.count) > 0.5 ? '#f0b90b' : '#f6465d' }} />
                         </div>
                         <span className="w-10 text-right font-mono text-[var(--text-faint)]">{stats.count > 0 ? ((stats.wins / stats.count) * 100).toFixed(0) : 0}%</span>
                         <span className="w-14 text-right font-mono text-[var(--text-faint)]">n={stats.count}</span>
@@ -783,10 +783,10 @@ function TradeFinderTab({ data, loading, onRefresh, trackingStats, trackedRecs, 
             <Card>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-2">
-                  <BarChart3 className="w-3.5 h-3.5 text-[#8b5cf6]" /> Walk-Forward Validation
+                  <BarChart3 className="w-3.5 h-3.5 text-[#f0b90b]" /> Walk-Forward Validation
                 </h3>
                 {walkForwardData && (
-                  <span className={`text-[9px] px-2 py-0.5 rounded-full font-semibold ${walkForwardData.statSignificant ? 'bg-[#22c55e]/10 text-[#22c55e]' : 'bg-[#f59e0b]/10 text-[#f59e0b]'}`}>
+                  <span className={`text-[9px] px-2 py-0.5 rounded-full font-semibold ${walkForwardData.statSignificant ? 'bg-[#0ecb81]/10 text-[#0ecb81]' : 'bg-[#f0b90b]/10 text-[#f0b90b]'}`}>
                     {walkForwardData.statSignificant ? 'Statistically Significant' : 'Needs More Data'}
                   </span>
                 )}
@@ -794,32 +794,32 @@ function TradeFinderTab({ data, loading, onRefresh, trackingStats, trackedRecs, 
 
               {wfLoading ? (
                 <div className="text-center py-8">
-                  <Search className="w-6 h-6 text-[#8b5cf6] animate-pulse mx-auto mb-2" />
+                  <Search className="w-6 h-6 text-[#f0b90b] animate-pulse mx-auto mb-2" />
                   <p className="text-xs text-[var(--text-muted)]">Running walk-forward backtest on historical data...</p>
                 </div>
               ) : walkForwardData ? (
                 <>
                   {/* Summary Stats */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-                    <div className="p-3.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-center overflow-hidden">
+                    <div className="p-3.5 rounded-md bg-[var(--bg-secondary)] border border-[var(--border)] text-center overflow-hidden">
                       <p className="text-[10px] text-[var(--text-faint)] uppercase font-semibold truncate">Trades Tested</p>
                       <p className="font-mono font-bold text-lg mt-1.5">{walkForwardData.totalTrades}</p>
                     </div>
-                    <div className="p-3.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-center overflow-hidden">
+                    <div className="p-3.5 rounded-md bg-[var(--bg-secondary)] border border-[var(--border)] text-center overflow-hidden">
                       <p className="text-[10px] text-[var(--text-faint)] uppercase font-semibold truncate">Score-Return r</p>
-                      <p className={`font-mono font-bold text-lg mt-1.5 ${walkForwardData.scoreCorrelation > 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+                      <p className={`font-mono font-bold text-lg mt-1.5 ${walkForwardData.scoreCorrelation > 0 ? 'text-[#0ecb81]' : 'text-[#f6465d]'}`}>
                         {walkForwardData.scoreCorrelation > 0 ? '+' : ''}{walkForwardData.scoreCorrelation.toFixed(3)}
                       </p>
                     </div>
-                    <div className="p-3.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-center overflow-hidden">
+                    <div className="p-3.5 rounded-md bg-[var(--bg-secondary)] border border-[var(--border)] text-center overflow-hidden">
                       <p className="text-[10px] text-[var(--text-faint)] uppercase font-semibold truncate">Hi vs Lo Edge</p>
-                      <p className={`font-mono font-bold text-lg mt-1.5 ${walkForwardData.highScoreEdge > 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+                      <p className={`font-mono font-bold text-lg mt-1.5 ${walkForwardData.highScoreEdge > 0 ? 'text-[#0ecb81]' : 'text-[#f6465d]'}`}>
                         {walkForwardData.highScoreEdge > 0 ? '+' : ''}{walkForwardData.highScoreEdge.toFixed(1)}%
                       </p>
                     </div>
-                    <div className="p-3.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-center overflow-hidden">
+                    <div className="p-3.5 rounded-md bg-[var(--bg-secondary)] border border-[var(--border)] text-center overflow-hidden">
                       <p className="text-[10px] text-[var(--text-faint)] uppercase font-semibold truncate">t-Statistic</p>
-                      <p className={`font-mono font-bold text-lg mt-1.5 ${Math.abs(walkForwardData.tStatistic) > 1.96 ? 'text-[#22c55e]' : 'text-[#f59e0b]'}`}>
+                      <p className={`font-mono font-bold text-lg mt-1.5 ${Math.abs(walkForwardData.tStatistic) > 1.96 ? 'text-[#0ecb81]' : 'text-[#f0b90b]'}`}>
                         {walkForwardData.tStatistic.toFixed(2)}
                       </p>
                     </div>
@@ -835,12 +835,12 @@ function TradeFinderTab({ data, loading, onRefresh, trackingStats, trackedRecs, 
                           <div className="h-3 bg-[var(--bg-primary)] rounded-full overflow-hidden">
                             <div className="h-full rounded-full transition-all" style={{
                               width: `${Math.max(5, b.winRate)}%`,
-                              background: b.winRate > 60 ? '#22c55e' : b.winRate > 50 ? '#f59e0b' : '#ef4444'
+                              background: b.winRate > 60 ? '#0ecb81' : b.winRate > 50 ? '#f0b90b' : '#f6465d'
                             }} />
                           </div>
                         </div>
                         <div className="text-right shrink-0 w-24">
-                          <span className="text-[10px] font-mono font-semibold" style={{ color: b.winRate > 55 ? '#22c55e' : b.winRate > 50 ? '#f59e0b' : '#ef4444' }}>
+                          <span className="text-[10px] font-mono font-semibold" style={{ color: b.winRate > 55 ? '#0ecb81' : b.winRate > 50 ? '#f0b90b' : '#f6465d' }}>
                             {b.winRate.toFixed(1)}% win
                           </span>
                           <span className="text-[9px] text-[var(--text-faint)] ml-1">
@@ -864,8 +864,8 @@ function TradeFinderTab({ data, loading, onRefresh, trackingStats, trackedRecs, 
       {/* Loading state */}
       {loading && !data && (
         <Card className="text-center py-12">
-          <div className="w-12 h-12 rounded-2xl bg-[#8b5cf6]/10 flex items-center justify-center mx-auto mb-4">
-            <Search className="w-6 h-6 text-[#8b5cf6] animate-pulse" />
+          <div className="w-12 h-12 rounded-lg bg-[#f0b90b]/10 flex items-center justify-center mx-auto mb-4">
+            <Search className="w-6 h-6 text-[#f0b90b] animate-pulse" />
           </div>
           <p className="text-[var(--text-muted)] font-medium">Scanning 500+ stocks with IC-weighted multi-factor model...</p>
           <p className="text-xs text-[var(--text-faint)] mt-1">Multi-timeframe confirmation · Relative strength · Adaptive volatility filters</p>
@@ -890,7 +890,7 @@ function TradeFinderTab({ data, loading, onRefresh, trackingStats, trackedRecs, 
         </div>
       ) : data && !loading ? (
         <Card className="text-center py-12">
-          <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center mx-auto mb-4">
+          <div className="w-14 h-14 rounded-lg bg-white/5 flex items-center justify-center mx-auto mb-4">
             <Target className="w-7 h-7 text-[var(--text-faint)]" />
           </div>
           <p className="text-[var(--text-muted)] font-medium">No opportunities match your filter</p>
@@ -906,12 +906,12 @@ function TradeOpportunityCard({ opportunity: opp, rank, expanded, onToggle, acti
   actionColor: (a: string) => string; horizonIcon: (t: string) => string; signalDot: (s: string) => string;
 }) {
   return (
-    <div className={`rounded-2xl border transition-all overflow-hidden ${expanded ? 'border-[#8b5cf6]/40 bg-[var(--bg-card)]' : 'border-[var(--border)] bg-[var(--bg-card)] hover:border-[var(--border-emphasis)]'}`}>
+    <div className={`rounded-lg border transition-all overflow-hidden ${expanded ? 'border-[#f0b90b]/40 bg-[var(--bg-card)]' : 'border-[var(--border)] bg-[var(--bg-card)] hover:border-[var(--border-emphasis)]'}`}>
       {/* Header — always visible */}
       <button onClick={onToggle} className="w-full p-4 text-left">
         <div className="flex items-start gap-3">
           {/* Rank badge */}
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 font-bold text-sm mt-0.5" style={{ background: `${actionColor(opp.action)}15`, color: actionColor(opp.action) }}>
+          <div className="w-8 h-8 rounded-md flex items-center justify-center shrink-0 font-bold text-sm mt-0.5" style={{ background: `${actionColor(opp.action)}15`, color: actionColor(opp.action) }}>
             #{rank}
           </div>
 
@@ -923,24 +923,24 @@ function TradeOpportunityCard({ opportunity: opp, rank, expanded, onToggle, acti
                 {opp.action}
               </span>
               {opp.multiTimeframeAlign && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#22c55e]/10 text-[#22c55e] font-semibold">MTF✓</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#0ecb81]/10 text-[#0ecb81] font-semibold">MTF✓</span>
               )}
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#8b5cf6]/10 text-[#8b5cf6] font-semibold hidden sm:inline-flex items-center gap-1">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#f0b90b]/10 text-[#f0b90b] font-semibold hidden sm:inline-flex items-center gap-1">
                 {horizonIcon(opp.timeHorizon.type)} {opp.timeHorizon.label}
               </span>
             </div>
             <div className="flex items-center gap-2 text-[11px] text-[var(--text-faint)] mt-1.5 flex-wrap">
               <span>{opp.sector}</span>
               <span className="font-mono">${opp.currentPrice.toFixed(2)}</span>
-              <span className="text-[#22c55e] font-semibold">{opp.historicalWinRate}% win</span>
-              <span className="sm:hidden text-[#8b5cf6]">{horizonIcon(opp.timeHorizon.type)} {opp.timeHorizon.label}</span>
+              <span className="text-[#0ecb81] font-semibold">{opp.historicalWinRate}% win</span>
+              <span className="sm:hidden text-[#f0b90b]">{horizonIcon(opp.timeHorizon.type)} {opp.timeHorizon.label}</span>
             </div>
             {/* Score row — below text on mobile for breathing room */}
             <div className="flex items-center gap-2 mt-2 sm:hidden">
               <div className="w-16 h-2 rounded-full bg-[var(--bg-secondary)] overflow-hidden">
-                <div className="h-full rounded-full transition-all" style={{ width: `${opp.score}%`, background: opp.score > 70 ? '#22c55e' : opp.score > 50 ? '#f59e0b' : '#6b7280' }} />
+                <div className="h-full rounded-full transition-all" style={{ width: `${opp.score}%`, background: opp.score > 70 ? '#0ecb81' : opp.score > 50 ? '#f0b90b' : '#6b7280' }} />
               </div>
-              <span className="text-xs font-bold font-mono" style={{ color: opp.score > 70 ? '#22c55e' : opp.score > 50 ? '#f59e0b' : '#6b7280' }}>{opp.score}</span>
+              <span className="text-xs font-bold font-mono" style={{ color: opp.score > 70 ? '#0ecb81' : opp.score > 50 ? '#f0b90b' : '#6b7280' }}>{opp.score}</span>
               <span className="text-[10px] text-[var(--text-faint)] ml-1">R:R {opp.riskRewardRatio}x · +{opp.expectedReturn}%</span>
             </div>
           </div>
@@ -949,9 +949,9 @@ function TradeOpportunityCard({ opportunity: opp, rank, expanded, onToggle, acti
           <div className="text-right shrink-0 hidden sm:block">
             <div className="flex items-center gap-1.5 justify-end mb-0.5">
               <div className="w-12 h-2 rounded-full bg-[var(--bg-secondary)] overflow-hidden">
-                <div className="h-full rounded-full transition-all" style={{ width: `${opp.score}%`, background: opp.score > 70 ? '#22c55e' : opp.score > 50 ? '#f59e0b' : '#6b7280' }} />
+                <div className="h-full rounded-full transition-all" style={{ width: `${opp.score}%`, background: opp.score > 70 ? '#0ecb81' : opp.score > 50 ? '#f0b90b' : '#6b7280' }} />
               </div>
-              <span className="text-xs font-bold font-mono" style={{ color: opp.score > 70 ? '#22c55e' : opp.score > 50 ? '#f59e0b' : '#6b7280' }}>{opp.score}</span>
+              <span className="text-xs font-bold font-mono" style={{ color: opp.score > 70 ? '#0ecb81' : opp.score > 50 ? '#f0b90b' : '#6b7280' }}>{opp.score}</span>
             </div>
             <p className="text-[10px] text-[var(--text-faint)]">R:R {opp.riskRewardRatio}x · +{opp.expectedReturn}%</p>
           </div>
@@ -965,36 +965,36 @@ function TradeOpportunityCard({ opportunity: opp, rank, expanded, onToggle, acti
         <div className="px-4 pb-5 space-y-5 border-t border-[var(--border)] pt-4">
           {/* Price Levels */}
           <div className="grid grid-cols-3 gap-2.5">
-            <div className="p-3 rounded-xl bg-[#22c55e]/5 border border-[#22c55e]/20 text-center overflow-hidden">
-              <p className="text-[10px] text-[#22c55e]/70 uppercase font-semibold mb-1">Target</p>
-              <p className="font-mono font-bold text-sm text-[#22c55e]">${opp.targetPrice.toFixed(2)}</p>
-              <p className="text-[10px] text-[#22c55e]/60 mt-0.5">+{opp.expectedReturn}%</p>
+            <div className="p-3 rounded-md bg-[#0ecb81]/5 border border-[#0ecb81]/20 text-center overflow-hidden">
+              <p className="text-[10px] text-[#0ecb81]/70 uppercase font-semibold mb-1">Target</p>
+              <p className="font-mono font-bold text-sm text-[#0ecb81]">${opp.targetPrice.toFixed(2)}</p>
+              <p className="text-[10px] text-[#0ecb81]/60 mt-0.5">+{opp.expectedReturn}%</p>
             </div>
-            <div className="p-3 rounded-xl bg-[#3b82f6]/5 border border-[#3b82f6]/20 text-center overflow-hidden">
-              <p className="text-[10px] text-[#3b82f6]/70 uppercase font-semibold mb-1">Entry</p>
-              <p className="font-mono font-bold text-sm text-[#3b82f6]">${opp.entryPrice.toFixed(2)}</p>
-              <p className="text-[10px] text-[#3b82f6]/60 mt-0.5">Now</p>
+            <div className="p-3 rounded-md bg-[#1e90ff]/5 border border-[#1e90ff]/20 text-center overflow-hidden">
+              <p className="text-[10px] text-[#1e90ff]/70 uppercase font-semibold mb-1">Entry</p>
+              <p className="font-mono font-bold text-sm text-[#1e90ff]">${opp.entryPrice.toFixed(2)}</p>
+              <p className="text-[10px] text-[#1e90ff]/60 mt-0.5">Now</p>
             </div>
-            <div className="p-3 rounded-xl bg-[#ef4444]/5 border border-[#ef4444]/20 text-center overflow-hidden">
-              <p className="text-[10px] text-[#ef4444]/70 uppercase font-semibold mb-1">Stop</p>
-              <p className="font-mono font-bold text-sm text-[#ef4444]">${opp.stopLoss.toFixed(2)}</p>
-              <p className="text-[10px] text-[#ef4444]/60 mt-0.5">-{opp.maxRisk}%</p>
+            <div className="p-3 rounded-md bg-[#f6465d]/5 border border-[#f6465d]/20 text-center overflow-hidden">
+              <p className="text-[10px] text-[#f6465d]/70 uppercase font-semibold mb-1">Stop</p>
+              <p className="font-mono font-bold text-sm text-[#f6465d]">${opp.stopLoss.toFixed(2)}</p>
+              <p className="text-[10px] text-[#f6465d]/60 mt-0.5">-{opp.maxRisk}%</p>
             </div>
           </div>
 
           {/* Time Horizon + Position Size */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="p-3.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] overflow-hidden">
+            <div className="p-3.5 rounded-md bg-[var(--bg-secondary)] border border-[var(--border)] overflow-hidden">
               <div className="flex items-center gap-2 mb-1.5">
-                <Timer className="w-3.5 h-3.5 text-[#8b5cf6]" />
+                <Timer className="w-3.5 h-3.5 text-[#f0b90b]" />
                 <span className="text-[10px] text-[var(--text-faint)] uppercase font-semibold">Hold</span>
               </div>
               <p className="font-bold text-sm">{opp.timeHorizon.label}</p>
               <p className="text-[10px] text-[var(--text-faint)] mt-1 capitalize">{opp.timeHorizon.type} · ~{opp.timeHorizon.days}d</p>
             </div>
-            <div className="p-3.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] overflow-hidden">
+            <div className="p-3.5 rounded-md bg-[var(--bg-secondary)] border border-[var(--border)] overflow-hidden">
               <div className="flex items-center gap-2 mb-1.5">
-                <DollarSign className="w-3.5 h-3.5 text-[#22c55e]" />
+                <DollarSign className="w-3.5 h-3.5 text-[#0ecb81]" />
                 <span className="text-[10px] text-[var(--text-faint)] uppercase font-semibold">Size</span>
               </div>
               <p className="font-bold text-sm">${opp.positionSize.dollarAmount.toLocaleString()}</p>
@@ -1004,24 +1004,24 @@ function TradeOpportunityCard({ opportunity: opp, rank, expanded, onToggle, acti
 
           {/* Accuracy Metrics */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="p-3.5 rounded-xl bg-[#22c55e]/5 border border-[#22c55e]/20 text-center overflow-hidden">
-              <p className="text-[10px] text-[#22c55e]/70 uppercase font-semibold mb-1">Win Rate</p>
-              <p className="font-mono font-bold text-lg text-[#22c55e]">{opp.historicalWinRate}%</p>
+            <div className="p-3.5 rounded-md bg-[#0ecb81]/5 border border-[#0ecb81]/20 text-center overflow-hidden">
+              <p className="text-[10px] text-[#0ecb81]/70 uppercase font-semibold mb-1">Win Rate</p>
+              <p className="font-mono font-bold text-lg text-[#0ecb81]">{opp.historicalWinRate}%</p>
               <p className="text-[10px] text-[var(--text-faint)] mt-0.5">historical</p>
             </div>
-            <div className="p-3.5 rounded-xl bg-[#8b5cf6]/5 border border-[#8b5cf6]/20 text-center overflow-hidden">
-              <p className="text-[10px] text-[#8b5cf6]/70 uppercase font-semibold mb-1">Edge</p>
-              <p className="font-mono font-bold text-lg text-[#8b5cf6]">{opp.edgeScore > 0 ? '+' : ''}{opp.edgeScore}</p>
+            <div className="p-3.5 rounded-md bg-[#f0b90b]/5 border border-[#f0b90b]/20 text-center overflow-hidden">
+              <p className="text-[10px] text-[#f0b90b]/70 uppercase font-semibold mb-1">Edge</p>
+              <p className="font-mono font-bold text-lg text-[#f0b90b]">{opp.edgeScore > 0 ? '+' : ''}{opp.edgeScore}</p>
               <p className="text-[10px] text-[var(--text-faint)] mt-0.5">vol-adj</p>
             </div>
-            <div className="p-3.5 rounded-xl bg-[#3b82f6]/5 border border-[#3b82f6]/20 text-center overflow-hidden">
-              <p className="text-[10px] text-[#3b82f6]/70 uppercase font-semibold mb-1">vs Sector</p>
-              <p className="font-mono font-bold text-lg text-[#3b82f6]">{opp.relativeStrength > 1 ? '+' : ''}{((opp.relativeStrength - 1) * 100).toFixed(0)}%</p>
+            <div className="p-3.5 rounded-md bg-[#1e90ff]/5 border border-[#1e90ff]/20 text-center overflow-hidden">
+              <p className="text-[10px] text-[#1e90ff]/70 uppercase font-semibold mb-1">vs Sector</p>
+              <p className="font-mono font-bold text-lg text-[#1e90ff]">{opp.relativeStrength > 1 ? '+' : ''}{((opp.relativeStrength - 1) * 100).toFixed(0)}%</p>
               <p className="text-[10px] text-[var(--text-faint)] mt-0.5">rel. str.</p>
             </div>
-            <div className="p-3.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-center overflow-hidden">
+            <div className="p-3.5 rounded-md bg-[var(--bg-secondary)] border border-[var(--border)] text-center overflow-hidden">
               <p className="text-[10px] text-[var(--text-faint)] uppercase font-semibold mb-1">Entry</p>
-              <p className={`font-bold text-sm capitalize ${opp.entryQuality === 'optimal' ? 'text-[#22c55e]' : opp.entryQuality === 'good' ? 'text-[#3b82f6]' : opp.entryQuality === 'extended' ? 'text-[#ef4444]' : 'text-[#f59e0b]'}`}>{opp.entryQuality}</p>
+              <p className={`font-bold text-sm capitalize ${opp.entryQuality === 'optimal' ? 'text-[#0ecb81]' : opp.entryQuality === 'good' ? 'text-[#1e90ff]' : opp.entryQuality === 'extended' ? 'text-[#f6465d]' : 'text-[#f0b90b]'}`}>{opp.entryQuality}</p>
               <p className="text-[10px] text-[var(--text-faint)] mt-0.5">{opp.momentumPersistence}w mom</p>
             </div>
           </div>
@@ -1029,22 +1029,22 @@ function TradeOpportunityCard({ opportunity: opp, rank, expanded, onToggle, acti
           {/* Multi-Timeframe + Persistence */}
           <div className="flex items-center gap-2 flex-wrap">
             {opp.multiTimeframeAlign && (
-              <span className="text-[9px] px-2.5 py-1 rounded-full bg-[#22c55e]/10 text-[#22c55e] font-semibold border border-[#22c55e]/20">
+              <span className="text-[9px] px-2.5 py-1 rounded-full bg-[#0ecb81]/10 text-[#0ecb81] font-semibold border border-[#0ecb81]/20">
                 Weekly + Daily Aligned
               </span>
             )}
             {opp.momentumPersistence >= 3 && (
-              <span className="text-[9px] px-2.5 py-1 rounded-full bg-[#3b82f6]/10 text-[#3b82f6] font-semibold border border-[#3b82f6]/20">
+              <span className="text-[9px] px-2.5 py-1 rounded-full bg-[#1e90ff]/10 text-[#1e90ff] font-semibold border border-[#1e90ff]/20">
                 {opp.momentumPersistence}W Sustained Momentum
               </span>
             )}
             {opp.entryQuality === 'optimal' && (
-              <span className="text-[9px] px-2.5 py-1 rounded-full bg-[#8b5cf6]/10 text-[#8b5cf6] font-semibold border border-[#8b5cf6]/20">
+              <span className="text-[9px] px-2.5 py-1 rounded-full bg-[#f0b90b]/10 text-[#f0b90b] font-semibold border border-[#f0b90b]/20">
                 Pullback to Support
               </span>
             )}
             {opp.relativeStrength > 1.3 && (
-              <span className="text-[9px] px-2.5 py-1 rounded-full bg-[#f59e0b]/10 text-[#f59e0b] font-semibold border border-[#f59e0b]/20">
+              <span className="text-[9px] px-2.5 py-1 rounded-full bg-[#f0b90b]/10 text-[#f0b90b] font-semibold border border-[#f0b90b]/20">
                 Sector Leader
               </span>
             )}
@@ -1067,37 +1067,37 @@ function TradeOpportunityCard({ opportunity: opp, rank, expanded, onToggle, acti
           {/* Catalysts & Risks */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <p className="text-[10px] text-[#22c55e] uppercase tracking-wider font-semibold mb-1.5 flex items-center gap-1">
+              <p className="text-[10px] text-[#0ecb81] uppercase tracking-wider font-semibold mb-1.5 flex items-center gap-1">
                 <ArrowUpRight className="w-3 h-3" /> Catalysts
               </p>
               <div className="space-y-1">
                 {opp.catalysts.map((c, i) => (
-                  <p key={i} className="text-[10px] text-[var(--text-muted)] pl-3 border-l-2 border-[#22c55e]/30">{c}</p>
+                  <p key={i} className="text-[10px] text-[var(--text-muted)] pl-3 border-l-2 border-[#0ecb81]/30">{c}</p>
                 ))}
               </div>
             </div>
             <div>
-              <p className="text-[10px] text-[#ef4444] uppercase tracking-wider font-semibold mb-1.5 flex items-center gap-1">
+              <p className="text-[10px] text-[#f6465d] uppercase tracking-wider font-semibold mb-1.5 flex items-center gap-1">
                 <AlertTriangle className="w-3 h-3" /> Risks
               </p>
               <div className="space-y-1">
                 {opp.risks.map((r, i) => (
-                  <p key={i} className="text-[10px] text-[var(--text-muted)] pl-3 border-l-2 border-[#ef4444]/30">{r}</p>
+                  <p key={i} className="text-[10px] text-[var(--text-muted)] pl-3 border-l-2 border-[#f6465d]/30">{r}</p>
                 ))}
               </div>
             </div>
           </div>
 
           {/* Confidence meter */}
-          <div className="p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)]">
+          <div className="p-3 rounded-md bg-[var(--bg-secondary)] border border-[var(--border)]">
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-[10px] text-[var(--text-faint)] uppercase tracking-wider font-semibold">Signal Confidence</span>
-              <span className="text-xs font-bold font-mono" style={{ color: opp.confidence > 0.7 ? '#22c55e' : opp.confidence > 0.5 ? '#f59e0b' : '#ef4444' }}>
+              <span className="text-xs font-bold font-mono" style={{ color: opp.confidence > 0.7 ? '#0ecb81' : opp.confidence > 0.5 ? '#f0b90b' : '#f6465d' }}>
                 {(opp.confidence * 100).toFixed(0)}%
               </span>
             </div>
             <div className="h-2 bg-[var(--bg-primary)] rounded-full overflow-hidden">
-              <div className="h-full rounded-full transition-all" style={{ width: `${opp.confidence * 100}%`, background: opp.confidence > 0.7 ? '#22c55e' : opp.confidence > 0.5 ? '#f59e0b' : '#ef4444' }} />
+              <div className="h-full rounded-full transition-all" style={{ width: `${opp.confidence * 100}%`, background: opp.confidence > 0.7 ? '#0ecb81' : opp.confidence > 0.5 ? '#f0b90b' : '#f6465d' }} />
             </div>
             <p className="text-[9px] text-[var(--text-faint)] mt-1">{Math.round(opp.confidence * 7)}/7 indicators aligned · R:R {opp.riskRewardRatio}:1</p>
           </div>
@@ -1125,10 +1125,10 @@ function DashboardTab({ regime, rankings, sectors, onSelectSymbol, technicals, s
       {regime && (
         <div className="sm:hidden flex items-center justify-center">
           <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold
-            ${regime.regime === 'bull' ? 'bg-[#22c55e]/10 text-[#22c55e]' :
-              regime.regime === 'bear' ? 'bg-[#ef4444]/10 text-[#ef4444]' :
-                'bg-[#f59e0b]/10 text-[#f59e0b]'}`}>
-            <span className={`w-2 h-2 rounded-full pulse-dot ${regime.regime === 'bull' ? 'bg-[#22c55e]' : regime.regime === 'bear' ? 'bg-[#ef4444]' : 'bg-[#f59e0b]'}`} />
+            ${regime.regime === 'bull' ? 'bg-[#0ecb81]/10 text-[#0ecb81]' :
+              regime.regime === 'bear' ? 'bg-[#f6465d]/10 text-[#f6465d]' :
+                'bg-[#f0b90b]/10 text-[#f0b90b]'}`}>
+            <span className={`w-2 h-2 rounded-full pulse-dot ${regime.regime === 'bull' ? 'bg-[#0ecb81]' : regime.regime === 'bear' ? 'bg-[#f6465d]' : 'bg-[#f0b90b]'}`} />
             {regime.regime.toUpperCase()} Market
             <span className="text-[var(--text-faint)] font-normal">{(regime.confidence * 100).toFixed(0)}%</span>
           </div>
@@ -1136,16 +1136,16 @@ function DashboardTab({ regime, rankings, sectors, onSelectSymbol, technicals, s
       )}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 stagger-in">
-        <MetricCard label="Regime" value={regime?.regime?.toUpperCase() || '--'} sub={`Confidence: ${regime ? (regime.confidence * 100).toFixed(0) : '--'}%`} icon={Gauge} accent={regime?.regime === 'bull' ? '#22c55e' : regime?.regime === 'bear' ? '#ef4444' : '#f59e0b'} />
-        <MetricCard label="Universe" value={rankings.length.toString()} sub="Stocks ranked" icon={Target} accent="#3b82f6" />
-        <MetricCard label="Top Pick" value={topBuys[0]?.symbol || '--'} sub={topBuys[0] ? `Score: ${topBuys[0].composite.toFixed(3)}` : ''} icon={Flame} accent="#22c55e" />
-        <MetricCard label="Sectors" value={sectors.length.toString()} sub="GICS sectors" icon={PieIcon} accent="#8b5cf6" />
+        <MetricCard label="Regime" value={regime?.regime?.toUpperCase() || '--'} sub={`Confidence: ${regime ? (regime.confidence * 100).toFixed(0) : '--'}%`} icon={Gauge} accent={regime?.regime === 'bull' ? '#0ecb81' : regime?.regime === 'bear' ? '#f6465d' : '#f0b90b'} />
+        <MetricCard label="Universe" value={rankings.length.toString()} sub="Stocks ranked" icon={Target} accent="#1e90ff" />
+        <MetricCard label="Top Pick" value={topBuys[0]?.symbol || '--'} sub={topBuys[0] ? `Score: ${topBuys[0].composite.toFixed(3)}` : ''} icon={Flame} accent="#0ecb81" />
+        <MetricCard label="Sectors" value={sectors.length.toString()} sub="GICS sectors" icon={PieIcon} accent="#f0b90b" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5">
         <Card className="lg:col-span-1">
           <h3 className="text-xs font-semibold text-[var(--text-muted)] mb-4 flex items-center gap-2 uppercase tracking-wider">
-            <Cpu className="w-3.5 h-3.5 text-[#3b82f6]" /> Regime Signals
+            <Cpu className="w-3.5 h-3.5 text-[#1e90ff]" /> Regime Signals
           </h3>
           {radarData.length > 0 ? (
             <ResponsiveContainer width="100%" height={200}>
@@ -1153,33 +1153,33 @@ function DashboardTab({ regime, rankings, sectors, onSelectSymbol, technicals, s
                 <PolarGrid stroke="var(--border)" strokeDasharray="3 3" />
                 <PolarAngleAxis dataKey="factor" tick={{ fill: 'var(--text-faint)', fontSize: 10 }} />
                 <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} />
-                <Radar dataKey="value" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.12} strokeWidth={2} />
+                <Radar dataKey="value" stroke="#1e90ff" fill="#1e90ff" fillOpacity={0.12} strokeWidth={2} />
               </RadarChart>
             </ResponsiveContainer>
-          ) : <div className="h-48 shimmer rounded-xl" />}
+          ) : <div className="h-48 shimmer rounded-md" />}
         </Card>
 
         <Card className="lg:col-span-2">
           <h3 className="text-xs font-semibold text-[var(--text-muted)] mb-4 flex items-center gap-2 uppercase tracking-wider">
-            <TrendingUp className="w-3.5 h-3.5 text-[#22c55e]" /> Rankings
+            <TrendingUp className="w-3.5 h-3.5 text-[#0ecb81]" /> Rankings
           </h3>
           {/* Mobile: Card list */}
           <div className="md:hidden space-y-2">
             {topBuys.map((r: RankingEntry) => (
               <button key={r.symbol} onClick={() => onSelectSymbol(r.symbol)}
-                className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-[var(--border)] press-scale text-left">
-                <div className="w-8 h-8 rounded-lg bg-[#3b82f6]/10 flex items-center justify-center shrink-0">
-                  <span className="font-mono font-bold text-[10px] text-[#3b82f6]">#{r.rank}</span>
+                className="w-full flex items-center gap-3 p-3 rounded-md bg-white/[0.02] border border-[var(--border)] press-scale text-left">
+                <div className="w-8 h-8 rounded-lg bg-[#1e90ff]/10 flex items-center justify-center shrink-0">
+                  <span className="font-mono font-bold text-[10px] text-[#1e90ff]">#{r.rank}</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-mono font-bold text-sm text-[#3b82f6]">{r.symbol}</p>
+                  <p className="font-mono font-bold text-sm text-[#1e90ff]">{r.symbol}</p>
                   <div className="flex gap-3 mt-0.5">
-                    <span className={`text-[10px] font-mono ${r.momentum > 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>Mom {(r.momentum * 100).toFixed(1)}%</span>
-                    <span className="text-[10px] font-mono text-[#8b5cf6]">Q {r.quality.toFixed(3)}</span>
+                    <span className={`text-[10px] font-mono ${r.momentum > 0 ? 'text-[#0ecb81]' : 'text-[#f6465d]'}`}>Mom {(r.momentum * 100).toFixed(1)}%</span>
+                    <span className="text-[10px] font-mono text-[#f0b90b]">Q {r.quality.toFixed(3)}</span>
                   </div>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className={`font-mono font-bold text-sm ${r.composite > 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>{r.composite.toFixed(3)}</p>
+                  <p className={`font-mono font-bold text-sm ${r.composite > 0 ? 'text-[#0ecb81]' : 'text-[#f6465d]'}`}>{r.composite.toFixed(3)}</p>
                   <p className="text-[9px] text-[var(--text-faint)]">score</p>
                 </div>
               </button>
@@ -1207,17 +1207,17 @@ function DashboardTab({ regime, rankings, sectors, onSelectSymbol, technicals, s
                     style={{ animationDelay: `${idx * 40}ms` }}>
                     <td className="py-2.5 pr-2 text-[var(--text-faint)] text-xs">{r.rank}</td>
                     <td className="py-2.5 pr-2">
-                      <span className="font-mono font-bold text-[#3b82f6] text-xs">{r.symbol}</span>
+                      <span className="font-mono font-bold text-[#1e90ff] text-xs">{r.symbol}</span>
                     </td>
-                    <td className={`py-2.5 pr-2 text-right font-mono font-semibold text-xs ${r.composite > 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+                    <td className={`py-2.5 pr-2 text-right font-mono font-semibold text-xs ${r.composite > 0 ? 'text-[#0ecb81]' : 'text-[#f6465d]'}`}>
                       {r.composite.toFixed(3)}
                     </td>
-                    <td className={`py-2.5 pr-2 text-right font-mono text-[10px] ${r.momentum > 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+                    <td className={`py-2.5 pr-2 text-right font-mono text-[10px] ${r.momentum > 0 ? 'text-[#0ecb81]' : 'text-[#f6465d]'}`}>
                       {(r.momentum * 100).toFixed(1)}%
                     </td>
                     <td className="py-2.5 pr-2 text-right font-mono text-[10px] text-[#06b6d4]">{r.mean_reversion.toFixed(3)}</td>
-                    <td className="py-2.5 pr-2 text-right font-mono text-[10px] text-[#8b5cf6]">{r.quality.toFixed(3)}</td>
-                    <td className="py-2.5 text-right font-mono text-[10px] text-[#f59e0b]">{r.volatility.toFixed(3)}</td>
+                    <td className="py-2.5 pr-2 text-right font-mono text-[10px] text-[#f0b90b]">{r.quality.toFixed(3)}</td>
+                    <td className="py-2.5 text-right font-mono text-[10px] text-[#f0b90b]">{r.volatility.toFixed(3)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -1229,18 +1229,18 @@ function DashboardTab({ regime, rankings, sectors, onSelectSymbol, technicals, s
       {/* Sectors */}
       <Card>
         <h3 className="text-xs font-semibold text-[var(--text-muted)] mb-4 flex items-center gap-2 uppercase tracking-wider">
-          <Layers className="w-3.5 h-3.5 text-[#8b5cf6]" /> Sector Rotation
+          <Layers className="w-3.5 h-3.5 text-[#f0b90b]" /> Sector Rotation
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
           {sectors.map((s: any) => (
             <div key={s.etf}
-              className={`flex items-center justify-between p-3 rounded-xl border transition-all
-                ${s.above_50sma ? 'border-[#22c55e]/10 bg-[#22c55e]/[0.03]' : 'border-[#ef4444]/10 bg-[#ef4444]/[0.03]'}`}>
+              className={`flex items-center justify-between p-3 rounded-md border transition-all
+                ${s.above_50sma ? 'border-[#0ecb81]/10 bg-[#0ecb81]/[0.03]' : 'border-[#f6465d]/10 bg-[#f6465d]/[0.03]'}`}>
               <div className="min-w-0">
                 <p className="font-semibold text-sm truncate">{s.sector}</p>
                 <p className="text-[10px] text-[var(--text-faint)]">{s.etf} #{s.rank}</p>
               </div>
-              <p className={`font-mono font-bold text-sm shrink-0 ml-3 ${s.return_1m > 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+              <p className={`font-mono font-bold text-sm shrink-0 ml-3 ${s.return_1m > 0 ? 'text-[#0ecb81]' : 'text-[#f6465d]'}`}>
                 {s.return_1m > 0 ? '+' : ''}{(s.return_1m * 100).toFixed(1)}%
               </p>
             </div>
@@ -1252,14 +1252,14 @@ function DashboardTab({ regime, rankings, sectors, onSelectSymbol, technicals, s
       {technicals && selectedSymbol && (
         <Card glow="glow-blue">
           <h3 className="text-xs font-semibold text-[var(--text-muted)] mb-4 flex items-center gap-2 uppercase tracking-wider">
-            <Eye className="w-3.5 h-3.5 text-[#3b82f6]" /> {selectedSymbol}
+            <Eye className="w-3.5 h-3.5 text-[#1e90ff]" /> {selectedSymbol}
           </h3>
           <div className="grid grid-cols-3 sm:grid-cols-5 gap-4 mb-4">
             {[
               ['Price', `$${technicals.price?.toFixed(2)}`, ''],
-              ['RSI', technicals.rsi?.toFixed(1), technicals.rsi < 30 ? '#22c55e' : technicals.rsi > 70 ? '#ef4444' : ''],
-              ['MACD', technicals.macd?.histogram?.toFixed(3), technicals.macd?.histogram > 0 ? '#22c55e' : '#ef4444'],
-              ['Mom', `${((technicals.factors?.momentum || 0) * 100).toFixed(1)}%`, (technicals.factors?.momentum || 0) > 0 ? '#22c55e' : '#ef4444'],
+              ['RSI', technicals.rsi?.toFixed(1), technicals.rsi < 30 ? '#0ecb81' : technicals.rsi > 70 ? '#f6465d' : ''],
+              ['MACD', technicals.macd?.histogram?.toFixed(3), technicals.macd?.histogram > 0 ? '#0ecb81' : '#f6465d'],
+              ['Mom', `${((technicals.factors?.momentum || 0) * 100).toFixed(1)}%`, (technicals.factors?.momentum || 0) > 0 ? '#0ecb81' : '#f6465d'],
               ['MR', technicals.factors?.mean_reversion?.toFixed(3), '#06b6d4'],
             ].map(([label, val, color]) => (
               <div key={label as string} className="text-center">
@@ -1273,14 +1273,14 @@ function DashboardTab({ regime, rankings, sectors, onSelectSymbol, technicals, s
               <AreaChart data={technicals.price_history}>
                 <defs>
                   <linearGradient id="priceGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.2} />
-                    <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
+                    <stop offset="0%" stopColor="#1e90ff" stopOpacity={0.2} />
+                    <stop offset="100%" stopColor="#1e90ff" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <XAxis dataKey="date" tick={false} axisLine={false} />
                 <YAxis domain={['auto', 'auto']} tick={{ fill: 'var(--text-faint)', fontSize: 10 }} width={50} axisLine={false} tickLine={false} />
                 <Tooltip contentStyle={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 12, fontSize: 12 }} />
-                <Area type="monotone" dataKey="close" stroke="#3b82f6" fill="url(#priceGrad)" strokeWidth={2} dot={false} />
+                <Area type="monotone" dataKey="close" stroke="#1e90ff" fill="url(#priceGrad)" strokeWidth={2} dot={false} />
               </AreaChart>
             </ResponsiveContainer>
           )}
@@ -1297,31 +1297,31 @@ function SignalsTab({ signals, loading, onRefresh, onSelectSymbol }: any) {
 
   return (
     <div className="space-y-5 sm:space-y-6">
-      <SectionHeader icon={Crosshair} title="Signal Scanner" subtitle="Multi-factor signal detection" accent="#3b82f6"
+      <SectionHeader icon={Crosshair} title="Signal Scanner" subtitle="Multi-factor signal detection" accent="#1e90ff"
         action={<ActionButton onClick={onRefresh} loading={loading} icon={RefreshCw} label="Scan" />} />
 
       <div className="grid grid-cols-3 gap-3">
-        <MetricCard label="Total" value={signals.length.toString()} icon={Activity} accent="#3b82f6" />
-        <MetricCard label="Buy" value={buySignals.length.toString()} icon={ArrowUpRight} accent="#22c55e" />
-        <MetricCard label="Sell" value={sellSignals.length.toString()} icon={ArrowDownRight} accent="#ef4444" />
+        <MetricCard label="Total" value={signals.length.toString()} icon={Activity} accent="#1e90ff" />
+        <MetricCard label="Buy" value={buySignals.length.toString()} icon={ArrowUpRight} accent="#0ecb81" />
+        <MetricCard label="Sell" value={sellSignals.length.toString()} icon={ArrowDownRight} accent="#f6465d" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card glow="glow-green">
-          <h3 className="text-xs font-bold text-[#22c55e] mb-3 flex items-center gap-2 uppercase tracking-wider">
+          <h3 className="text-xs font-bold text-[#0ecb81] mb-3 flex items-center gap-2 uppercase tracking-wider">
             <ArrowUpRight className="w-3.5 h-3.5" /> Buy <span className="text-[var(--text-faint)] font-normal ml-auto">{buySignals.length}</span>
           </h3>
           <div className="space-y-1.5 max-h-[400px] overflow-y-auto">
             {buySignals.map((s: any, i: number) => (
               <div key={i}
-                className="flex items-center justify-between p-3 rounded-xl bg-[#22c55e]/[0.03] border border-[#22c55e]/8 hover:border-[#22c55e]/20 cursor-pointer transition-all"
+                className="flex items-center justify-between p-3 rounded-md bg-[#0ecb81]/[0.03] border border-[#0ecb81]/8 hover:border-[#0ecb81]/20 cursor-pointer transition-all"
                 onClick={() => onSelectSymbol(s.symbol)}>
                 <div className="min-w-0">
-                  <span className="font-mono font-bold text-[#3b82f6] text-sm">{s.symbol}</span>
+                  <span className="font-mono font-bold text-[#1e90ff] text-sm">{s.symbol}</span>
                   <p className="text-[10px] text-[var(--text-faint)] truncate max-w-[160px]">{s.description}</p>
                 </div>
                 <div className="text-right shrink-0 ml-2">
-                  <p className="font-mono font-bold text-sm text-[#22c55e]">{(s.strength * 100).toFixed(0)}%</p>
+                  <p className="font-mono font-bold text-sm text-[#0ecb81]">{(s.strength * 100).toFixed(0)}%</p>
                   <p className="text-[9px] text-[var(--text-faint)] uppercase">{s.strategy}</p>
                 </div>
               </div>
@@ -1331,20 +1331,20 @@ function SignalsTab({ signals, loading, onRefresh, onSelectSymbol }: any) {
         </Card>
 
         <Card glow="glow-red">
-          <h3 className="text-xs font-bold text-[#ef4444] mb-3 flex items-center gap-2 uppercase tracking-wider">
+          <h3 className="text-xs font-bold text-[#f6465d] mb-3 flex items-center gap-2 uppercase tracking-wider">
             <ArrowDownRight className="w-3.5 h-3.5" /> Sell <span className="text-[var(--text-faint)] font-normal ml-auto">{sellSignals.length}</span>
           </h3>
           <div className="space-y-1.5 max-h-[400px] overflow-y-auto">
             {sellSignals.map((s: any, i: number) => (
               <div key={i}
-                className="flex items-center justify-between p-3 rounded-xl bg-[#ef4444]/[0.03] border border-[#ef4444]/8 hover:border-[#ef4444]/20 cursor-pointer transition-all"
+                className="flex items-center justify-between p-3 rounded-md bg-[#f6465d]/[0.03] border border-[#f6465d]/8 hover:border-[#f6465d]/20 cursor-pointer transition-all"
                 onClick={() => onSelectSymbol(s.symbol)}>
                 <div className="min-w-0">
-                  <span className="font-mono font-bold text-[#3b82f6] text-sm">{s.symbol}</span>
+                  <span className="font-mono font-bold text-[#1e90ff] text-sm">{s.symbol}</span>
                   <p className="text-[10px] text-[var(--text-faint)] truncate max-w-[160px]">{s.description}</p>
                 </div>
                 <div className="text-right shrink-0 ml-2">
-                  <p className="font-mono font-bold text-sm text-[#ef4444]">{(s.strength * 100).toFixed(0)}%</p>
+                  <p className="font-mono font-bold text-sm text-[#f6465d]">{(s.strength * 100).toFixed(0)}%</p>
                   <p className="text-[9px] text-[var(--text-faint)] uppercase">{s.strategy}</p>
                 </div>
               </div>
@@ -1364,7 +1364,7 @@ function SignalsTab({ signals, loading, onRefresh, onSelectSymbol }: any) {
               <Tooltip contentStyle={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 12, fontSize: 12 }} />
               <Bar dataKey="strength" radius={[4, 4, 0, 0]}>
                 {signals.slice(0, 30).map((s: any, i: number) => (
-                  <Cell key={i} fill={s.signal_type === 'buy' ? '#22c55e' : s.signal_type === 'sell' ? '#ef4444' : '#f59e0b'} fillOpacity={0.8} />
+                  <Cell key={i} fill={s.signal_type === 'buy' ? '#0ecb81' : s.signal_type === 'sell' ? '#f6465d' : '#f0b90b'} fillOpacity={0.8} />
                 ))}
               </Bar>
             </BarChart>
@@ -1381,7 +1381,7 @@ function BacktestTab({ result, loading, onRun, monteCarlo, attribution }: any) {
 
   return (
     <div className="space-y-5 sm:space-y-6">
-      <SectionHeader icon={FlaskConical} title="Backtest Engine" subtitle="Walk-forward validation" accent="#8b5cf6"
+      <SectionHeader icon={FlaskConical} title="Backtest Engine" subtitle="Walk-forward validation" accent="#f0b90b"
         action={<ActionButton onClick={onRun} loading={loading} icon={RefreshCw} label="Run Backtest" />} />
 
       {result && !result.error && (
@@ -1389,15 +1389,15 @@ function BacktestTab({ result, loading, onRun, monteCarlo, attribution }: any) {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 stagger-in">
             <MetricCard label="Total Return" value={`${isPositive ? '+' : ''}${(result.total_return * 100).toFixed(1)}%`}
               sub={`$${result.initial_capital?.toLocaleString()} -> $${result.final_value?.toLocaleString()}`}
-              icon={isPositive ? TrendingUp : TrendingDown} accent={isPositive ? '#22c55e' : '#ef4444'} />
+              icon={isPositive ? TrendingUp : TrendingDown} accent={isPositive ? '#0ecb81' : '#f6465d'} />
             <MetricCard label="Annual Return" value={`${(result.annual_return * 100).toFixed(1)}%`}
-              icon={DollarSign} accent={result.annual_return > 0 ? '#22c55e' : '#ef4444'} />
+              icon={DollarSign} accent={result.annual_return > 0 ? '#0ecb81' : '#f6465d'} />
             <MetricCard label="Sharpe" value={result.sharpe_ratio?.toFixed(2) || '--'}
               sub={`Sortino: ${result.sortino_ratio?.toFixed(2) || '--'}`}
-              icon={Target} accent={result.sharpe_ratio > 1 ? '#22c55e' : '#f59e0b'} />
+              icon={Target} accent={result.sharpe_ratio > 1 ? '#0ecb81' : '#f0b90b'} />
             <MetricCard label="Max DD" value={`${(result.max_drawdown * 100).toFixed(1)}%`}
               sub={`${result.total_trades} trades`}
-              icon={AlertTriangle} accent={result.max_drawdown > -0.15 ? '#22c55e' : '#ef4444'} />
+              icon={AlertTriangle} accent={result.max_drawdown > -0.15 ? '#0ecb81' : '#f6465d'} />
           </div>
 
           {result.equity_curve && (
@@ -1408,14 +1408,14 @@ function BacktestTab({ result, loading, onRun, monteCarlo, attribution }: any) {
                   <AreaChart data={result.equity_curve}>
                     <defs>
                       <linearGradient id="eqGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor={isPositive ? '#22c55e' : '#ef4444'} stopOpacity={0.15} />
-                        <stop offset="100%" stopColor={isPositive ? '#22c55e' : '#ef4444'} stopOpacity={0} />
+                        <stop offset="0%" stopColor={isPositive ? '#0ecb81' : '#f6465d'} stopOpacity={0.15} />
+                        <stop offset="100%" stopColor={isPositive ? '#0ecb81' : '#f6465d'} stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <XAxis dataKey="date" tick={false} axisLine={false} />
                     <YAxis domain={['auto', 'auto']} tick={{ fill: 'var(--text-faint)', fontSize: 10 }} width={55} axisLine={false} tickLine={false} tickFormatter={(v) => `$${v}`} />
                     <Tooltip contentStyle={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 12, fontSize: 12 }} formatter={(v) => [`$${Number(v).toFixed(2)}`, 'Portfolio']} />
-                    <Area type="monotone" dataKey="value" stroke={isPositive ? '#22c55e' : '#ef4444'} fill="url(#eqGrad)" strokeWidth={2} dot={false} />
+                    <Area type="monotone" dataKey="value" stroke={isPositive ? '#0ecb81' : '#f6465d'} fill="url(#eqGrad)" strokeWidth={2} dot={false} />
                   </AreaChart>
                 </ResponsiveContainer>
               </Card>
@@ -1427,7 +1427,7 @@ function BacktestTab({ result, loading, onRun, monteCarlo, attribution }: any) {
                     <XAxis dataKey="date" tick={false} axisLine={false} />
                     <YAxis tick={{ fill: 'var(--text-faint)', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v * 100).toFixed(0)}%`} />
                     <Tooltip contentStyle={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 12, fontSize: 12 }} formatter={(v) => [`${(Number(v) * 100).toFixed(1)}%`, 'DD']} />
-                    <Area type="monotone" dataKey="drawdown" stroke="#ef4444" fill="#ef4444" fillOpacity={0.1} strokeWidth={1.5} dot={false} />
+                    <Area type="monotone" dataKey="drawdown" stroke="#f6465d" fill="#f6465d" fillOpacity={0.1} strokeWidth={1.5} dot={false} />
                   </AreaChart>
                 </ResponsiveContainer>
               </Card>
@@ -1440,38 +1440,38 @@ function BacktestTab({ result, loading, onRun, monteCarlo, attribution }: any) {
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Monte Carlo Projection (90 days, 500 sims)</h3>
                 <div className="flex gap-3 text-[10px] text-[var(--text-faint)]">
-                  <span>Median: <span className="text-[#22c55e] font-bold">${monteCarlo.stats.median_outcome?.toLocaleString()}</span></span>
-                  <span>Best: <span className="text-[#3b82f6]">${monteCarlo.stats.best_case?.toLocaleString()}</span></span>
-                  <span>Worst: <span className="text-[#ef4444]">${monteCarlo.stats.worst_case?.toLocaleString()}</span></span>
+                  <span>Median: <span className="text-[#0ecb81] font-bold">${monteCarlo.stats.median_outcome?.toLocaleString()}</span></span>
+                  <span>Best: <span className="text-[#1e90ff]">${monteCarlo.stats.best_case?.toLocaleString()}</span></span>
+                  <span>Worst: <span className="text-[#f6465d]">${monteCarlo.stats.worst_case?.toLocaleString()}</span></span>
                 </div>
               </div>
               <ResponsiveContainer width="100%" height={220}>
                 <AreaChart data={monteCarlo.cone}>
                   <defs>
                     <linearGradient id="mcOuter" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.05} />
-                      <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
+                      <stop offset="0%" stopColor="#1e90ff" stopOpacity={0.05} />
+                      <stop offset="100%" stopColor="#1e90ff" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="mcInner" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.15} />
-                      <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.02} />
+                      <stop offset="0%" stopColor="#f0b90b" stopOpacity={0.15} />
+                      <stop offset="100%" stopColor="#f0b90b" stopOpacity={0.02} />
                     </linearGradient>
                   </defs>
                   <XAxis dataKey="day" tick={{ fill: 'var(--text-faint)', fontSize: 10 }} axisLine={false} tickLine={false} label={{ value: 'Days', position: 'bottom', fill: 'var(--text-faint)', fontSize: 10 }} />
                   <YAxis tick={{ fill: 'var(--text-faint)', fontSize: 10 }} width={60} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v/1000).toFixed(1)}k`} />
                   <Tooltip contentStyle={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 12, fontSize: 11 }}
                     formatter={(v, name) => [`$${Number(v).toLocaleString()}`, name === 'p95' ? '95th %ile' : name === 'p75' ? '75th' : name === 'p50' ? 'Median' : name === 'p25' ? '25th' : '5th %ile']} />
-                  <Area type="monotone" dataKey="p95" stroke="#3b82f6" strokeWidth={1} fill="url(#mcOuter)" strokeDasharray="3 3" dot={false} />
-                  <Area type="monotone" dataKey="p75" stroke="#8b5cf6" strokeWidth={1} fill="url(#mcInner)" dot={false} />
-                  <Area type="monotone" dataKey="p50" stroke="#22c55e" strokeWidth={2.5} fill="none" dot={false} />
-                  <Area type="monotone" dataKey="p25" stroke="#8b5cf6" strokeWidth={1} fill="none" dot={false} />
-                  <Area type="monotone" dataKey="p5" stroke="#ef4444" strokeWidth={1} fill="none" strokeDasharray="3 3" dot={false} />
+                  <Area type="monotone" dataKey="p95" stroke="#1e90ff" strokeWidth={1} fill="url(#mcOuter)" strokeDasharray="3 3" dot={false} />
+                  <Area type="monotone" dataKey="p75" stroke="#f0b90b" strokeWidth={1} fill="url(#mcInner)" dot={false} />
+                  <Area type="monotone" dataKey="p50" stroke="#0ecb81" strokeWidth={2.5} fill="none" dot={false} />
+                  <Area type="monotone" dataKey="p25" stroke="#f0b90b" strokeWidth={1} fill="none" dot={false} />
+                  <Area type="monotone" dataKey="p5" stroke="#f6465d" strokeWidth={1} fill="none" strokeDasharray="3 3" dot={false} />
                 </AreaChart>
               </ResponsiveContainer>
               <div className="flex justify-center gap-6 mt-2 text-[10px] text-[var(--text-faint)]">
-                <span className="flex items-center gap-1"><span className="w-3 h-0.5 bg-[#3b82f6] inline-block" style={{ borderTop: '1px dashed #3b82f6' }}></span> 5th/95th</span>
-                <span className="flex items-center gap-1"><span className="w-3 h-0.5 bg-[#8b5cf6] inline-block"></span> 25th/75th</span>
-                <span className="flex items-center gap-1"><span className="w-3 h-0.5 bg-[#22c55e] inline-block"></span> Median</span>
+                <span className="flex items-center gap-1"><span className="w-3 h-0.5 bg-[#1e90ff] inline-block" style={{ borderTop: '1px dashed #1e90ff' }}></span> 5th/95th</span>
+                <span className="flex items-center gap-1"><span className="w-3 h-0.5 bg-[#f0b90b] inline-block"></span> 25th/75th</span>
+                <span className="flex items-center gap-1"><span className="w-3 h-0.5 bg-[#0ecb81] inline-block"></span> Median</span>
               </div>
             </Card>
           )}
@@ -1485,7 +1485,7 @@ function BacktestTab({ result, loading, onRun, monteCarlo, attribution }: any) {
                   <div key={f.name} className="flex items-center gap-3">
                     <div className="w-28 text-xs text-[var(--text-secondary)]">{f.name}</div>
                     <div className="flex-1 h-5 bg-[var(--bg-secondary)] rounded-full overflow-hidden relative">
-                      <div className={`h-full rounded-full transition-all ${f.contribution >= 0 ? 'bg-gradient-to-r from-[#22c55e]/50 to-[#22c55e]' : 'bg-gradient-to-r from-[#ef4444] to-[#ef4444]/50'}`}
+                      <div className={`h-full rounded-full transition-all ${f.contribution >= 0 ? 'bg-gradient-to-r from-[#0ecb81]/50 to-[#0ecb81]' : 'bg-gradient-to-r from-[#f6465d] to-[#f6465d]/50'}`}
                         style={{ width: `${Math.min(Math.abs(f.contribution) * 10, 100)}%`, marginLeft: f.contribution < 0 ? 'auto' : 0 }} />
                       <span className="absolute inset-0 flex items-center justify-end pr-2 text-[10px] font-mono text-white/80">
                         {f.contribution >= 0 ? '+' : ''}{f.contribution.toFixed(2)}%
@@ -1496,7 +1496,7 @@ function BacktestTab({ result, loading, onRun, monteCarlo, attribution }: any) {
                 ))}
                 <div className="flex items-center gap-3 pt-2 border-t border-[var(--border)]">
                   <div className="w-28 text-xs font-bold text-[var(--text-primary)]">Total</div>
-                  <div className="flex-1 text-sm font-bold" style={{ color: attribution.total_return >= 0 ? '#22c55e' : '#ef4444' }}>
+                  <div className="flex-1 text-sm font-bold" style={{ color: attribution.total_return >= 0 ? '#0ecb81' : '#f6465d' }}>
                     {attribution.total_return >= 0 ? '+' : ''}{attribution.total_return.toFixed(2)}%
                   </div>
                 </div>
@@ -1506,7 +1506,7 @@ function BacktestTab({ result, loading, onRun, monteCarlo, attribution }: any) {
         </>
       )}
 
-      {result?.error && <Card><p className="text-[#ef4444]">{result.error}</p></Card>}
+      {result?.error && <Card><p className="text-[#f6465d]">{result.error}</p></Card>}
 
       {!result && !loading && (
         <EmptyState icon={FlaskConical} title="Run a Backtest" subtitle="Simulate the multi-factor strategy on 1 year of historical data" />
@@ -1519,7 +1519,7 @@ function BacktestTab({ result, loading, onRun, monteCarlo, attribution }: any) {
 function RiskTab({ limits, correlationMatrix }: any) {
   return (
     <div className="space-y-5 sm:space-y-6">
-      <SectionHeader icon={ShieldCheck} title="Risk Management" subtitle="Position sizing & drawdown controls" accent="#f59e0b" />
+      <SectionHeader icon={ShieldCheck} title="Risk Management" subtitle="Position sizing & drawdown controls" accent="#f0b90b" />
 
       {limits ? (
         <>
@@ -1527,8 +1527,8 @@ function RiskTab({ limits, correlationMatrix }: any) {
           <Card>
             <h3 className="text-xs font-bold text-[var(--text-muted)] mb-4 uppercase tracking-wider">Position Limits</h3>
             <div className="space-y-4">
-              <LimitBar label="Max Position" value={limits.max_position_pct} color="#3b82f6" />
-              <LimitBar label="Max Sector" value={limits.max_sector_pct} color="#8b5cf6" />
+              <LimitBar label="Max Position" value={limits.max_position_pct} color="#1e90ff" />
+              <LimitBar label="Max Sector" value={limits.max_sector_pct} color="#f0b90b" />
               <LimitBar label="Cash Reserve" value={limits.min_cash_reserve_pct} color="#06b6d4" />
             </div>
           </Card>
@@ -1536,9 +1536,9 @@ function RiskTab({ limits, correlationMatrix }: any) {
           <Card>
             <h3 className="text-xs font-bold text-[var(--text-muted)] mb-4 uppercase tracking-wider">Drawdown Controls</h3>
             <div className="space-y-4">
-              <LimitBar label="Warning" value={Math.abs(limits.max_drawdown_warning)} color="#f59e0b" />
-              <LimitBar label="Reduce" value={Math.abs(limits.max_drawdown_reduce)} color="#ef4444" />
-              <LimitBar label="Liquidation" value={Math.abs(limits.max_drawdown_liquidate)} color="#ef4444" />
+              <LimitBar label="Warning" value={Math.abs(limits.max_drawdown_warning)} color="#f0b90b" />
+              <LimitBar label="Reduce" value={Math.abs(limits.max_drawdown_reduce)} color="#f6465d" />
+              <LimitBar label="Liquidation" value={Math.abs(limits.max_drawdown_liquidate)} color="#f6465d" />
             </div>
           </Card>
 
@@ -1546,10 +1546,10 @@ function RiskTab({ limits, correlationMatrix }: any) {
             <h3 className="text-xs font-bold text-[var(--text-muted)] mb-4 uppercase tracking-wider">Trade Controls</h3>
             <div className="space-y-3">
               {[
-                ['Trailing Stop-Loss', `${(limits.trailing_stop_pct * 100).toFixed(0)}%`, '#ef4444'],
-                ['Take-Profit', `+${(limits.take_profit_pct * 100).toFixed(0)}%`, '#22c55e'],
+                ['Trailing Stop-Loss', `${(limits.trailing_stop_pct * 100).toFixed(0)}%`, '#f6465d'],
+                ['Take-Profit', `+${(limits.take_profit_pct * 100).toFixed(0)}%`, '#0ecb81'],
                 ['Partial Sell at TP', `${(limits.take_profit_sell_pct * 100).toFixed(0)}%`, 'var(--text-primary)'],
-                ['PDT Day Trades', `${limits.pdt_max_day_trades}/5 days`, '#f59e0b'],
+                ['PDT Day Trades', `${limits.pdt_max_day_trades}/5 days`, '#f0b90b'],
               ].map(([label, val, color]) => (
                 <div key={label as string} className="flex justify-between items-center py-2 border-b border-[var(--border)]/50 last:border-0">
                   <span className="text-sm text-[var(--text-muted)]">{label}</span>
@@ -1569,7 +1569,7 @@ function RiskTab({ limits, correlationMatrix }: any) {
                 ['Multi-Layer Stops', 'Per-position + portfolio drawdown'],
               ].map(([title, desc]) => (
                 <div key={title} className="flex items-start gap-2.5">
-                  <ChevronRight className="w-3.5 h-3.5 text-[#3b82f6] shrink-0 mt-0.5" />
+                  <ChevronRight className="w-3.5 h-3.5 text-[#1e90ff] shrink-0 mt-0.5" />
                   <div>
                     <p className="text-sm font-medium">{title}</p>
                     <p className="text-[10px] text-[var(--text-faint)]">{desc}</p>
@@ -1670,15 +1670,15 @@ function ResearchPanel({ title, badge, children, defaultOpen = false }: { title:
 function ResearchTab({ data, loading, onRefresh }: any) {
   if (!data && loading) return (
     <div className="space-y-4">
-      <SectionHeader icon={Cpu} title="Institutional Research" subtitle="Loading analytics..." accent="#8b5cf6"
+      <SectionHeader icon={Cpu} title="Institutional Research" subtitle="Loading analytics..." accent="#f0b90b"
         action={<ActionButton onClick={onRefresh} loading={loading} icon={RefreshCw} label="Refresh" />} />
-      {[1,2,3,4].map(i => <div key={i} className="h-32 sm:h-48 shimmer rounded-2xl" />)}
+      {[1,2,3,4].map(i => <div key={i} className="h-32 sm:h-48 shimmer rounded-lg" />)}
     </div>
   );
 
   if (!data) return (
     <div className="space-y-4">
-      <SectionHeader icon={Cpu} title="Institutional Research" subtitle="Quant-grade validation suite" accent="#8b5cf6"
+      <SectionHeader icon={Cpu} title="Institutional Research" subtitle="Quant-grade validation suite" accent="#f0b90b"
         action={<ActionButton onClick={onRefresh} loading={loading} icon={RefreshCw} label="Run Analysis" />} />
       <EmptyState icon={Cpu} title="Run Research Suite" subtitle="Walk-forward CV, deflated Sharpe, PCA, stress tests, IC analysis, HRP, macro regime" />
     </div>
@@ -1688,55 +1688,55 @@ function ResearchTab({ data, loading, onRefresh }: any) {
 
   return (
     <div className="space-y-3 sm:space-y-5">
-      <SectionHeader icon={Cpu} title="Research" subtitle="Institutional-grade validation" accent="#8b5cf6"
+      <SectionHeader icon={Cpu} title="Research" subtitle="Institutional-grade validation" accent="#f0b90b"
         action={<ActionButton onClick={onRefresh} loading={loading} icon={RefreshCw} label="Re-run" />} />
 
       {/* Summary chips (mobile horizontal scroll) */}
       <div className="scroll-x -mx-3.5 px-3.5 sm:hidden swipe-hint">
-        {walkForward && <div className="metric-chip"><p className="text-base font-bold" style={{ color: walkForward.is_robust ? '#22c55e' : '#ef4444' }}>{walkForward.is_robust ? 'ROBUST' : 'WEAK'}</p><p className="text-[9px] text-[var(--text-faint)] mt-0.5">Walk-Forward</p></div>}
-        {deflatedSharpe && <div className="metric-chip"><p className="text-base font-bold" style={{ color: deflatedSharpe.is_significant ? '#22c55e' : '#ef4444' }}>{deflatedSharpe.deflated_sharpe}</p><p className="text-[9px] text-[var(--text-faint)] mt-0.5">Deflated SR</p></div>}
-        {pca && <div className="metric-chip"><p className="text-base font-bold text-[#3b82f6]">{pca.systematic_risk_pct}%</p><p className="text-[9px] text-[var(--text-faint)] mt-0.5">Systematic</p></div>}
-        {stressTests && <div className="metric-chip"><p className="text-base font-bold text-[#ef4444]">{stressTests.tail_risk_var95}%</p><p className="text-[9px] text-[var(--text-faint)] mt-0.5">VaR 95%</p></div>}
-        {macro && <div className="metric-chip"><p className="text-[11px] font-bold" style={{ color: macro.regime.includes('Expansion') ? '#22c55e' : '#ef4444' }}>{macro.regime.includes('Expansion') ? 'Risk-On' : macro.regime.includes('Contraction') ? 'Risk-Off' : 'Mixed'}</p><p className="text-[9px] text-[var(--text-faint)] mt-0.5">Regime</p></div>}
-        {txCost && <div className="metric-chip"><p className="text-base font-bold text-[#f59e0b]">{txCost.total_portfolio_cost_bps}bps</p><p className="text-[9px] text-[var(--text-faint)] mt-0.5">Avg Cost</p></div>}
+        {walkForward && <div className="metric-chip"><p className="text-base font-bold" style={{ color: walkForward.is_robust ? '#0ecb81' : '#f6465d' }}>{walkForward.is_robust ? 'ROBUST' : 'WEAK'}</p><p className="text-[9px] text-[var(--text-faint)] mt-0.5">Walk-Forward</p></div>}
+        {deflatedSharpe && <div className="metric-chip"><p className="text-base font-bold" style={{ color: deflatedSharpe.is_significant ? '#0ecb81' : '#f6465d' }}>{deflatedSharpe.deflated_sharpe}</p><p className="text-[9px] text-[var(--text-faint)] mt-0.5">Deflated SR</p></div>}
+        {pca && <div className="metric-chip"><p className="text-base font-bold text-[#1e90ff]">{pca.systematic_risk_pct}%</p><p className="text-[9px] text-[var(--text-faint)] mt-0.5">Systematic</p></div>}
+        {stressTests && <div className="metric-chip"><p className="text-base font-bold text-[#f6465d]">{stressTests.tail_risk_var95}%</p><p className="text-[9px] text-[var(--text-faint)] mt-0.5">VaR 95%</p></div>}
+        {macro && <div className="metric-chip"><p className="text-[11px] font-bold" style={{ color: macro.regime.includes('Expansion') ? '#0ecb81' : '#f6465d' }}>{macro.regime.includes('Expansion') ? 'Risk-On' : macro.regime.includes('Contraction') ? 'Risk-Off' : 'Mixed'}</p><p className="text-[9px] text-[var(--text-faint)] mt-0.5">Regime</p></div>}
+        {txCost && <div className="metric-chip"><p className="text-base font-bold text-[#f0b90b]">{txCost.total_portfolio_cost_bps}bps</p><p className="text-[9px] text-[var(--text-faint)] mt-0.5">Avg Cost</p></div>}
       </div>
 
       {/* Walk-Forward Cross-Validation */}
       {walkForward && (
         <ResearchPanel title={`Walk-Forward CV (${walkForward.folds.length} folds)`} badge={walkForward.is_robust ? 'ROBUST' : 'WEAK'} defaultOpen>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4">
-            <div className="text-center p-2.5 sm:p-3 bg-[var(--bg-secondary)] rounded-xl">
-              <p className="text-base sm:text-lg font-bold" style={{ color: walkForward.avg_test_sharpe > 0.5 ? '#22c55e' : '#f59e0b' }}>{walkForward.avg_test_sharpe}</p>
+            <div className="text-center p-2.5 sm:p-3 bg-[var(--bg-secondary)] rounded-md">
+              <p className="text-base sm:text-lg font-bold" style={{ color: walkForward.avg_test_sharpe > 0.5 ? '#0ecb81' : '#f0b90b' }}>{walkForward.avg_test_sharpe}</p>
               <p className="text-[9px] text-[var(--text-faint)]">Avg OOS Sharpe</p>
             </div>
-            <div className="text-center p-2.5 sm:p-3 bg-[var(--bg-secondary)] rounded-xl">
+            <div className="text-center p-2.5 sm:p-3 bg-[var(--bg-secondary)] rounded-md">
               <p className="text-base sm:text-lg font-bold text-[var(--text-primary)]">±{walkForward.sharpe_std}</p>
               <p className="text-[9px] text-[var(--text-faint)]">Sharpe Std</p>
             </div>
-            <div className="text-center p-2.5 sm:p-3 bg-[var(--bg-secondary)] rounded-xl">
-              <p className="text-base sm:text-lg font-bold" style={{ color: walkForward.overfit_ratio < 0.5 ? '#22c55e' : '#ef4444' }}>{(walkForward.overfit_ratio * 100).toFixed(0)}%</p>
+            <div className="text-center p-2.5 sm:p-3 bg-[var(--bg-secondary)] rounded-md">
+              <p className="text-base sm:text-lg font-bold" style={{ color: walkForward.overfit_ratio < 0.5 ? '#0ecb81' : '#f6465d' }}>{(walkForward.overfit_ratio * 100).toFixed(0)}%</p>
               <p className="text-[9px] text-[var(--text-faint)]">Overfit Ratio</p>
             </div>
-            <div className="text-center p-2.5 sm:p-3 bg-[var(--bg-secondary)] rounded-xl">
-              <p className="text-base sm:text-lg font-bold" style={{ color: walkForward.is_robust ? '#22c55e' : '#ef4444' }}>{walkForward.is_robust ? 'ROBUST' : 'WEAK'}</p>
+            <div className="text-center p-2.5 sm:p-3 bg-[var(--bg-secondary)] rounded-md">
+              <p className="text-base sm:text-lg font-bold" style={{ color: walkForward.is_robust ? '#0ecb81' : '#f6465d' }}>{walkForward.is_robust ? 'ROBUST' : 'WEAK'}</p>
               <p className="text-[9px] text-[var(--text-faint)]">Verdict</p>
             </div>
           </div>
           {/* Mobile: Card per fold */}
           <div className="md:hidden space-y-2">
             {walkForward.folds.map((f: any) => (
-              <div key={f.fold} className="flex items-center gap-3 p-2.5 rounded-xl bg-white/[0.02] border border-[var(--border)]">
+              <div key={f.fold} className="flex items-center gap-3 p-2.5 rounded-md bg-white/[0.02] border border-[var(--border)]">
                 <div className="w-7 h-7 rounded-lg bg-[var(--bg-secondary)] flex items-center justify-center shrink-0">
                   <span className="text-[10px] font-mono font-bold text-[var(--text-faint)]">F{f.fold}</span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] text-[var(--text-faint)]">OOS Sharpe</span>
-                    <span className="font-mono font-bold text-xs" style={{ color: f.test_sharpe > 0 ? '#22c55e' : '#ef4444' }}>{f.test_sharpe}</span>
+                    <span className="font-mono font-bold text-xs" style={{ color: f.test_sharpe > 0 ? '#0ecb81' : '#f6465d' }}>{f.test_sharpe}</span>
                   </div>
                   <div className="flex items-center gap-3 mt-0.5">
-                    <span className="font-mono text-[10px]" style={{ color: f.test_return > 0 ? '#22c55e' : '#ef4444' }}>{f.test_return > 0 ? '+' : ''}{f.test_return}%</span>
-                    <span className="font-mono text-[10px] text-[#ef4444]">DD {f.test_max_dd}%</span>
+                    <span className="font-mono text-[10px]" style={{ color: f.test_return > 0 ? '#0ecb81' : '#f6465d' }}>{f.test_return > 0 ? '+' : ''}{f.test_return}%</span>
+                    <span className="font-mono text-[10px] text-[#f6465d]">DD {f.test_max_dd}%</span>
                   </div>
                 </div>
               </div>
@@ -1763,9 +1763,9 @@ function ResearchTab({ data, loading, onRefresh }: any) {
                     <td className="py-2 px-1 text-[var(--text-faint)]">{f.train_start.slice(5)}</td>
                     <td className="py-2 px-1 text-right font-mono">{f.train_sharpe}</td>
                     <td className="py-2 px-1 text-[var(--text-faint)]">{f.test_start.slice(5)}</td>
-                    <td className="py-2 px-1 text-right font-mono" style={{ color: f.test_sharpe > 0 ? '#22c55e' : '#ef4444' }}>{f.test_sharpe}</td>
-                    <td className="py-2 px-1 text-right font-mono" style={{ color: f.test_return > 0 ? '#22c55e' : '#ef4444' }}>{f.test_return > 0 ? '+' : ''}{f.test_return}%</td>
-                    <td className="py-2 px-1 text-right font-mono text-[#ef4444]">{f.test_max_dd}%</td>
+                    <td className="py-2 px-1 text-right font-mono" style={{ color: f.test_sharpe > 0 ? '#0ecb81' : '#f6465d' }}>{f.test_sharpe}</td>
+                    <td className="py-2 px-1 text-right font-mono" style={{ color: f.test_return > 0 ? '#0ecb81' : '#f6465d' }}>{f.test_return > 0 ? '+' : ''}{f.test_return}%</td>
+                    <td className="py-2 px-1 text-right font-mono text-[#f6465d]">{f.test_max_dd}%</td>
                   </tr>
                 ))}
               </tbody>
@@ -1778,26 +1778,26 @@ function ResearchTab({ data, loading, onRefresh }: any) {
       {deflatedSharpe && (
         <ResearchPanel title="Deflated Sharpe Ratio" badge={deflatedSharpe.is_significant ? 'SIG' : 'N/S'}>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-3">
-            <div className="text-center p-2.5 bg-[var(--bg-secondary)] rounded-xl">
+            <div className="text-center p-2.5 bg-[var(--bg-secondary)] rounded-md">
               <p className="text-base font-bold text-[var(--text-primary)]">{deflatedSharpe.observed_sharpe}</p>
               <p className="text-[9px] text-[var(--text-faint)]">Observed</p>
             </div>
-            <div className="text-center p-2.5 bg-[var(--bg-secondary)] rounded-xl">
-              <p className="text-base font-bold" style={{ color: deflatedSharpe.deflated_sharpe > 0 ? '#22c55e' : '#ef4444' }}>{deflatedSharpe.deflated_sharpe}</p>
+            <div className="text-center p-2.5 bg-[var(--bg-secondary)] rounded-md">
+              <p className="text-base font-bold" style={{ color: deflatedSharpe.deflated_sharpe > 0 ? '#0ecb81' : '#f6465d' }}>{deflatedSharpe.deflated_sharpe}</p>
               <p className="text-[9px] text-[var(--text-faint)]">Deflated</p>
             </div>
-            <div className="text-center p-2.5 bg-[var(--bg-secondary)] rounded-xl">
-              <p className="text-base font-bold" style={{ color: deflatedSharpe.p_value < 0.05 ? '#22c55e' : '#ef4444' }}>{deflatedSharpe.p_value}</p>
+            <div className="text-center p-2.5 bg-[var(--bg-secondary)] rounded-md">
+              <p className="text-base font-bold" style={{ color: deflatedSharpe.p_value < 0.05 ? '#0ecb81' : '#f6465d' }}>{deflatedSharpe.p_value}</p>
               <p className="text-[9px] text-[var(--text-faint)]">p-value</p>
             </div>
-            <div className="text-center p-2.5 bg-[var(--bg-secondary)] rounded-xl">
-              <p className="text-base font-bold" style={{ color: deflatedSharpe.is_significant ? '#22c55e' : '#ef4444' }}>{deflatedSharpe.is_significant ? 'YES' : 'NO'}</p>
+            <div className="text-center p-2.5 bg-[var(--bg-secondary)] rounded-md">
+              <p className="text-base font-bold" style={{ color: deflatedSharpe.is_significant ? '#0ecb81' : '#f6465d' }}>{deflatedSharpe.is_significant ? 'YES' : 'NO'}</p>
               <p className="text-[9px] text-[var(--text-faint)]">Significant</p>
             </div>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-[11px]">
-            <div className="p-2 rounded-lg bg-white/[0.02]"><span className="text-[var(--text-faint)]">Haircut </span><span className="font-mono text-[#f59e0b]">{deflatedSharpe.haircut_pct}%</span></div>
-            <div className="p-2 rounded-lg bg-white/[0.02]"><span className="text-[var(--text-faint)]">P(Overfit) </span><span className="font-mono text-[#ef4444]">{(deflatedSharpe.prob_overfit * 100).toFixed(0)}%</span></div>
+            <div className="p-2 rounded-lg bg-white/[0.02]"><span className="text-[var(--text-faint)]">Haircut </span><span className="font-mono text-[#f0b90b]">{deflatedSharpe.haircut_pct}%</span></div>
+            <div className="p-2 rounded-lg bg-white/[0.02]"><span className="text-[var(--text-faint)]">P(Overfit) </span><span className="font-mono text-[#f6465d]">{(deflatedSharpe.prob_overfit * 100).toFixed(0)}%</span></div>
             <div className="p-2 rounded-lg bg-white/[0.02]"><span className="text-[var(--text-faint)]">Trials </span><span className="font-mono">{deflatedSharpe.trials_equivalent}</span></div>
             <div className="p-2 rounded-lg bg-white/[0.02]"><span className="text-[var(--text-faint)]">Min Track </span><span className="font-mono">{deflatedSharpe.min_track_record_months}mo</span></div>
           </div>
@@ -1808,12 +1808,12 @@ function ResearchTab({ data, loading, onRefresh }: any) {
       {pca && (
         <ResearchPanel title="PCA Risk Decomposition" badge={`${pca.systematic_risk_pct}% sys`}>
           <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-4">
-            <div className="text-center p-2.5 sm:p-3 bg-[var(--bg-secondary)] rounded-xl">
-              <p className="text-lg sm:text-xl font-bold text-[#3b82f6]">{pca.systematic_risk_pct}%</p>
+            <div className="text-center p-2.5 sm:p-3 bg-[var(--bg-secondary)] rounded-md">
+              <p className="text-lg sm:text-xl font-bold text-[#1e90ff]">{pca.systematic_risk_pct}%</p>
               <p className="text-[9px] text-[var(--text-faint)]">Systematic</p>
             </div>
-            <div className="text-center p-2.5 sm:p-3 bg-[var(--bg-secondary)] rounded-xl">
-              <p className="text-lg sm:text-xl font-bold text-[#8b5cf6]">{pca.idiosyncratic_risk_pct}%</p>
+            <div className="text-center p-2.5 sm:p-3 bg-[var(--bg-secondary)] rounded-md">
+              <p className="text-lg sm:text-xl font-bold text-[#f0b90b]">{pca.idiosyncratic_risk_pct}%</p>
               <p className="text-[9px] text-[var(--text-faint)]">Alpha</p>
             </div>
           </div>
@@ -1822,7 +1822,7 @@ function ResearchTab({ data, loading, onRefresh }: any) {
               <div key={c.id} className="flex items-center gap-2 sm:gap-3">
                 <span className="w-6 text-xs font-mono text-[var(--text-faint)]">PC{c.id}</span>
                 <div className="flex-1 h-3.5 sm:h-4 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
-                  <div className="h-full rounded-full bg-gradient-to-r from-[#3b82f6] to-[#8b5cf6]" style={{ width: `${c.variance_pct}%` }} />
+                  <div className="h-full rounded-full bg-[#f0b90b] text-[#0b0e11]" style={{ width: `${c.variance_pct}%` }} />
                 </div>
                 <span className="w-10 sm:w-12 text-right text-[10px] sm:text-xs font-mono">{c.variance_pct}%</span>
                 <span className="hidden sm:inline w-24 text-xs text-[var(--text-faint)] truncate">{c.interpretation}</span>
@@ -1836,16 +1836,16 @@ function ResearchTab({ data, loading, onRefresh }: any) {
       {stressTests && (
         <ResearchPanel title="Historical Stress Tests" badge={`VaR ${stressTests.tail_risk_var95}%`}>
           <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-4">
-            <div className="text-center p-2 bg-[var(--bg-secondary)] rounded-xl">
-              <p className="text-sm font-bold text-[#ef4444]">{stressTests.tail_risk_var95}%</p>
+            <div className="text-center p-2 bg-[var(--bg-secondary)] rounded-md">
+              <p className="text-sm font-bold text-[#f6465d]">{stressTests.tail_risk_var95}%</p>
               <p className="text-[8px] text-[var(--text-faint)]">VaR 95%</p>
             </div>
-            <div className="text-center p-2 bg-[var(--bg-secondary)] rounded-xl">
-              <p className="text-sm font-bold text-[#ef4444]">{stressTests.tail_risk_cvar95}%</p>
+            <div className="text-center p-2 bg-[var(--bg-secondary)] rounded-md">
+              <p className="text-sm font-bold text-[#f6465d]">{stressTests.tail_risk_cvar95}%</p>
               <p className="text-[8px] text-[var(--text-faint)]">CVaR</p>
             </div>
-            <div className="text-center p-2 bg-[var(--bg-secondary)] rounded-xl">
-              <p className="text-sm font-bold text-[#f59e0b]">{stressTests.current_vulnerability}%</p>
+            <div className="text-center p-2 bg-[var(--bg-secondary)] rounded-md">
+              <p className="text-sm font-bold text-[#f0b90b]">{stressTests.current_vulnerability}%</p>
               <p className="text-[8px] text-[var(--text-faint)]">Vol</p>
             </div>
           </div>
@@ -1857,7 +1857,7 @@ function ResearchTab({ data, loading, onRefresh }: any) {
                   <p className="text-[9px] text-[var(--text-faint)]">{s.period}</p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-xs font-mono font-bold text-[#ef4444]">{s.portfolio_impact.toFixed(1)}%</p>
+                  <p className="text-xs font-mono font-bold text-[#f6465d]">{s.portfolio_impact.toFixed(1)}%</p>
                   <p className="text-[8px] text-[var(--text-faint)]">{s.recovery_days}d</p>
                 </div>
               </div>
@@ -1872,14 +1872,14 @@ function ResearchTab({ data, loading, onRefresh }: any) {
           {/* Mobile: Card per factor */}
           <div className="md:hidden space-y-2">
             {ic.factors.map((f: any) => (
-              <div key={f.name} className="p-2.5 rounded-xl bg-white/[0.02] border border-[var(--border)]">
+              <div key={f.name} className="p-2.5 rounded-md bg-white/[0.02] border border-[var(--border)]">
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-xs font-semibold">{f.name}</span>
-                  {f.is_significant ? <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#22c55e]/10 text-[#22c55e]">Sig</span> : <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#ef4444]/10 text-[#ef4444]">N/S</span>}
+                  {f.is_significant ? <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#0ecb81]/10 text-[#0ecb81]">Sig</span> : <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#f6465d]/10 text-[#f6465d]">N/S</span>}
                 </div>
                 <div className="grid grid-cols-4 gap-1.5 text-center">
-                  <div><p className="font-mono text-[11px] font-bold" style={{ color: f.ic_mean > 0 ? '#22c55e' : '#ef4444' }}>{f.ic_mean.toFixed(3)}</p><p className="text-[8px] text-[var(--text-faint)]">IC</p></div>
-                  <div><p className="font-mono text-[11px] font-bold" style={{ color: f.icir > 0.5 ? '#22c55e' : '#f59e0b' }}>{f.icir.toFixed(2)}</p><p className="text-[8px] text-[var(--text-faint)]">ICIR</p></div>
+                  <div><p className="font-mono text-[11px] font-bold" style={{ color: f.ic_mean > 0 ? '#0ecb81' : '#f6465d' }}>{f.ic_mean.toFixed(3)}</p><p className="text-[8px] text-[var(--text-faint)]">IC</p></div>
+                  <div><p className="font-mono text-[11px] font-bold" style={{ color: f.icir > 0.5 ? '#0ecb81' : '#f0b90b' }}>{f.icir.toFixed(2)}</p><p className="text-[8px] text-[var(--text-faint)]">ICIR</p></div>
                   <div><p className="font-mono text-[11px] font-bold">{(f.hit_rate * 100).toFixed(0)}%</p><p className="text-[8px] text-[var(--text-faint)]">Hit</p></div>
                   <div><p className="font-mono text-[11px] font-bold">{f.decay_halflife}d</p><p className="text-[8px] text-[var(--text-faint)]">Half</p></div>
                 </div>
@@ -1904,12 +1904,12 @@ function ResearchTab({ data, loading, onRefresh }: any) {
                 {ic.factors.map((f: any) => (
                   <tr key={f.name} className="border-b border-[var(--border)]/30">
                     <td className="py-2 font-medium">{f.name}</td>
-                    <td className="py-2 text-right font-mono" style={{ color: f.ic_mean > 0 ? '#22c55e' : '#ef4444' }}>{f.ic_mean.toFixed(3)}</td>
-                    <td className="py-2 text-right font-mono" style={{ color: f.icir > 0.5 ? '#22c55e' : '#f59e0b' }}>{f.icir.toFixed(2)}</td>
+                    <td className="py-2 text-right font-mono" style={{ color: f.ic_mean > 0 ? '#0ecb81' : '#f6465d' }}>{f.ic_mean.toFixed(3)}</td>
+                    <td className="py-2 text-right font-mono" style={{ color: f.icir > 0.5 ? '#0ecb81' : '#f0b90b' }}>{f.icir.toFixed(2)}</td>
                     <td className="py-2 text-right font-mono">{f.t_stat.toFixed(2)}</td>
                     <td className="py-2 text-right font-mono">{(f.hit_rate * 100).toFixed(0)}%</td>
                     <td className="py-2 text-right font-mono">{f.decay_halflife}d</td>
-                    <td className="py-2 text-right">{f.is_significant ? <span className="text-[#22c55e]">✓</span> : <span className="text-[#ef4444]">✗</span>}</td>
+                    <td className="py-2 text-right">{f.is_significant ? <span className="text-[#0ecb81]">✓</span> : <span className="text-[#f6465d]">✗</span>}</td>
                   </tr>
                 ))}
               </tbody>
@@ -1923,12 +1923,12 @@ function ResearchTab({ data, loading, onRefresh }: any) {
       {hrp && (
         <ResearchPanel title="Hierarchical Risk Parity" badge={`${hrp.diversification_ratio}x div`}>
           <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-4">
-            <div className="text-center p-2.5 sm:p-3 bg-[var(--bg-secondary)] rounded-xl">
-              <p className="text-base sm:text-lg font-bold text-[#3b82f6]">{hrp.diversification_ratio}x</p>
+            <div className="text-center p-2.5 sm:p-3 bg-[var(--bg-secondary)] rounded-md">
+              <p className="text-base sm:text-lg font-bold text-[#1e90ff]">{hrp.diversification_ratio}x</p>
               <p className="text-[9px] text-[var(--text-faint)]">Diversification</p>
             </div>
-            <div className="text-center p-2.5 sm:p-3 bg-[var(--bg-secondary)] rounded-xl">
-              <p className="text-base sm:text-lg font-bold text-[#8b5cf6]">{hrp.effective_n}</p>
+            <div className="text-center p-2.5 sm:p-3 bg-[var(--bg-secondary)] rounded-md">
+              <p className="text-base sm:text-lg font-bold text-[#f0b90b]">{hrp.effective_n}</p>
               <p className="text-[9px] text-[var(--text-faint)]">Effective N</p>
             </div>
           </div>
@@ -1956,8 +1956,8 @@ function ResearchTab({ data, loading, onRefresh }: any) {
       {/* Macro Regime */}
       {macro && (
         <ResearchPanel title="Macro Regime Signals" badge={macro.regime.includes('Expansion') ? 'Risk-On' : macro.regime.includes('Contraction') ? 'Risk-Off' : 'Mixed'} defaultOpen>
-          <div className="flex items-center gap-3 mb-4 p-2.5 sm:p-3 rounded-xl" style={{ background: macro.regime.includes('Expansion') ? 'rgba(34,197,94,0.08)' : macro.regime.includes('Contraction') ? 'rgba(239,68,68,0.08)' : 'rgba(245,158,11,0.08)' }}>
-            <div className="text-xs sm:text-sm font-bold" style={{ color: macro.regime.includes('Expansion') ? '#22c55e' : macro.regime.includes('Contraction') ? '#ef4444' : '#f59e0b' }}>
+          <div className="flex items-center gap-3 mb-4 p-2.5 sm:p-3 rounded-md" style={{ background: macro.regime.includes('Expansion') ? 'rgba(34,197,94,0.08)' : macro.regime.includes('Contraction') ? 'rgba(239,68,68,0.08)' : 'rgba(245,158,11,0.08)' }}>
+            <div className="text-xs sm:text-sm font-bold" style={{ color: macro.regime.includes('Expansion') ? '#0ecb81' : macro.regime.includes('Contraction') ? '#f6465d' : '#f0b90b' }}>
               {macro.regime}
             </div>
             <div className="ml-auto text-[11px] sm:text-xs font-mono">{macro.confidence}%</div>
@@ -1965,10 +1965,10 @@ function ResearchTab({ data, loading, onRefresh }: any) {
           <div className="space-y-2 mb-4">
             {macro.signals.map((s: any) => (
               <div key={s.name} className="flex items-center gap-2 py-1.5 border-b border-[var(--border)]/30 last:border-0">
-                <span className="w-2 h-2 rounded-full shrink-0" style={{ background: s.signal === 'bullish' ? '#22c55e' : s.signal === 'bearish' ? '#ef4444' : '#f59e0b' }}></span>
+                <span className="w-2 h-2 rounded-full shrink-0" style={{ background: s.signal === 'bullish' ? '#0ecb81' : s.signal === 'bearish' ? '#f6465d' : '#f0b90b' }}></span>
                 <span className="flex-1 text-[11px] sm:text-xs truncate">{s.name}</span>
                 <span className="text-[11px] sm:text-xs font-mono shrink-0">{s.value > 0 ? '+' : ''}{s.value}%</span>
-                <span className="text-[9px] px-1.5 py-0.5 rounded shrink-0" style={{ background: s.signal === 'bullish' ? 'rgba(34,197,94,0.15)' : s.signal === 'bearish' ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)', color: s.signal === 'bullish' ? '#22c55e' : s.signal === 'bearish' ? '#ef4444' : '#f59e0b' }}>{s.signal}</span>
+                <span className="text-[9px] px-1.5 py-0.5 rounded shrink-0" style={{ background: s.signal === 'bullish' ? 'rgba(34,197,94,0.15)' : s.signal === 'bearish' ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)', color: s.signal === 'bullish' ? '#0ecb81' : s.signal === 'bearish' ? '#f6465d' : '#f0b90b' }}>{s.signal}</span>
               </div>
             ))}
           </div>
@@ -1978,7 +1978,7 @@ function ResearchTab({ data, loading, onRefresh }: any) {
               <div key={a.asset_class} className="flex items-center gap-2">
                 <span className="w-14 sm:w-16 text-[11px] sm:text-xs truncate">{a.asset_class}</span>
                 <div className="flex-1 h-3 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
-                  <div className="h-full rounded-full bg-gradient-to-r from-[#3b82f6] to-[#22c55e]" style={{ width: `${a.weight}%` }} />
+                  <div className="h-full rounded-full bg-gradient-to-r from-[#1e90ff] to-[#0ecb81]" style={{ width: `${a.weight}%` }} />
                 </div>
                 <span className="w-8 text-right text-[10px] font-mono">{a.weight}%</span>
               </div>
@@ -1991,25 +1991,25 @@ function ResearchTab({ data, loading, onRefresh }: any) {
       {txCost && (
         <ResearchPanel title={`Transaction Costs (${txCost.model})`} badge={`${txCost.annual_drag_pct}% drag`}>
           <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-3">
-            <div className="text-center p-2 bg-[var(--bg-secondary)] rounded-xl">
-              <p className="text-sm font-bold" style={{ color: txCost.total_portfolio_cost_bps < 10 ? '#22c55e' : '#f59e0b' }}>{txCost.total_portfolio_cost_bps}bps</p>
+            <div className="text-center p-2 bg-[var(--bg-secondary)] rounded-md">
+              <p className="text-sm font-bold" style={{ color: txCost.total_portfolio_cost_bps < 10 ? '#0ecb81' : '#f0b90b' }}>{txCost.total_portfolio_cost_bps}bps</p>
               <p className="text-[8px] text-[var(--text-faint)]">Cost/Trade</p>
             </div>
-            <div className="text-center p-2 bg-[var(--bg-secondary)] rounded-xl">
-              <p className="text-sm font-bold" style={{ color: txCost.annual_drag_pct < 1 ? '#22c55e' : '#ef4444' }}>{txCost.annual_drag_pct}%</p>
+            <div className="text-center p-2 bg-[var(--bg-secondary)] rounded-md">
+              <p className="text-sm font-bold" style={{ color: txCost.annual_drag_pct < 1 ? '#0ecb81' : '#f6465d' }}>{txCost.annual_drag_pct}%</p>
               <p className="text-[8px] text-[var(--text-faint)]">Ann. Drag</p>
             </div>
-            <div className="text-center p-2 bg-[var(--bg-secondary)] rounded-xl">
+            <div className="text-center p-2 bg-[var(--bg-secondary)] rounded-md">
               <p className="text-sm font-bold text-[var(--text-primary)]">{txCost.turnover_assumption}x</p>
               <p className="text-[8px] text-[var(--text-faint)]">Turnover</p>
             </div>
           </div>
-          <p className="text-[11px] mb-3 p-2.5 rounded-xl bg-[var(--bg-secondary)] text-[var(--text-muted)] leading-relaxed">{txCost.recommendation}</p>
+          <p className="text-[11px] mb-3 p-2.5 rounded-md bg-[var(--bg-secondary)] text-[var(--text-muted)] leading-relaxed">{txCost.recommendation}</p>
           {/* Mobile: Compact list */}
           <div className="md:hidden space-y-1.5">
             {txCost.estimates.slice(0, 8).map((e: any) => (
               <div key={e.symbol} className="flex items-center justify-between py-1.5 border-b border-[var(--border)]/20 last:border-0">
-                <span className="font-mono text-xs font-bold text-[#3b82f6]">{e.symbol}</span>
+                <span className="font-mono text-xs font-bold text-[#1e90ff]">{e.symbol}</span>
                 <div className="flex items-center gap-3">
                   <span className="font-mono text-[10px]">{e.total_cost_bps}bps</span>
                   <span className="text-[10px] text-[var(--text-faint)]">{e.optimal_horizon_min}min</span>
@@ -2102,12 +2102,12 @@ function BrokerTab({ status: _status, portfolio }: any) {
       <Card glow={alpacaStatus?.connected ? 'glow-green' : ''}>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2.5">
-            <div className={`w-2.5 h-2.5 rounded-full ${alpacaStatus?.connected ? 'bg-[#22c55e] pulse-dot' : 'bg-[var(--text-faint)]'}`} />
+            <div className={`w-2.5 h-2.5 rounded-full ${alpacaStatus?.connected ? 'bg-[#0ecb81] pulse-dot' : 'bg-[var(--text-faint)]'}`} />
             <h3 className="text-sm font-bold">Alpaca Paper Trading</h3>
             <span className="text-[9px] uppercase tracking-wider text-[var(--text-faint)] bg-white/5 px-2 py-0.5 rounded-full">Primary</span>
           </div>
           {alpacaStatus?.connected && (
-            <button onClick={handleDisconnect} className="text-[10px] text-[#ef4444] hover:underline">Disconnect</button>
+            <button onClick={handleDisconnect} className="text-[10px] text-[#f6465d] hover:underline">Disconnect</button>
           )}
         </div>
 
@@ -2115,12 +2115,12 @@ function BrokerTab({ status: _status, portfolio }: any) {
           <div className="space-y-4">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
-                ['Portfolio', `$${Number(alpacaStatus.account.portfolio_value).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, '#22c55e'],
-                ['Cash', `$${Number(alpacaStatus.account.cash).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, '#3b82f6'],
-                ['Buying Power', `$${Number(alpacaStatus.account.buying_power).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, '#8b5cf6'],
-                ['Day Trades', `${alpacaStatus.account.daytrade_count}/3`, '#f59e0b'],
+                ['Portfolio', `$${Number(alpacaStatus.account.portfolio_value).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, '#0ecb81'],
+                ['Cash', `$${Number(alpacaStatus.account.cash).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, '#1e90ff'],
+                ['Buying Power', `$${Number(alpacaStatus.account.buying_power).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, '#f0b90b'],
+                ['Day Trades', `${alpacaStatus.account.daytrade_count}/3`, '#f0b90b'],
               ].map(([label, val, color]) => (
-                <div key={label} className="p-3 rounded-xl bg-white/[0.02] border border-[var(--border)] text-center">
+                <div key={label} className="p-3 rounded-md bg-white/[0.02] border border-[var(--border)] text-center">
                   <p className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider mb-1">{label}</p>
                   <p className="text-lg font-bold font-mono" style={{ color }}>{val}</p>
                 </div>
@@ -2135,14 +2135,14 @@ function BrokerTab({ status: _status, portfolio }: any) {
                   {alpacaPositions.map(p => (
                     <div key={p.symbol} className="flex items-center justify-between p-2.5 rounded-lg bg-white/[0.02] border border-[var(--border)]">
                       <div className="flex items-center gap-2">
-                        <span className="font-mono font-bold text-sm text-[#3b82f6]">{p.symbol}</span>
+                        <span className="font-mono font-bold text-sm text-[#1e90ff]">{p.symbol}</span>
                         <span className="text-[10px] text-[var(--text-faint)]">{p.qty} shares</span>
                       </div>
                       <div className="text-right">
-                        <p className={`font-mono text-sm font-bold ${Number(p.unrealized_pl) >= 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+                        <p className={`font-mono text-sm font-bold ${Number(p.unrealized_pl) >= 0 ? 'text-[#0ecb81]' : 'text-[#f6465d]'}`}>
                           {Number(p.unrealized_pl) >= 0 ? '+' : ''}${Number(p.unrealized_pl).toFixed(2)}
                         </p>
-                        <p className={`text-[10px] font-mono ${Number(p.unrealized_plpc) >= 0 ? 'text-[#22c55e]/70' : 'text-[#ef4444]/70'}`}>
+                        <p className={`text-[10px] font-mono ${Number(p.unrealized_plpc) >= 0 ? 'text-[#0ecb81]/70' : 'text-[#f6465d]/70'}`}>
                           {(Number(p.unrealized_plpc) * 100).toFixed(2)}%
                         </p>
                       </div>
@@ -2160,11 +2160,11 @@ function BrokerTab({ status: _status, portfolio }: any) {
                   {alpacaOrders.slice(0, 10).map(o => (
                     <div key={o.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-white/[0.02]">
                       <div className="flex items-center gap-2">
-                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${o.side === 'buy' ? 'bg-[#22c55e]/10 text-[#22c55e]' : 'bg-[#ef4444]/10 text-[#ef4444]'}`}>{o.side.toUpperCase()}</span>
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${o.side === 'buy' ? 'bg-[#0ecb81]/10 text-[#0ecb81]' : 'bg-[#f6465d]/10 text-[#f6465d]'}`}>{o.side.toUpperCase()}</span>
                         <span className="font-mono text-sm font-semibold">{o.symbol}</span>
                         <span className="text-[10px] text-[var(--text-faint)]">{o.qty} @ {o.filled_avg_price || 'pending'}</span>
                       </div>
-                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-semibold ${o.status === 'filled' ? 'bg-[#22c55e]/10 text-[#22c55e]' : o.status === 'canceled' ? 'bg-[#ef4444]/10 text-[#ef4444]' : 'bg-[#f59e0b]/10 text-[#f59e0b]'}`}>
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-semibold ${o.status === 'filled' ? 'bg-[#0ecb81]/10 text-[#0ecb81]' : o.status === 'canceled' ? 'bg-[#f6465d]/10 text-[#f6465d]' : 'bg-[#f0b90b]/10 text-[#f0b90b]'}`}>
                         {o.status}
                       </span>
                     </div>
@@ -2176,8 +2176,8 @@ function BrokerTab({ status: _status, portfolio }: any) {
         ) : (
           <div className="space-y-3">
             {alpacaStatus?.error && (
-              <div className="p-3 rounded-xl bg-[#ef4444]/10 border border-[#ef4444]/20">
-                <p className="text-xs text-[#ef4444]">{alpacaStatus.error}</p>
+              <div className="p-3 rounded-md bg-[#f6465d]/10 border border-[#f6465d]/20">
+                <p className="text-xs text-[#f6465d]">{alpacaStatus.error}</p>
               </div>
             )}
             <p className="text-sm text-[var(--text-muted)]">Connect your free Alpaca paper trading account for live simulated trading with real market data.</p>
@@ -2185,27 +2185,27 @@ function BrokerTab({ status: _status, portfolio }: any) {
               <div>
                 <label className="text-[10px] font-medium text-[var(--text-faint)] block mb-1 uppercase tracking-wider">API Key</label>
                 <input type="text" value={alpacaKey} onChange={e => setAlpacaKey(e.target.value)}
-                  className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-4 py-2.5 text-sm font-mono placeholder:text-[var(--text-faint)]"
+                  className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-md px-4 py-2.5 text-sm font-mono placeholder:text-[var(--text-faint)]"
                   placeholder="PKXXXXXXXXXXXXXXXXXX" />
               </div>
               <div>
                 <label className="text-[10px] font-medium text-[var(--text-faint)] block mb-1 uppercase tracking-wider">Secret Key</label>
                 <input type="password" value={alpacaSecret} onChange={e => setAlpacaSecret(e.target.value)}
-                  className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-4 py-2.5 text-sm font-mono placeholder:text-[var(--text-faint)]"
+                  className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-md px-4 py-2.5 text-sm font-mono placeholder:text-[var(--text-faint)]"
                   placeholder="Enter your secret key" />
               </div>
               <button onClick={handleConnect} disabled={connecting || !alpacaKey || !alpacaSecret}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-[#3b82f6] to-[#8b5cf6] font-semibold text-sm disabled:opacity-50 hover:opacity-90 flex items-center justify-center gap-2">
+                className="w-full py-3 rounded-md bg-[#f0b90b] text-[#0b0e11] font-semibold text-sm disabled:opacity-50 hover:opacity-90 flex items-center justify-center gap-2">
                 {connecting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Plug className="w-4 h-4" />}
                 {connecting ? 'Connecting...' : 'Connect to Alpaca'}
               </button>
             </div>
             <div className="flex items-center gap-2 pt-1">
-              <a href="https://app.alpaca.markets/signup" target="_blank" rel="noreferrer" className="text-[#3b82f6] hover:underline text-xs flex items-center gap-1">
+              <a href="https://app.alpaca.markets/signup" target="_blank" rel="noreferrer" className="text-[#1e90ff] hover:underline text-xs flex items-center gap-1">
                 Create free account <ExternalLink className="w-3 h-3" />
               </a>
               <span className="text-[var(--text-faint)] text-[10px]">|</span>
-              <a href="https://app.alpaca.markets/paper/dashboard/overview" target="_blank" rel="noreferrer" className="text-[#3b82f6] hover:underline text-xs flex items-center gap-1">
+              <a href="https://app.alpaca.markets/paper/dashboard/overview" target="_blank" rel="noreferrer" className="text-[#1e90ff] hover:underline text-xs flex items-center gap-1">
                 Get API keys <ExternalLink className="w-3 h-3" />
               </a>
             </div>
@@ -2223,7 +2223,7 @@ function BrokerTab({ status: _status, portfolio }: any) {
         </div>
         <div className="text-sm text-[var(--text-muted)] space-y-2">
           <p>Robinhood MCP integration available when backend is deployed</p>
-          <code className="block text-[10px] bg-[var(--bg-primary)] px-3 py-2 rounded-lg text-[#3b82f6] font-mono">agent.robinhood.com/mcp/trading</code>
+          <code className="block text-[10px] bg-[var(--bg-primary)] px-3 py-2 rounded-lg text-[#1e90ff] font-mono">agent.robinhood.com/mcp/trading</code>
         </div>
       </Card>
 
@@ -2231,14 +2231,14 @@ function BrokerTab({ status: _status, portfolio }: any) {
       {portfolio?.allocations && (
         <Card>
           <h3 className="text-xs font-bold text-[var(--text-muted)] mb-4 uppercase tracking-wider flex items-center gap-2">
-            <Target className="w-3.5 h-3.5 text-[#3b82f6]" /> Target Allocation
+            <Target className="w-3.5 h-3.5 text-[#1e90ff]" /> Target Allocation
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5 pb-5 border-b border-[var(--border)]">
             {[
               [portfolio.num_positions, 'Positions', ''],
-              [`${((1 - portfolio.cash_pct) * 100).toFixed(0)}%`, 'Invested', '#22c55e'],
-              [`${(portfolio.cash_pct * 100).toFixed(0)}%`, 'Cash', '#3b82f6'],
-              [portfolio.regime?.toUpperCase(), 'Regime', '#8b5cf6'],
+              [`${((1 - portfolio.cash_pct) * 100).toFixed(0)}%`, 'Invested', '#0ecb81'],
+              [`${(portfolio.cash_pct * 100).toFixed(0)}%`, 'Cash', '#1e90ff'],
+              [portfolio.regime?.toUpperCase(), 'Regime', '#f0b90b'],
             ].map(([val, label, color]) => (
               <div key={label as string} className="text-center">
                 <p className="text-xl font-bold font-mono" style={color ? { color: color as string } : {}}>{val}</p>
@@ -2250,9 +2250,9 @@ function BrokerTab({ status: _status, portfolio }: any) {
           <div className="space-y-2.5">
             {Object.entries(portfolio.allocations).sort(([, a], [, b]) => (b as number) - (a as number)).map(([sym, weight]) => (
               <div key={sym} className="flex items-center gap-3">
-                <span className="font-mono font-bold text-sm text-[#3b82f6] w-12">{sym}</span>
+                <span className="font-mono font-bold text-sm text-[#1e90ff] w-12">{sym}</span>
                 <div className="flex-1 bg-white/5 rounded-full h-2 overflow-hidden">
-                  <div className="h-full rounded-full bg-gradient-to-r from-[#3b82f6] to-[#8b5cf6] transition-all duration-500" style={{ width: `${(weight as number) * 100 * 4}%` }} />
+                  <div className="h-full rounded-full bg-[#f0b90b] text-[#0b0e11] transition-all duration-500" style={{ width: `${(weight as number) * 100 * 4}%` }} />
                 </div>
                 <span className="font-mono text-xs text-[var(--text-muted)] w-14 text-right">{((weight as number) * 100).toFixed(1)}%</span>
               </div>
@@ -2265,7 +2265,7 @@ function BrokerTab({ status: _status, portfolio }: any) {
               <div className="space-y-1.5">
                 {portfolio.orders.map((o: any, i: number) => (
                   <div key={i} className="flex items-center justify-between text-sm py-1">
-                    <span className={`font-mono font-bold ${o.side === 'buy' ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+                    <span className={`font-mono font-bold ${o.side === 'buy' ? 'text-[#0ecb81]' : 'text-[#f6465d]'}`}>
                       {o.side.toUpperCase()} {o.symbol}
                     </span>
                     <span className="font-mono text-[var(--text-muted)]">${Math.abs(o.delta_value).toFixed(0)}</span>
@@ -2306,7 +2306,7 @@ function AuthModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (emai
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
-      <div className="bg-[var(--bg-card)] border-t sm:border border-[var(--border)] rounded-t-3xl sm:rounded-2xl p-6 sm:p-8 w-full sm:max-w-sm scale-in" onClick={e => e.stopPropagation()}>
+      <div className="bg-[var(--bg-card)] border-t sm:border border-[var(--border)] rounded-t-3xl sm:rounded-lg p-6 sm:p-8 w-full sm:max-w-sm scale-in" onClick={e => e.stopPropagation()}>
         <div className="w-10 h-1 bg-white/10 rounded-full mx-auto mb-6 sm:hidden" />
 
         {/* Close button */}
@@ -2315,7 +2315,7 @@ function AuthModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (emai
         </button>
 
         <div className="text-center mb-6">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#3b82f6] to-[#8b5cf6] flex items-center justify-center mx-auto mb-3 shadow-lg shadow-[#3b82f6]/20">
+          <div className="w-12 h-12 rounded-lg bg-[#f0b90b] flex items-center justify-center mx-auto mb-3 shadow-lg shadow-[#1e90ff]/20">
             <User className="w-6 h-6 text-white" />
           </div>
           <h2 className="text-xl font-bold">{isRegister ? 'Create Your Account' : 'Welcome Back'}</h2>
@@ -2325,7 +2325,7 @@ function AuthModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (emai
         </div>
 
         {error && (
-          <div className="mb-4 px-3 py-2 bg-[#ef4444]/10 border border-[#ef4444]/20 rounded-lg text-xs text-[#ef4444] flex items-center gap-2">
+          <div className="mb-4 px-3 py-2 bg-[#f6465d]/10 border border-[#f6465d]/20 rounded-lg text-xs text-[#f6465d] flex items-center gap-2">
             <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
             {error}
           </div>
@@ -2336,24 +2336,24 @@ function AuthModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (emai
             <div>
               <label className="text-[10px] font-medium text-[var(--text-faint)] block mb-1.5 uppercase tracking-wider">Your Name</label>
               <input type="text" value={name} onChange={e => setName(e.target.value)}
-                className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm placeholder:text-[var(--text-faint)] focus:border-[#3b82f6]/50 focus:ring-1 focus:ring-[#3b82f6]/20 transition-all"
+                className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-md px-4 py-3 text-sm placeholder:text-[var(--text-faint)] focus:border-[#1e90ff]/50 focus:ring-1 focus:ring-[#1e90ff]/20 transition-all"
                 placeholder="Jason" required autoFocus />
             </div>
           )}
           <div>
             <label className="text-[10px] font-medium text-[var(--text-faint)] block mb-1.5 uppercase tracking-wider">Email</label>
             <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-              className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm placeholder:text-[var(--text-faint)] focus:border-[#3b82f6]/50 focus:ring-1 focus:ring-[#3b82f6]/20 transition-all"
+              className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-md px-4 py-3 text-sm placeholder:text-[var(--text-faint)] focus:border-[#1e90ff]/50 focus:ring-1 focus:ring-[#1e90ff]/20 transition-all"
               placeholder="you@example.com" required autoFocus={!isRegister} />
           </div>
           <div>
             <label className="text-[10px] font-medium text-[var(--text-faint)] block mb-1.5 uppercase tracking-wider">Password</label>
             <input type="password" value={password} onChange={e => setPassword(e.target.value)}
-              className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm placeholder:text-[var(--text-faint)] focus:border-[#3b82f6]/50 focus:ring-1 focus:ring-[#3b82f6]/20 transition-all"
+              className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded-md px-4 py-3 text-sm placeholder:text-[var(--text-faint)] focus:border-[#1e90ff]/50 focus:ring-1 focus:ring-[#1e90ff]/20 transition-all"
               placeholder="Min 6 characters" required minLength={6} />
           </div>
           <button type="submit" disabled={submitting}
-            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#3b82f6] to-[#8b5cf6] font-semibold text-sm disabled:opacity-50 hover:opacity-90 active:scale-[0.98] transition-all mt-2 shadow-lg shadow-[#3b82f6]/20">
+            className="w-full py-3.5 rounded-md bg-[#f0b90b] text-[#0b0e11] font-semibold text-sm disabled:opacity-50 hover:opacity-90 active:scale-[0.98] transition-all mt-2 shadow-lg shadow-[#1e90ff]/20">
             {submitting ? (
               <span className="flex items-center justify-center gap-2"><RefreshCw className="w-4 h-4 animate-spin" /> Signing {isRegister ? 'up' : 'in'}...</span>
             ) : isRegister ? 'Create Account' : 'Sign In'}
@@ -2363,7 +2363,7 @@ function AuthModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (emai
         <div className="mt-4 pt-4 border-t border-[var(--border)]">
           <p className="text-xs text-center text-[var(--text-faint)]">
             {isRegister ? 'Already have an account?' : "Don't have an account?"}{' '}
-            <button onClick={() => { setIsRegister(!isRegister); setError(''); }} className="text-[#3b82f6] hover:underline font-medium">
+            <button onClick={() => { setIsRegister(!isRegister); setError(''); }} className="text-[#1e90ff] hover:underline font-medium">
               {isRegister ? 'Sign in' : 'Create one free'}
             </button>
           </p>
@@ -2424,7 +2424,7 @@ function PaperTradingTab({ livePrices: _livePrices }: { livePrices: Record<strin
   if (isLoading && !result) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
-        <div className="w-12 h-12 rounded-full border-4 border-[#3b82f6]/20 border-t-[#3b82f6] animate-spin mb-4" />
+        <div className="w-12 h-12 rounded-full border-4 border-[#1e90ff]/20 border-t-[#1e90ff] animate-spin mb-4" />
         <p className="text-sm text-[var(--text-muted)] font-medium">Running 30-day paper backtest...</p>
         <p className="text-[10px] text-[var(--text-faint)] mt-1">Fetching real market data for 20 stocks</p>
       </div>
@@ -2447,7 +2447,7 @@ function PaperTradingTab({ livePrices: _livePrices }: { livePrices: Record<strin
           <p className="text-[10px] sm:text-xs text-[var(--text-faint)] uppercase tracking-wider font-medium flex items-center gap-1.5">
             <Clock className="w-3 sm:w-3.5 h-3 sm:h-3.5" /> 30-Day Paper Backtest
           </p>
-          <span className={`text-[8px] sm:text-[9px] px-1.5 sm:px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider ${result.data_source === 'real' ? 'bg-[#22c55e]/10 text-[#22c55e]' : 'bg-[#f59e0b]/10 text-[#f59e0b]'}`}>
+          <span className={`text-[8px] sm:text-[9px] px-1.5 sm:px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider ${result.data_source === 'real' ? 'bg-[#0ecb81]/10 text-[#0ecb81]' : 'bg-[#f0b90b]/10 text-[#f0b90b]'}`}>
             {result.data_source === 'real' ? 'Real Data' : 'Simulated'}
           </span>
         </div>
@@ -2455,7 +2455,7 @@ function PaperTradingTab({ livePrices: _livePrices }: { livePrices: Record<strin
           ${result.final_value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </p>
         <div className={`inline-flex items-center gap-1.5 mt-2.5 px-3 py-1.5 rounded-full text-sm font-semibold
-          ${isPositive ? 'bg-[#22c55e]/10 text-[#22c55e]' : 'bg-[#ef4444]/10 text-[#ef4444]'}`}>
+          ${isPositive ? 'bg-[#0ecb81]/10 text-[#0ecb81]' : 'bg-[#f6465d]/10 text-[#f6465d]'}`}>
           {isPositive ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
           {isPositive ? '+' : ''}{totalReturn.toFixed(2)}%
           <span className="text-[var(--text-faint)] font-normal text-xs ml-1">{result.days_simulated} days</span>
@@ -2463,7 +2463,7 @@ function PaperTradingTab({ livePrices: _livePrices }: { livePrices: Record<strin
 
         <div className="flex items-center justify-center gap-3 mt-3 sm:mt-4">
           <button onClick={handleRefresh} disabled={isLoading}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-[var(--border)] text-sm font-medium text-[var(--text-muted)] hover:bg-white/5 hover:text-white disabled:opacity-50 transition-all press-scale min-h-[44px]">
+            className="flex items-center gap-2 px-5 py-2.5 rounded-md border border-[var(--border)] text-sm font-medium text-[var(--text-muted)] hover:bg-white/5 hover:text-white disabled:opacity-50 transition-all press-scale min-h-[44px]">
             <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
             {isLoading ? 'Running...' : 'Refresh'}
           </button>
@@ -2474,23 +2474,23 @@ function PaperTradingTab({ livePrices: _livePrices }: { livePrices: Record<strin
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <Card>
           <p className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider mb-1 font-medium">Return</p>
-          <p className={`text-lg sm:text-xl font-bold font-mono ${isPositive ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+          <p className={`text-lg sm:text-xl font-bold font-mono ${isPositive ? 'text-[#0ecb81]' : 'text-[#f6465d]'}`}>
             {isPositive ? '+' : ''}{totalReturn.toFixed(2)}%
           </p>
         </Card>
         <Card>
           <p className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider mb-1 font-medium">Max Drawdown</p>
-          <p className="text-lg sm:text-xl font-bold font-mono text-[#ef4444]">{(result.max_drawdown * 100).toFixed(2)}%</p>
+          <p className="text-lg sm:text-xl font-bold font-mono text-[#f6465d]">{(result.max_drawdown * 100).toFixed(2)}%</p>
         </Card>
         <Card>
           <p className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider mb-1 font-medium">Sharpe Ratio</p>
-          <p className={`text-lg sm:text-xl font-bold font-mono ${result.sharpe_ratio > 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+          <p className={`text-lg sm:text-xl font-bold font-mono ${result.sharpe_ratio > 0 ? 'text-[#0ecb81]' : 'text-[#f6465d]'}`}>
             {result.sharpe_ratio.toFixed(2)}
           </p>
         </Card>
         <Card>
           <p className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider mb-1 font-medium">Win Rate</p>
-          <p className="text-lg sm:text-xl font-bold font-mono text-[#3b82f6]">{(result.win_rate * 100).toFixed(0)}%</p>
+          <p className="text-lg sm:text-xl font-bold font-mono text-[#1e90ff]">{(result.win_rate * 100).toFixed(0)}%</p>
         </Card>
       </div>
 
@@ -2498,7 +2498,7 @@ function PaperTradingTab({ livePrices: _livePrices }: { livePrices: Record<strin
       <div className="scroll-x -mx-3.5 px-3.5 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-4 sm:gap-3">
         <Card className="min-w-[140px] sm:min-w-0">
           <p className="text-[10px] text-[var(--text-faint)] uppercase tracking-wider mb-1 font-medium">Regime</p>
-          <p className={`text-sm font-bold ${result.regime === 'bull' ? 'text-[#22c55e]' : result.regime === 'bear' ? 'text-[#ef4444]' : 'text-[#f59e0b]'}`}>
+          <p className={`text-sm font-bold ${result.regime === 'bull' ? 'text-[#0ecb81]' : result.regime === 'bear' ? 'text-[#f6465d]' : 'text-[#f0b90b]'}`}>
             {result.regime === 'bull' ? 'Bull' : result.regime === 'bear' ? 'Bear' : 'Sideways'}
           </p>
           <p className="text-[9px] text-[var(--text-faint)] mt-0.5">Adaptive weights</p>
@@ -2510,12 +2510,12 @@ function PaperTradingTab({ livePrices: _livePrices }: { livePrices: Record<strin
         </Card>
         <Card className="min-w-[140px] sm:min-w-0">
           <p className="text-[10px] text-[var(--text-faint)] uppercase tracking-wider mb-1 font-medium">Positions</p>
-          <p className="text-lg font-bold font-mono text-[#8b5cf6]">{result.positions.length}</p>
+          <p className="text-lg font-bold font-mono text-[#f0b90b]">{result.positions.length}</p>
           <p className="text-[9px] text-[var(--text-faint)] mt-0.5">Corr-filtered</p>
         </Card>
         <Card className="min-w-[140px] sm:min-w-0">
           <p className="text-[10px] text-[var(--text-faint)] uppercase tracking-wider mb-1 font-medium">Risk Model</p>
-          <p className="text-sm font-bold text-[#22c55e]">ATR Stops</p>
+          <p className="text-sm font-bold text-[#0ecb81]">ATR Stops</p>
           <p className="text-[9px] text-[var(--text-faint)] mt-0.5">2.5× adaptive</p>
         </Card>
       </div>
@@ -2524,21 +2524,21 @@ function PaperTradingTab({ livePrices: _livePrices }: { livePrices: Record<strin
       {equityCurve.length > 0 && (
         <Card>
           <h3 className="text-xs font-bold text-[var(--text-muted)] mb-4 flex items-center gap-2 uppercase tracking-wider">
-            <TrendingUp className="w-3.5 h-3.5 text-[#3b82f6]" /> Equity Curve
+            <TrendingUp className="w-3.5 h-3.5 text-[#1e90ff]" /> Equity Curve
           </h3>
           <div className="h-[220px] sm:h-[280px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={equityCurve}>
                 <defs>
                   <linearGradient id="equityGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={isPositive ? '#22c55e' : '#ef4444'} stopOpacity={0.3} />
-                    <stop offset="95%" stopColor={isPositive ? '#22c55e' : '#ef4444'} stopOpacity={0} />
+                    <stop offset="5%" stopColor={isPositive ? '#0ecb81' : '#f6465d'} stopOpacity={0.3} />
+                    <stop offset="95%" stopColor={isPositive ? '#0ecb81' : '#f6465d'} stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={(d: string) => d.slice(5)} interval="preserveStartEnd" />
                 <YAxis tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} domain={['auto', 'auto']} tickFormatter={(v: number) => `$${v.toFixed(0)}`} />
                 <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '12px', fontSize: '12px' }} formatter={(v: any) => [`$${Number(v).toFixed(2)}`, 'Portfolio']} labelFormatter={(l: any) => `Date: ${l}`} />
-                <Area type="monotone" dataKey="value" stroke={isPositive ? '#22c55e' : '#ef4444'} fill="url(#equityGrad)" strokeWidth={2} dot={false} />
+                <Area type="monotone" dataKey="value" stroke={isPositive ? '#0ecb81' : '#f6465d'} fill="url(#equityGrad)" strokeWidth={2} dot={false} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -2549,21 +2549,21 @@ function PaperTradingTab({ livePrices: _livePrices }: { livePrices: Record<strin
       {equityCurve.length > 0 && (
         <Card>
           <h3 className="text-xs font-bold text-[var(--text-muted)] mb-4 flex items-center gap-2 uppercase tracking-wider">
-            <TrendingDown className="w-3.5 h-3.5 text-[#ef4444]" /> Drawdown
+            <TrendingDown className="w-3.5 h-3.5 text-[#f6465d]" /> Drawdown
           </h3>
           <div className="h-[150px] sm:h-[180px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={equityCurve}>
                 <defs>
                   <linearGradient id="ddGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#f6465d" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#f6465d" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={(d: string) => d.slice(5)} interval="preserveStartEnd" />
                 <YAxis tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={(v: number) => `${(v * 100).toFixed(1)}%`} />
                 <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: '12px', fontSize: '12px' }} formatter={(v: any) => [`${(Number(v) * 100).toFixed(2)}%`, 'Drawdown']} />
-                <Area type="monotone" dataKey="drawdown" stroke="#ef4444" fill="url(#ddGrad)" strokeWidth={1.5} dot={false} />
+                <Area type="monotone" dataKey="drawdown" stroke="#f6465d" fill="url(#ddGrad)" strokeWidth={1.5} dot={false} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -2574,14 +2574,14 @@ function PaperTradingTab({ livePrices: _livePrices }: { livePrices: Record<strin
       {positions.length > 0 && (
         <Card>
           <h3 className="text-xs font-bold text-[var(--text-muted)] mb-3 flex items-center gap-2 uppercase tracking-wider">
-            <Activity className="w-3.5 h-3.5 text-[#22c55e]" /> Current Holdings ({positions.length})
+            <Activity className="w-3.5 h-3.5 text-[#0ecb81]" /> Current Holdings ({positions.length})
           </h3>
           <div className="space-y-2">
             {positions.map((p) => (
-              <div key={p.symbol} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-[var(--border)]">
+              <div key={p.symbol} className="flex items-center justify-between p-3 rounded-md bg-white/[0.02] border border-[var(--border)]">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-xl bg-[#3b82f6]/10 flex items-center justify-center shrink-0">
-                    <span className="font-mono font-bold text-[10px] text-[#3b82f6]">{p.symbol.slice(0, 3)}</span>
+                  <div className="w-9 h-9 rounded-md bg-[#1e90ff]/10 flex items-center justify-center shrink-0">
+                    <span className="font-mono font-bold text-[10px] text-[#1e90ff]">{p.symbol.slice(0, 3)}</span>
                   </div>
                   <div className="min-w-0">
                     <p className="font-mono font-bold text-sm">{p.symbol}</p>
@@ -2589,10 +2589,10 @@ function PaperTradingTab({ livePrices: _livePrices }: { livePrices: Record<strin
                   </div>
                 </div>
                 <div className="text-right shrink-0 ml-2">
-                  <p className={`font-mono font-bold text-sm ${p.pnl >= 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+                  <p className={`font-mono font-bold text-sm ${p.pnl >= 0 ? 'text-[#0ecb81]' : 'text-[#f6465d]'}`}>
                     {p.pnl >= 0 ? '+' : ''}${p.pnl.toFixed(2)}
                   </p>
-                  <p className={`text-[10px] font-mono ${p.pnl_pct >= 0 ? 'text-[#22c55e]/70' : 'text-[#ef4444]/70'}`}>
+                  <p className={`text-[10px] font-mono ${p.pnl_pct >= 0 ? 'text-[#0ecb81]/70' : 'text-[#f6465d]/70'}`}>
                     {p.pnl_pct >= 0 ? '+' : ''}{p.pnl_pct.toFixed(1)}%
                   </p>
                 </div>
@@ -2612,8 +2612,8 @@ function PaperTradingTab({ livePrices: _livePrices }: { livePrices: Record<strin
             {trades.map((t, i) => (
               <div key={i} className="flex items-center justify-between p-2.5 rounded-lg hover:bg-white/[0.02] transition-colors">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${t.side === 'buy' ? 'bg-[#22c55e]/10' : 'bg-[#ef4444]/10'}`}>
-                    {t.side === 'buy' ? <ArrowUpRight className="w-3 h-3 text-[#22c55e]" /> : <ArrowDownRight className="w-3 h-3 text-[#ef4444]" />}
+                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${t.side === 'buy' ? 'bg-[#0ecb81]/10' : 'bg-[#f6465d]/10'}`}>
+                    {t.side === 'buy' ? <ArrowUpRight className="w-3 h-3 text-[#0ecb81]" /> : <ArrowDownRight className="w-3 h-3 text-[#f6465d]" />}
                   </div>
                   <div className="min-w-0">
                     <p className="font-mono font-bold text-sm">{t.symbol}</p>
@@ -2706,8 +2706,8 @@ ${positive.length > negative.length * 2 ? '• Strong bullish consensus — watc
     setAgentRunning(false);
   }, [data]);
 
-  const sentimentColor = (s: string) => s === 'positive' ? '#22c55e' : s === 'negative' ? '#ef4444' : 'var(--text-faint)';
-  const sentimentBg = (s: string) => s === 'positive' ? '#22c55e' : s === 'negative' ? '#ef4444' : 'var(--text-faint)';
+  const sentimentColor = (s: string) => s === 'positive' ? '#0ecb81' : s === 'negative' ? '#f6465d' : 'var(--text-faint)';
+  const sentimentBg = (s: string) => s === 'positive' ? '#0ecb81' : s === 'negative' ? '#f6465d' : 'var(--text-faint)';
   const timeAgo = (dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime();
     if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
@@ -2721,7 +2721,7 @@ ${positive.length > negative.length * 2 ? '• Strong bullish consensus — watc
         action={<ActionButton onClick={onRefresh} loading={loading} icon={RefreshCw} label="Refresh" variant="ghost" />} />
 
       {/* AI News Agent */}
-      <div className="rounded-xl border border-[#06b6d4]/30 bg-gradient-to-br from-[#06b6d4]/5 to-[#3b82f6]/5 p-4">
+      <div className="rounded-md border border-[#06b6d4]/30 bg-gradient-to-br from-[#06b6d4]/5 to-[#1e90ff]/5 p-4">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <Cpu className="w-5 h-5 text-[#06b6d4]" />
@@ -2755,7 +2755,7 @@ ${positive.length > negative.length * 2 ? '• Strong bullish consensus — watc
               <span>{agentProgress}%</span>
             </div>
             <div className="w-full h-1.5 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-[#06b6d4] to-[#3b82f6] rounded-full transition-all duration-300" style={{ width: `${agentProgress}%` }} />
+              <div className="h-full bg-gradient-to-r from-[#06b6d4] to-[#1e90ff] rounded-full transition-all duration-300" style={{ width: `${agentProgress}%` }} />
             </div>
           </div>
         )}
@@ -2782,7 +2782,7 @@ ${positive.length > negative.length * 2 ? '• Strong bullish consensus — watc
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[10px] text-[var(--text-faint)] uppercase tracking-wider mb-1">Market Sentiment</p>
-              <p className={`text-xl font-bold ${data.aggregateLabel === 'Bullish' ? 'text-[#22c55e]' : data.aggregateLabel === 'Bearish' ? 'text-[#ef4444]' : 'text-[#f59e0b]'}`}>
+              <p className={`text-xl font-bold ${data.aggregateLabel === 'Bullish' ? 'text-[#0ecb81]' : data.aggregateLabel === 'Bearish' ? 'text-[#f6465d]' : 'text-[#f0b90b]'}`}>
                 {data.aggregateLabel}
               </p>
             </div>
@@ -2793,7 +2793,7 @@ ${positive.length > negative.length * 2 ? '• Strong bullish consensus — watc
           </div>
           <div className="mt-3 flex gap-3">
             <div className="flex-1 h-2 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-[#22c55e] to-[#10b981] rounded-full transition-all" style={{ width: `${Math.max(0, data.aggregateSentiment * 50 + 50)}%` }} />
+              <div className="h-full bg-gradient-to-r from-[#0ecb81] to-[#02a566] rounded-full transition-all" style={{ width: `${Math.max(0, data.aggregateSentiment * 50 + 50)}%` }} />
             </div>
             <span className="text-[10px] font-mono text-[var(--text-faint)]">{data.aggregateSentiment.toFixed(2)}</span>
           </div>
@@ -2805,7 +2805,7 @@ ${positive.length > negative.length * 2 ? '• Strong bullish consensus — watc
         <div className="space-y-2">
           {data.news.map((item, i) => (
             <a key={i} href={item.link} target="_blank" rel="noreferrer"
-              className="block p-3.5 sm:p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border)] hover:border-[var(--border-emphasis)] transition-all press-scale">
+              className="block p-3.5 sm:p-4 rounded-lg bg-[var(--bg-card)] border border-[var(--border)] hover:border-[var(--border-emphasis)] transition-all press-scale">
               <div className="flex items-start gap-3">
                 <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0`} style={{ background: sentimentBg(item.sentiment) }} />
                 <div className="flex-1 min-w-0">
@@ -2818,7 +2818,7 @@ ${positive.length > negative.length * 2 ? '• Strong bullish consensus — watc
                       {item.sentiment}
                     </span>
                     {item.symbols.length > 0 && item.symbols.map(s => (
-                      <span key={s} className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#3b82f6]/10 text-[#3b82f6] font-mono font-bold">{s}</span>
+                      <span key={s} className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#1e90ff]/10 text-[#1e90ff] font-mono font-bold">{s}</span>
                     ))}
                   </div>
                 </div>
@@ -2828,7 +2828,7 @@ ${positive.length > negative.length * 2 ? '• Strong bullish consensus — watc
           ))}
         </div>
       ) : loading ? (
-        <div className="space-y-3">{[1, 2, 3, 4, 5].map(i => <div key={i} className="h-24 shimmer rounded-2xl" />)}</div>
+        <div className="space-y-3">{[1, 2, 3, 4, 5].map(i => <div key={i} className="h-24 shimmer rounded-lg" />)}</div>
       ) : (
         <EmptyState icon={Newspaper} title="No news available" subtitle="News feed will populate when the API is reachable" />
       )}
@@ -2855,11 +2855,11 @@ function TrackRecordTab() {
 
   return (
     <div className="space-y-5 sm:space-y-6">
-      <SectionHeader icon={History} title="Track Record" subtitle="Every signal logged \u2014 immutable performance audit" accent="#f59e0b"
+      <SectionHeader icon={History} title="Track Record" subtitle="Every signal logged \u2014 immutable performance audit" accent="#f0b90b"
         action={
           <button onClick={toggleNotifications}
-            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all press-scale whitespace-nowrap shrink-0
-              ${notifPrefs.enabled ? 'bg-[#22c55e]/10 text-[#22c55e] border border-[#22c55e]/20' : 'bg-white/5 text-[var(--text-faint)] border border-[var(--border)]'}`}>
+            className={`flex items-center gap-2 px-3 py-2 rounded-md text-xs font-semibold transition-all press-scale whitespace-nowrap shrink-0
+              ${notifPrefs.enabled ? 'bg-[#0ecb81]/10 text-[#0ecb81] border border-[#0ecb81]/20' : 'bg-white/5 text-[var(--text-faint)] border border-[var(--border)]'}`}>
             {notifPrefs.enabled ? <Bell className="w-3.5 h-3.5" /> : <BellOff className="w-3.5 h-3.5" />}
             {notifPrefs.enabled ? 'Alerts On' : 'Alerts Off'}
           </button>
@@ -2874,14 +2874,14 @@ function TrackRecordTab() {
         </Card>
         <Card glow={stats.accuracy >= 60 ? 'glow-green' : stats.accuracy < 40 ? 'glow-red' : ''}>
           <p className="text-[10px] text-[var(--text-faint)] uppercase tracking-wider mb-1">Accuracy</p>
-          <p className={`text-2xl font-bold font-mono ${stats.accuracy >= 55 ? 'text-[#22c55e]' : stats.accuracy < 45 ? 'text-[#ef4444]' : 'text-[#f59e0b]'}`}>
+          <p className={`text-2xl font-bold font-mono ${stats.accuracy >= 55 ? 'text-[#0ecb81]' : stats.accuracy < 45 ? 'text-[#f6465d]' : 'text-[#f0b90b]'}`}>
             {stats.accuracy}%
           </p>
           <p className="text-[10px] text-[var(--text-faint)] mt-0.5">{stats.resolvedCount} resolved</p>
         </Card>
         <Card>
           <p className="text-[10px] text-[var(--text-faint)] uppercase tracking-wider mb-1">Avg Return</p>
-          <p className={`text-2xl font-bold font-mono ${stats.avgReturn >= 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+          <p className={`text-2xl font-bold font-mono ${stats.avgReturn >= 0 ? 'text-[#0ecb81]' : 'text-[#f6465d]'}`}>
             {stats.avgReturn >= 0 ? '+' : ''}{stats.avgReturn}%
           </p>
           <p className="text-[10px] text-[var(--text-faint)] mt-0.5">per signal</p>
@@ -2889,10 +2889,10 @@ function TrackRecordTab() {
         <Card>
           <p className="text-[10px] text-[var(--text-faint)] uppercase tracking-wider mb-1">Streak</p>
           <div className="flex items-center gap-2">
-            <p className={`text-2xl font-bold font-mono ${stats.streak.type === 'win' ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+            <p className={`text-2xl font-bold font-mono ${stats.streak.type === 'win' ? 'text-[#0ecb81]' : 'text-[#f6465d]'}`}>
               {stats.streak.count}
             </p>
-            <Trophy className={`w-5 h-5 ${stats.streak.type === 'win' ? 'text-[#22c55e]' : 'text-[#ef4444]'}`} />
+            <Trophy className={`w-5 h-5 ${stats.streak.type === 'win' ? 'text-[#0ecb81]' : 'text-[#f6465d]'}`} />
           </div>
           <p className="text-[10px] text-[var(--text-faint)] mt-0.5">{stats.streak.type === 'win' ? 'wins' : 'losses'} in a row</p>
         </Card>
@@ -2902,22 +2902,22 @@ function TrackRecordTab() {
       {runHistory.length > 0 && (
         <Card>
           <h3 className="text-xs font-bold text-[var(--text-muted)] mb-3 flex items-center gap-2 uppercase tracking-wider">
-            <Calendar className="w-3.5 h-3.5 text-[#3b82f6]" /> Daily Runs
-            <span className="text-[9px] px-2 py-0.5 rounded-full bg-[#22c55e]/10 text-[#22c55e] font-mono ml-auto">{streak}-day streak</span>
+            <Calendar className="w-3.5 h-3.5 text-[#1e90ff]" /> Daily Runs
+            <span className="text-[9px] px-2 py-0.5 rounded-full bg-[#0ecb81]/10 text-[#0ecb81] font-mono ml-auto">{streak}-day streak</span>
           </h3>
           <div className="space-y-1.5 max-h-[300px] overflow-y-auto">
             {runHistory.slice(0, 30).map((run, i) => (
               <div key={i} className="flex items-center justify-between p-2.5 rounded-lg hover:bg-white/[0.02] transition-colors">
                 <div className="flex items-center gap-2.5">
-                  <div className={`w-2 h-2 rounded-full ${run.dailyReturn >= 0 ? 'bg-[#22c55e]' : 'bg-[#ef4444]'}`} />
+                  <div className={`w-2 h-2 rounded-full ${run.dailyReturn >= 0 ? 'bg-[#0ecb81]' : 'bg-[#f6465d]'}`} />
                   <span className="text-xs font-mono text-[var(--text-muted)]">{run.date}</span>
-                  <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${run.regime.includes('bull') || run.regime.includes('Expansion') ? 'bg-[#22c55e]/10 text-[#22c55e]' : run.regime.includes('bear') || run.regime.includes('Contraction') ? 'bg-[#ef4444]/10 text-[#ef4444]' : 'bg-[#f59e0b]/10 text-[#f59e0b]'}`}>
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${run.regime.includes('bull') || run.regime.includes('Expansion') ? 'bg-[#0ecb81]/10 text-[#0ecb81]' : run.regime.includes('bear') || run.regime.includes('Contraction') ? 'bg-[#f6465d]/10 text-[#f6465d]' : 'bg-[#f0b90b]/10 text-[#f0b90b]'}`}>
                     {run.regime}
                   </span>
                 </div>
                 <div className="flex items-center gap-4">
                   <span className="text-[10px] text-[var(--text-faint)]">{run.tradesExecuted} trades</span>
-                  <span className={`font-mono text-xs font-bold ${run.dailyReturn >= 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+                  <span className={`font-mono text-xs font-bold ${run.dailyReturn >= 0 ? 'text-[#0ecb81]' : 'text-[#f6465d]'}`}>
                     {run.dailyReturn >= 0 ? '+' : ''}{run.dailyReturn.toFixed(2)}%
                   </span>
                   <span className="font-mono text-xs text-[var(--text-muted)]">${run.portfolioValue.toFixed(0)}</span>
@@ -2934,19 +2934,19 @@ function TrackRecordTab() {
           <h3 className="text-xs font-bold text-[var(--text-muted)] mb-3 uppercase tracking-wider">Strategy Performance</h3>
           <div className="space-y-2">
             {Object.entries(stats.byStrategy).map(([strategy, data]) => (
-              <div key={strategy} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-[var(--border)]">
+              <div key={strategy} className="flex items-center justify-between p-3 rounded-md bg-white/[0.02] border border-[var(--border)]">
                 <div>
                   <p className="text-sm font-semibold capitalize">{strategy.replace(/_/g, ' ')}</p>
                   <p className="text-[10px] text-[var(--text-faint)]">{data.count} signals</p>
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="text-right">
-                    <p className={`text-xs font-mono font-bold ${data.winRate >= 55 ? 'text-[#22c55e]' : data.winRate < 45 ? 'text-[#ef4444]' : 'text-[#f59e0b]'}`}>
+                    <p className={`text-xs font-mono font-bold ${data.winRate >= 55 ? 'text-[#0ecb81]' : data.winRate < 45 ? 'text-[#f6465d]' : 'text-[#f0b90b]'}`}>
                       {data.winRate}% WR
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className={`text-xs font-mono font-bold ${data.avgReturn >= 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+                    <p className={`text-xs font-mono font-bold ${data.avgReturn >= 0 ? 'text-[#0ecb81]' : 'text-[#f6465d]'}`}>
                       {data.avgReturn >= 0 ? '+' : ''}{data.avgReturn}%
                     </p>
                   </div>
@@ -2960,28 +2960,28 @@ function TrackRecordTab() {
       {/* Signal Log */}
       <Card>
         <h3 className="text-xs font-bold text-[var(--text-muted)] mb-3 flex items-center gap-2 uppercase tracking-wider">
-          <Radio className="w-3.5 h-3.5 text-[#f59e0b]" /> Signal Log ({stats.entries.length})
+          <Radio className="w-3.5 h-3.5 text-[#f0b90b]" /> Signal Log ({stats.entries.length})
         </h3>
         {stats.entries.length > 0 ? (
           <div className="space-y-1.5 max-h-[400px] overflow-y-auto">
             {stats.entries.slice(0, 50).map(entry => (
               <div key={entry.id} className="flex items-center justify-between p-2.5 rounded-lg hover:bg-white/[0.02] transition-colors">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${entry.resolved ? (entry.actualReturn && entry.actualReturn > 0 ? 'bg-[#22c55e]/10' : 'bg-[#ef4444]/10') : 'bg-[#f59e0b]/10'}`}>
-                    {entry.resolved ? (entry.actualReturn && entry.actualReturn > 0 ? <CheckCircle2 className="w-3 h-3 text-[#22c55e]" /> : <XCircle className="w-3 h-3 text-[#ef4444]" />) : <Clock className="w-3 h-3 text-[#f59e0b]" />}
+                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${entry.resolved ? (entry.actualReturn && entry.actualReturn > 0 ? 'bg-[#0ecb81]/10' : 'bg-[#f6465d]/10') : 'bg-[#f0b90b]/10'}`}>
+                    {entry.resolved ? (entry.actualReturn && entry.actualReturn > 0 ? <CheckCircle2 className="w-3 h-3 text-[#0ecb81]" /> : <XCircle className="w-3 h-3 text-[#f6465d]" />) : <Clock className="w-3 h-3 text-[#f0b90b]" />}
                   </div>
                   <div className="min-w-0">
-                    <p className="font-mono font-bold text-sm">{entry.symbol} <span className={`text-[10px] ${entry.action === 'buy' ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>{entry.action.toUpperCase()}</span></p>
+                    <p className="font-mono font-bold text-sm">{entry.symbol} <span className={`text-[10px] ${entry.action === 'buy' ? 'text-[#0ecb81]' : 'text-[#f6465d]'}`}>{entry.action.toUpperCase()}</span></p>
                     <p className="text-[10px] text-[var(--text-faint)] truncate">{entry.strategy} \u00b7 {(entry.confidence * 100).toFixed(0)}% conf</p>
                   </div>
                 </div>
                 <div className="text-right shrink-0 ml-2">
                   {entry.resolved ? (
-                    <p className={`font-mono text-sm font-bold ${(entry.actualReturn || 0) >= 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+                    <p className={`font-mono text-sm font-bold ${(entry.actualReturn || 0) >= 0 ? 'text-[#0ecb81]' : 'text-[#f6465d]'}`}>
                       {(entry.actualReturn || 0) >= 0 ? '+' : ''}{(entry.actualReturn || 0).toFixed(2)}%
                     </p>
                   ) : (
-                    <p className="text-[10px] text-[#f59e0b] font-semibold">PENDING</p>
+                    <p className="text-[10px] text-[#f0b90b] font-semibold">PENDING</p>
                   )}
                   <p className="text-[10px] text-[var(--text-faint)]">{new Date(entry.timestamp).toLocaleDateString()}</p>
                 </div>
@@ -2999,7 +2999,7 @@ function TrackRecordTab() {
       {/* Notification Settings */}
       <Card>
         <h3 className="text-xs font-bold text-[var(--text-muted)] mb-3 flex items-center gap-2 uppercase tracking-wider">
-          <Bell className="w-3.5 h-3.5 text-[#8b5cf6]" /> Alert Settings
+          <Bell className="w-3.5 h-3.5 text-[#f0b90b]" /> Alert Settings
         </h3>
         <div className="space-y-3">
           {[
@@ -3007,7 +3007,7 @@ function TrackRecordTab() {
             { key: 'stops', label: 'Stop-Loss Alerts', desc: 'Get notified when a position hits its trailing stop' },
             { key: 'dailyReport', label: 'Daily Performance Report', desc: 'Summary of daily P&L and trades at market close' },
           ].map(({ key, label, desc }) => (
-            <div key={key} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-[var(--border)]">
+            <div key={key} className="flex items-center justify-between p-3 rounded-md bg-white/[0.02] border border-[var(--border)]">
               <div>
                 <p className="text-sm font-medium">{label}</p>
                 <p className="text-[10px] text-[var(--text-faint)]">{desc}</p>
@@ -3019,7 +3019,7 @@ function TrackRecordTab() {
                   setLocalPrefs(updated);
                 }}
                 disabled={!notifPrefs.enabled}
-                className={`w-10 h-6 rounded-full transition-all ${notifPrefs.enabled && notifPrefs[key as keyof NotificationPrefs] ? 'bg-[#22c55e]' : 'bg-[var(--bg-secondary)]'}`}>
+                className={`w-10 h-6 rounded-full transition-all ${notifPrefs.enabled && notifPrefs[key as keyof NotificationPrefs] ? 'bg-[#0ecb81]' : 'bg-[var(--bg-secondary)]'}`}>
                 <div className={`w-4 h-4 rounded-full bg-white transition-transform mx-1 ${notifPrefs.enabled && notifPrefs[key as keyof NotificationPrefs] ? 'translate-x-4' : ''}`} />
               </button>
             </div>
@@ -3540,7 +3540,7 @@ Week 1: Explore Trade Finder + Dashboard → Week 2-3: Study Backtest + Research
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3 mb-6">
-        <BookOpen className="w-6 h-6 text-[#3b82f6]" />
+        <BookOpen className="w-6 h-6 text-[#1e90ff]" />
         <div>
           <h2 className="text-xl font-bold">Documentation</h2>
           <p className="text-sm text-[var(--text-faint)]">Complete platform guide — how everything works and how to get the most out of Quest</p>
@@ -3548,20 +3548,20 @@ Week 1: Explore Trade Finder + Dashboard → Week 2-3: Study Backtest + Research
       </div>
 
       {/* AI Agent Summary */}
-      <div className="rounded-xl border border-[#8b5cf6]/30 bg-gradient-to-br from-[#8b5cf6]/5 to-[#3b82f6]/5 p-4 mb-4">
+      <div className="rounded-md border border-[#f0b90b]/30 bg-gradient-to-br from-[#f0b90b]/5 to-[#1e90ff]/5 p-4 mb-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <Cpu className="w-5 h-5 text-[#8b5cf6]" />
+            <Cpu className="w-5 h-5 text-[#f0b90b]" />
             <h3 className="font-semibold text-sm">Quest AI Agent</h3>
-            <span className="text-[10px] px-2 py-0.5 bg-[#8b5cf6]/20 text-[#8b5cf6] rounded-full">Beta</span>
+            <span className="text-[10px] px-2 py-0.5 bg-[#f0b90b]/20 text-[#f0b90b] rounded-full">Beta</span>
           </div>
           <button
             onClick={runAgent}
             disabled={agentRunning}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
               agentRunning
-                ? 'bg-[#8b5cf6]/20 text-[#8b5cf6]/60 cursor-not-allowed'
-                : 'bg-[#8b5cf6] text-white hover:bg-[#7c3aed] active:scale-95'
+                ? 'bg-[#f0b90b]/20 text-[#f0b90b]/60 cursor-not-allowed'
+                : 'bg-[#f0b90b] text-white hover:bg-[#7c3aed] active:scale-95'
             }`}
           >
             {agentRunning ? (
@@ -3595,7 +3595,7 @@ Week 1: Explore Trade Finder + Dashboard → Week 2-3: Study Backtest + Research
             </div>
             <div className="w-full h-1.5 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] rounded-full transition-all duration-300"
+                className="h-full bg-gradient-to-r from-[#f0b90b] to-[#1e90ff] rounded-full transition-all duration-300"
                 style={{ width: `${agentProgress}%` }}
               />
             </div>
@@ -3611,7 +3611,7 @@ Week 1: Explore Trade Finder + Dashboard → Week 2-3: Study Backtest + Research
                   return <h3 key={i} className="text-white font-bold text-base mt-2 mb-2 font-sans">{line.replace('## ', '')}</h3>;
                 }
                 if (line.startsWith('**') && line.endsWith('**')) {
-                  return <h4 key={i} className="text-[#8b5cf6] font-bold mt-3 mb-1 font-sans text-sm">{line.replace(/\*\*/g, '')}</h4>;
+                  return <h4 key={i} className="text-[#f0b90b] font-bold mt-3 mb-1 font-sans text-sm">{line.replace(/\*\*/g, '')}</h4>;
                 }
                 if (line.startsWith('**') && line.includes(':**')) {
                   const parts = line.split(':**');
@@ -3623,7 +3623,7 @@ Week 1: Explore Trade Finder + Dashboard → Week 2-3: Study Backtest + Research
                 if (line.trim() === '') return <div key={i} className="h-1.5" />;
                 return <p key={i} className="py-0.5">{line}</p>;
               })}
-              {agentRunning && <span className="inline-block w-2 h-4 bg-[#8b5cf6] animate-pulse ml-0.5" />}
+              {agentRunning && <span className="inline-block w-2 h-4 bg-[#f0b90b] animate-pulse ml-0.5" />}
             </div>
           </div>
         )}
@@ -3640,12 +3640,12 @@ Week 1: Explore Trade Finder + Dashboard → Week 2-3: Study Backtest + Research
           const Icon = section.icon;
           const isOpen = expanded === section.id;
           return (
-            <div key={section.id} className="rounded-xl border border-[var(--border)] overflow-hidden transition-all">
+            <div key={section.id} className="rounded-md border border-[var(--border)] overflow-hidden transition-all">
               <button
                 onClick={() => setExpanded(isOpen ? null : section.id)}
                 className="w-full flex items-center gap-3 p-4 text-left hover:bg-white/[0.02] transition-colors"
               >
-                <Icon className="w-5 h-5 text-[#3b82f6] shrink-0" />
+                <Icon className="w-5 h-5 text-[#1e90ff] shrink-0" />
                 <span className="font-medium flex-1">{section.title}</span>
                 <ChevronDown className={`w-4 h-4 text-[var(--text-faint)] transition-transform ${isOpen ? 'rotate-180' : ''}`} />
               </button>
