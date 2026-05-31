@@ -336,15 +336,15 @@ function App() {
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] mesh-bg">
       {/* ── Header ── */}
-      <header className="glass border-b border-[var(--border)] sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-md bg-[#f0b90b] flex items-center justify-center">
-              <Zap className="w-3.5 h-3.5 text-[#0b0e11]" />
+      <header className="glass border-b border-[var(--border)] sticky top-0 z-50" style={{ boxShadow: '0 1px 0 rgba(240, 185, 11, 0.04)' }}>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-12 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded bg-[#f0b90b] flex items-center justify-center shadow-[0_0_8px_rgba(240,185,11,0.3)]">
+              <Zap className="w-3 h-3 text-[#0b0e11]" />
             </div>
             <div className="leading-none">
-              <h1 className="text-sm font-bold tracking-tight font-mono uppercase">Quest</h1>
-              <p className="text-[8px] text-[var(--text-faint)] uppercase tracking-[0.25em] font-medium">Terminal</p>
+              <h1 className="text-[11px] font-bold tracking-[0.08em] font-mono uppercase">Quest</h1>
+              <p className="text-[7px] text-[var(--text-faint)] uppercase tracking-[0.3em] font-medium">Terminal</p>
             </div>
           </div>
 
@@ -438,8 +438,8 @@ function App() {
       </main>
 
       {/* Live Price Ticker */}
-      <div className="overflow-hidden border-b border-[var(--border)] bg-[var(--bg-secondary)]">
-        <div className="flex animate-ticker whitespace-nowrap py-1.5 gap-6 px-4">
+      <div className="overflow-hidden border-b border-[var(--border)] bg-[var(--bg-primary)]">
+        <div className="flex animate-ticker whitespace-nowrap py-1 gap-8 px-4">
           {Object.values(livePrices).length > 0 ? Object.values(livePrices).map(p => (
             <span key={p.symbol} className="inline-flex items-center gap-1.5 text-[10px] font-mono shrink-0">
               <span className="font-semibold text-[var(--text-secondary)]">{p.symbol}</span>
@@ -521,8 +521,9 @@ function App() {
 
 function Card({ children, className = '', glow = '' }: { children: React.ReactNode; className?: string; glow?: string }) {
   return (
-    <div className={`bg-[var(--bg-card)] rounded-lg p-4 sm:p-5 border border-[var(--border)] hover:border-[var(--border-emphasis)] transition-all card-hover ${glow} ${className}`}>
-      {children}
+    <div className={`relative bg-[var(--bg-card)] rounded-lg p-4 sm:p-5 border border-[var(--border)] card-hover ${glow} ${className}`}>
+      <div className="absolute inset-0 rounded-lg bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
+      <div className="relative">{children}</div>
     </div>
   );
 }
@@ -531,13 +532,13 @@ function MetricCard({ label, value, sub, icon: Icon, accent = '#f0b90b' }: { lab
   return (
     <Card>
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[10px] sm:text-[11px] font-medium text-[var(--text-faint)] uppercase tracking-[0.08em]">{label}</span>
-        <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{ background: `${accent}10`, color: accent }}>
-          <Icon className="w-3.5 h-3.5" />
+        <span className="text-[9px] sm:text-[10px] font-semibold text-[var(--text-faint)] uppercase tracking-[0.12em]">{label}</span>
+        <div className="w-6 h-6 rounded flex items-center justify-center" style={{ background: `${accent}08`, color: accent, border: `1px solid ${accent}20` }}>
+          <Icon className="w-3 h-3" />
         </div>
       </div>
-      <p className="text-xl sm:text-2xl font-semibold font-mono tracking-tight count-up" style={{ color: accent === '#0ecb81' || accent === '#f6465d' ? accent : 'var(--text-primary)' }}>{value}</p>
-      {sub && <p className="text-[10px] sm:text-xs text-[var(--text-faint)] mt-1 font-mono truncate">{sub}</p>}
+      <p className="text-lg sm:text-xl font-bold font-mono tracking-tight count-up" style={{ color: accent === '#0ecb81' || accent === '#f6465d' ? accent : 'var(--text-primary)' }}>{value}</p>
+      {sub && <p className="text-[9px] sm:text-[10px] text-[var(--text-faint)] mt-1.5 font-mono truncate">{sub}</p>}
     </Card>
   );
 }
@@ -545,13 +546,13 @@ function MetricCard({ label, value, sub, icon: Icon, accent = '#f0b90b' }: { lab
 function SectionHeader({ icon: Icon, title, subtitle, accent = '#f0b90b', action }: { icon: any; title: string; subtitle?: string; accent?: string; action?: React.ReactNode }) {
   return (
     <div className="flex items-start sm:items-center justify-between gap-3 mb-5">
-      <div className="flex items-center gap-3 min-w-0">
-        <div className="w-8 h-8 rounded-md flex items-center justify-center shrink-0" style={{ background: `${accent}10`, color: accent }}>
-          <Icon className="w-4 h-4" />
+      <div className="flex items-center gap-2.5 min-w-0">
+        <div className="w-7 h-7 rounded flex items-center justify-center shrink-0" style={{ background: `${accent}08`, color: accent, border: `1px solid ${accent}20` }}>
+          <Icon className="w-3.5 h-3.5" />
         </div>
         <div className="min-w-0">
-          <h2 className="text-sm sm:text-base font-semibold uppercase tracking-wide truncate">{title}</h2>
-          {subtitle && <p className="text-[10px] sm:text-xs text-[var(--text-faint)] mt-0.5 truncate">{subtitle}</p>}
+          <h2 className="text-xs sm:text-sm font-bold uppercase tracking-[0.06em] truncate">{title}</h2>
+          {subtitle && <p className="text-[9px] sm:text-[10px] text-[var(--text-faint)] mt-0.5 truncate font-mono">{subtitle}</p>}
         </div>
       </div>
       {action}
@@ -561,14 +562,14 @@ function SectionHeader({ icon: Icon, title, subtitle, accent = '#f0b90b', action
 
 function ActionButton({ onClick, loading, icon: Icon, label, variant = 'primary' }: { onClick: () => void; loading?: boolean; icon: any; label: string; variant?: 'primary' | 'green' | 'ghost' }) {
   const styles = {
-    primary: 'bg-[#f0b90b] text-[#0b0e11] hover:bg-[#d4a30a]',
-    green: 'bg-[#0ecb81] text-[#0b0e11] hover:bg-[#02a566]',
-    ghost: 'border border-[var(--border)] text-[var(--text-muted)] hover:bg-white/5 hover:text-white',
+    primary: 'bg-[#f0b90b] text-[#0b0e11] hover:bg-[#d4a30a] shadow-[0_1px_2px_rgba(240,185,11,0.2)]',
+    green: 'bg-[#0ecb81] text-[#0b0e11] hover:bg-[#02a566] shadow-[0_1px_2px_rgba(14,203,129,0.2)]',
+    ghost: 'border border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--border-emphasis)] hover:text-white',
   };
   return (
     <button onClick={onClick} disabled={loading}
-      className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold transition-all disabled:opacity-50 whitespace-nowrap shrink-0 ${styles[variant]}`}>
-      <Icon className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+      className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-[11px] font-bold uppercase tracking-wider transition-all disabled:opacity-50 whitespace-nowrap shrink-0 active:scale-[0.97] ${styles[variant]}`}>
+      <Icon className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
       <span className="hidden sm:inline">{label}</span>
       <span className="sm:hidden">{label.split(' ')[0]}</span>
     </button>
@@ -2305,21 +2306,23 @@ function AuthModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (emai
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
-      <div className="bg-[var(--bg-card)] border-t sm:border border-[var(--border)] rounded-t-3xl sm:rounded-lg p-6 sm:p-8 w-full sm:max-w-sm scale-in" onClick={e => e.stopPropagation()}>
-        <div className="w-10 h-1 bg-white/10 rounded-full mx-auto mb-6 sm:hidden" />
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
+      <div className="relative bg-[var(--bg-card)] border-t sm:border border-[var(--border)] rounded-t-2xl sm:rounded-lg p-6 sm:p-8 w-full sm:max-w-sm scale-in" onClick={e => e.stopPropagation()}>
+        <div className="absolute inset-0 rounded-t-2xl sm:rounded-lg bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
+        <div className="relative">
+        <div className="w-8 h-0.5 bg-white/10 rounded-full mx-auto mb-5 sm:hidden" />
 
         {/* Close button */}
-        <button onClick={onClose} className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-white/5 text-[var(--text-faint)] hover:text-white">
+        <button onClick={onClose} className="absolute top-0 right-0 p-1.5 rounded hover:bg-white/5 text-[var(--text-faint)] hover:text-white">
           <X className="w-4 h-4" />
         </button>
 
-        <div className="text-center mb-6">
-          <div className="w-12 h-12 rounded-lg bg-[#f0b90b] flex items-center justify-center mx-auto mb-3 shadow-lg shadow-[#1e90ff]/20">
-            <User className="w-6 h-6 text-white" />
+        <div className="text-center mb-5">
+          <div className="w-10 h-10 rounded bg-[#f0b90b] flex items-center justify-center mx-auto mb-3 shadow-[0_0_12px_rgba(240,185,11,0.3)]">
+            <User className="w-5 h-5 text-[#0b0e11]" />
           </div>
-          <h2 className="text-xl font-bold">{isRegister ? 'Create Your Account' : 'Welcome Back'}</h2>
-          <p className="text-sm text-[var(--text-faint)] mt-1">
+          <h2 className="text-base font-bold font-mono uppercase tracking-wide">{isRegister ? 'Create Account' : 'Welcome Back'}</h2>
+          <p className="text-[10px] text-[var(--text-faint)] mt-1 font-mono">
             {isRegister ? 'Get personalized trade recommendations' : 'Sign in to access your portfolio'}
           </p>
         </div>
@@ -2353,7 +2356,7 @@ function AuthModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (emai
               placeholder="Min 6 characters" required minLength={6} />
           </div>
           <button type="submit" disabled={submitting}
-            className="w-full py-3.5 rounded-md bg-[#f0b90b] text-[#0b0e11] font-semibold text-sm disabled:opacity-50 hover:opacity-90 active:scale-[0.98] transition-all mt-2 shadow-lg shadow-[#1e90ff]/20">
+            className="w-full py-3 rounded text-[11px] font-bold uppercase tracking-wider bg-[#f0b90b] text-[#0b0e11] disabled:opacity-50 hover:bg-[#d4a30a] active:scale-[0.98] transition-all mt-3 shadow-[0_2px_8px_rgba(240,185,11,0.3)]">
             {submitting ? (
               <span className="flex items-center justify-center gap-2"><RefreshCw className="w-4 h-4 animate-spin" /> Signing {isRegister ? 'up' : 'in'}...</span>
             ) : isRegister ? 'Create Account' : 'Sign In'}
@@ -2363,13 +2366,14 @@ function AuthModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (emai
         <div className="mt-4 pt-4 border-t border-[var(--border)]">
           <p className="text-xs text-center text-[var(--text-faint)]">
             {isRegister ? 'Already have an account?' : "Don't have an account?"}{' '}
-            <button onClick={() => { setIsRegister(!isRegister); setError(''); }} className="text-[#1e90ff] hover:underline font-medium">
+            <button onClick={() => { setIsRegister(!isRegister); setError(''); }} className="text-[#f0b90b] hover:underline font-medium">
               {isRegister ? 'Sign in' : 'Create one free'}
             </button>
           </p>
-          <p className="text-[10px] text-center text-[var(--text-faint)] mt-2 opacity-60">
+          <p className="text-[9px] text-center text-[var(--text-faint)] mt-2 opacity-60 font-mono">
             Data saved locally in your browser. No credit card required.
           </p>
+        </div>
         </div>
       </div>
     </div>
