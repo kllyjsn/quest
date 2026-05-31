@@ -13,7 +13,7 @@ import {
   LayoutDashboard, LineChart, FlaskConical, ShieldCheck,
   Newspaper, History, Bell, BellOff,
   ExternalLink, CheckCircle2, XCircle, Calendar, Plug,
-  Trophy, Radio, Search, Compass, Timer,
+  Trophy, Radio, Search, Compass, Timer, BarChart3,
 } from 'lucide-react';
 import * as api from './lib/api';
 import {
@@ -25,6 +25,9 @@ import {
   generateStressTests, generateICAnalysis, generateHRP, generateMacroRegime,
   generateTransactionCosts,
   findTradeOpportunities, type TradeFinderResult, type TradeOpportunity,
+  logRecommendations, updateTrackedRecommendations, computeTrackingStats,
+  runWalkForwardValidation,
+  type TrackedRecommendation, type TrackingStats, type ScoreValidationResult,
 } from './lib/simulation';
 import {
   type LivePrice, type NewsFeed,
@@ -100,6 +103,10 @@ function App() {
   const [showMoreTabs, setShowMoreTabs] = useState(false);
   const [tradeFinderData, setTradeFinderData] = useState<TradeFinderResult | null>(null);
   const [finderLoading, setFinderLoading] = useState(false);
+  const [trackingStats, setTrackingStats] = useState<TrackingStats | null>(null);
+  const [trackedRecs, setTrackedRecs] = useState<TrackedRecommendation[]>([]);
+  const [walkForwardData, setWalkForwardData] = useState<ScoreValidationResult | null>(null);
+  const [wfLoading, setWfLoading] = useState(false);
 
   // Real-time price subscription
   useEffect(() => {
@@ -160,12 +167,29 @@ function App() {
     try {
       const result = await findTradeOpportunities();
       setTradeFinderData(result);
+      // Auto-log recommendations for live tracking
+      logRecommendations(result.opportunities);
+      // Update tracked recommendations with current prices
+      const updated = await updateTrackedRecommendations();
+      setTrackedRecs(updated);
+      setTrackingStats(computeTrackingStats(updated));
     } catch (e: any) { setError(e.message); }
     setFinderLoading(false);
   }, []);
 
+  const loadWalkForward = useCallback(async () => {
+    setWfLoading(true);
+    try {
+      const result = await runWalkForwardValidation();
+      setWalkForwardData(result);
+    } catch (e: any) { setError(e.message); }
+    setWfLoading(false);
+  }, []);
+
   // Auto-load finder on mount
   useEffect(() => { loadFinder(); }, [loadFinder]);
+  // Auto-load walk-forward (runs once)
+  useEffect(() => { loadWalkForward(); }, [loadWalkForward]);
 
   const loadSignals = async () => {
     setLoading(true);
@@ -365,7 +389,7 @@ function App() {
 
       {/* Main content */}
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 pb-24 md:pb-6 slide-up">
-        {tab === 'finder' && <TradeFinderTab data={tradeFinderData} loading={finderLoading} onRefresh={loadFinder} />}
+        {tab === 'finder' && <TradeFinderTab data={tradeFinderData} loading={finderLoading} onRefresh={loadFinder} trackingStats={trackingStats} trackedRecs={trackedRecs} walkForwardData={walkForwardData} wfLoading={wfLoading} />}
         {tab === 'dashboard' && <DashboardTab regime={regime} rankings={rankings} sectors={sectors} onSelectSymbol={loadTechnicals} technicals={technicals} selectedSymbol={selectedSymbol} />}
         {tab === 'signals' && <SignalsTab signals={signals} loading={loading} onRefresh={loadSignals} onSelectSymbol={loadTechnicals} />}
         {tab === 'backtest' && <BacktestTab result={backtestResult} loading={loading} onRun={loadBacktest} monteCarlo={monteCarlo} attribution={attribution} />}
@@ -523,9 +547,14 @@ function EmptyState({ icon: Icon, title, subtitle }: { icon: any; title: string;
 // ██ TRADE FINDER TAB
 // ══════════════════════════════════════════════════════════════════════════════
 
-function TradeFinderTab({ data, loading, onRefresh }: { data: TradeFinderResult | null; loading: boolean; onRefresh: () => void }) {
+function TradeFinderTab({ data, loading, onRefresh, trackingStats, trackedRecs, walkForwardData, wfLoading }: {
+  data: TradeFinderResult | null; loading: boolean; onRefresh: () => void;
+  trackingStats: TrackingStats | null; trackedRecs: TrackedRecommendation[];
+  walkForwardData: ScoreValidationResult | null; wfLoading: boolean;
+}) {
   const [expandedTrade, setExpandedTrade] = useState<string | null>(null);
   const [filterHorizon, setFilterHorizon] = useState<string>('all');
+  const [showValidation, setShowValidation] = useState(false);
 
   const actionColor = (action: string) => {
     switch (action) {
@@ -615,6 +644,176 @@ function TradeFinderTab({ data, loading, onRefresh }: { data: TradeFinderResult 
               <span className="text-[10px] font-bold font-mono" style={{ color: s.strength > 55 ? '#22c55e' : s.strength > 40 ? '#f59e0b' : '#ef4444' }}>{s.strength}</span>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Live Tracking Stats + Walk-Forward Toggle */}
+      {(trackingStats || walkForwardData) && (
+        <div className="space-y-3">
+          {/* Toggle bar */}
+          <div className="flex items-center gap-2">
+            <button onClick={() => setShowValidation(false)}
+              className={`text-[10px] font-semibold px-3 py-1.5 rounded-full transition-all ${!showValidation ? 'bg-[#22c55e]/15 text-[#22c55e] border border-[#22c55e]/30' : 'text-[var(--text-faint)] hover:text-[var(--text-muted)]'}`}>
+              Live Tracking
+            </button>
+            <button onClick={() => setShowValidation(true)}
+              className={`text-[10px] font-semibold px-3 py-1.5 rounded-full transition-all ${showValidation ? 'bg-[#8b5cf6]/15 text-[#8b5cf6] border border-[#8b5cf6]/30' : 'text-[var(--text-faint)] hover:text-[var(--text-muted)]'}`}>
+              Walk-Forward Validation
+            </button>
+          </div>
+
+          {/* Live Tracking Panel */}
+          {!showValidation && trackingStats && (
+            <Card>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-2">
+                  <Target className="w-3.5 h-3.5 text-[#22c55e]" /> Live Recommendation Tracker
+                </h3>
+                <span className="text-[9px] text-[var(--text-faint)]">{trackingStats.totalTracked} tracked · {trackingStats.resolved} resolved</span>
+              </div>
+
+              {trackingStats.resolved > 0 ? (
+                <>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+                    <div className="p-2.5 rounded-xl bg-[#22c55e]/5 border border-[#22c55e]/20 text-center">
+                      <p className="text-[9px] text-[#22c55e]/70 uppercase font-semibold">Measured Win Rate</p>
+                      <p className="font-mono font-bold text-xl text-[#22c55e]">{trackingStats.winRate.toFixed(1)}%</p>
+                      <p className="text-[8px] text-[var(--text-faint)]">{trackingStats.wins}W / {trackingStats.losses}L</p>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-[#3b82f6]/5 border border-[#3b82f6]/20 text-center">
+                      <p className="text-[9px] text-[#3b82f6]/70 uppercase font-semibold">Avg Return</p>
+                      <p className={`font-mono font-bold text-xl ${trackingStats.avgReturn >= 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+                        {trackingStats.avgReturn >= 0 ? '+' : ''}{trackingStats.avgReturn.toFixed(2)}%
+                      </p>
+                      <p className="text-[8px] text-[var(--text-faint)]">per trade</p>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-[#f59e0b]/5 border border-[#f59e0b]/20 text-center">
+                      <p className="text-[9px] text-[#f59e0b]/70 uppercase font-semibold">Profit Factor</p>
+                      <p className="font-mono font-bold text-xl text-[#f59e0b]">{trackingStats.profitFactor.toFixed(2)}x</p>
+                      <p className="text-[8px] text-[var(--text-faint)]">gross W/L</p>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-[#8b5cf6]/5 border border-[#8b5cf6]/20 text-center">
+                      <p className="text-[9px] text-[#8b5cf6]/70 uppercase font-semibold">MTF Edge</p>
+                      <p className="font-mono font-bold text-xl text-[#8b5cf6]">
+                        {trackingStats.mtfWinRate > 0 ? `${trackingStats.mtfWinRate.toFixed(0)}%` : '--'}
+                      </p>
+                      <p className="text-[8px] text-[var(--text-faint)]">vs {trackingStats.nonMtfWinRate.toFixed(0)}% non-MTF</p>
+                    </div>
+                  </div>
+
+                  {/* By Score Bucket */}
+                  <div className="space-y-1">
+                    <p className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider font-semibold">Performance by Score</p>
+                    {Object.entries(trackingStats.byScoreBucket).map(([bucket, stats]) => (
+                      <div key={bucket} className="flex items-center gap-2 text-[10px]">
+                        <span className="w-14 font-mono text-[var(--text-muted)]">{bucket}</span>
+                        <div className="flex-1 h-2 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
+                          <div className="h-full rounded-full" style={{ width: `${stats.count > 0 ? (stats.wins / stats.count) * 100 : 0}%`, background: (stats.wins / stats.count) > 0.6 ? '#22c55e' : (stats.wins / stats.count) > 0.5 ? '#f59e0b' : '#ef4444' }} />
+                        </div>
+                        <span className="w-10 text-right font-mono text-[var(--text-faint)]">{stats.count > 0 ? ((stats.wins / stats.count) * 100).toFixed(0) : 0}%</span>
+                        <span className="w-14 text-right font-mono text-[var(--text-faint)]">n={stats.count}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Streaks */}
+                  <div className="flex items-center gap-4 mt-2 text-[10px] text-[var(--text-faint)]">
+                    <span>Best: {trackingStats.bestTrade ? `${trackingStats.bestTrade.symbol} +${trackingStats.bestTrade.returnPct.toFixed(1)}%` : '--'}</span>
+                    <span>Worst: {trackingStats.worstTrade ? `${trackingStats.worstTrade.symbol} ${trackingStats.worstTrade.returnPct.toFixed(1)}%` : '--'}</span>
+                    <span>Streak: {trackingStats.streaks.maxWin}W / {trackingStats.streaks.maxLoss}L</span>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-6">
+                  <p className="text-sm text-[var(--text-muted)]">Tracking started — results will appear as trades resolve</p>
+                  <p className="text-[10px] text-[var(--text-faint)] mt-1">
+                    {trackedRecs.filter(r => r.outcome === 'pending').length} recommendations pending · checking daily
+                  </p>
+                </div>
+              )}
+            </Card>
+          )}
+
+          {/* Walk-Forward Validation Panel */}
+          {showValidation && (
+            <Card>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-2">
+                  <BarChart3 className="w-3.5 h-3.5 text-[#8b5cf6]" /> Walk-Forward Validation
+                </h3>
+                {walkForwardData && (
+                  <span className={`text-[9px] px-2 py-0.5 rounded-full font-semibold ${walkForwardData.statSignificant ? 'bg-[#22c55e]/10 text-[#22c55e]' : 'bg-[#f59e0b]/10 text-[#f59e0b]'}`}>
+                    {walkForwardData.statSignificant ? 'Statistically Significant' : 'Needs More Data'}
+                  </span>
+                )}
+              </div>
+
+              {wfLoading ? (
+                <div className="text-center py-8">
+                  <Search className="w-6 h-6 text-[#8b5cf6] animate-pulse mx-auto mb-2" />
+                  <p className="text-xs text-[var(--text-muted)]">Running walk-forward backtest on historical data...</p>
+                </div>
+              ) : walkForwardData ? (
+                <>
+                  {/* Summary Stats */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+                    <div className="p-2.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-center">
+                      <p className="text-[9px] text-[var(--text-faint)] uppercase font-semibold">Trades Tested</p>
+                      <p className="font-mono font-bold text-lg">{walkForwardData.totalTrades}</p>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-center">
+                      <p className="text-[9px] text-[var(--text-faint)] uppercase font-semibold">Score-Return r</p>
+                      <p className={`font-mono font-bold text-lg ${walkForwardData.scoreCorrelation > 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+                        {walkForwardData.scoreCorrelation > 0 ? '+' : ''}{walkForwardData.scoreCorrelation.toFixed(3)}
+                      </p>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-center">
+                      <p className="text-[9px] text-[var(--text-faint)] uppercase font-semibold">High vs Low Edge</p>
+                      <p className={`font-mono font-bold text-lg ${walkForwardData.highScoreEdge > 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+                        {walkForwardData.highScoreEdge > 0 ? '+' : ''}{walkForwardData.highScoreEdge.toFixed(1)}%
+                      </p>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-center">
+                      <p className="text-[9px] text-[var(--text-faint)] uppercase font-semibold">t-Statistic</p>
+                      <p className={`font-mono font-bold text-lg ${Math.abs(walkForwardData.tStatistic) > 1.96 ? 'text-[#22c55e]' : 'text-[#f59e0b]'}`}>
+                        {walkForwardData.tStatistic.toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Score Bucket Breakdown */}
+                  <div className="space-y-1.5 mb-3">
+                    <p className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider font-semibold">Score → Forward Returns</p>
+                    {walkForwardData.buckets.map(b => (
+                      <div key={b.label} className="flex items-center gap-2 p-2 rounded-lg bg-[var(--bg-secondary)]/50">
+                        <span className="text-[10px] font-semibold w-28 shrink-0 text-[var(--text-muted)]">{b.label}</span>
+                        <div className="flex-1">
+                          <div className="h-3 bg-[var(--bg-primary)] rounded-full overflow-hidden">
+                            <div className="h-full rounded-full transition-all" style={{
+                              width: `${Math.max(5, b.winRate)}%`,
+                              background: b.winRate > 60 ? '#22c55e' : b.winRate > 50 ? '#f59e0b' : '#ef4444'
+                            }} />
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0 w-24">
+                          <span className="text-[10px] font-mono font-semibold" style={{ color: b.winRate > 55 ? '#22c55e' : b.winRate > 50 ? '#f59e0b' : '#ef4444' }}>
+                            {b.winRate.toFixed(1)}% win
+                          </span>
+                          <span className="text-[9px] text-[var(--text-faint)] ml-1">
+                            ({b.avgReturn >= 0 ? '+' : ''}{b.avgReturn.toFixed(2)}%)
+                          </span>
+                        </div>
+                        <span className="text-[9px] text-[var(--text-faint)] w-10 text-right">n={b.trades}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Methodology */}
+                  <p className="text-[9px] text-[var(--text-faint)] italic leading-relaxed">{walkForwardData.methodology}</p>
+                </>
+              ) : null}
+            </Card>
+          )}
         </div>
       )}
 
