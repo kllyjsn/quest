@@ -2464,3 +2464,349 @@ export async function generateTransactionCosts(): Promise<TransactionCostResult>
         : 'LOW COST: Execution costs are manageable at current position sizes',
   };
 }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ██ TRADE FINDER — Real-time Opportunity Scanner
+// ══════════════════════════════════════════════════════════════════════════════
+
+export interface TradeOpportunity {
+  symbol: string;
+  sector: string;
+  action: 'STRONG BUY' | 'BUY' | 'ACCUMULATE' | 'WATCH';
+  score: number; // 0-100 composite opportunity score
+  confidence: number; // signal alignment %
+  currentPrice: number;
+  entryPrice: number;
+  targetPrice: number;
+  stopLoss: number;
+  riskRewardRatio: number;
+  timeHorizon: {
+    label: string; // "1-3 Days", "1-2 Weeks", "2-4 Weeks", "1-3 Months"
+    days: number;
+    type: 'scalp' | 'swing' | 'position' | 'trend';
+  };
+  analysis: {
+    momentum: { value: number; signal: 'bullish' | 'bearish' | 'neutral'; detail: string };
+    rsi: { value: number; signal: 'oversold' | 'overbought' | 'neutral'; detail: string };
+    macd: { histogram: number; signal: 'bullish' | 'bearish'; detail: string };
+    bollinger: { percentB: number; width: number; signal: 'squeeze' | 'breakout' | 'normal'; detail: string };
+    quality: { value: number; signal: 'strong' | 'moderate' | 'weak'; detail: string };
+    volatility: { annualized: number; atr: number; signal: 'low' | 'moderate' | 'high'; detail: string };
+    volume: { relative: number; signal: 'surge' | 'above_avg' | 'normal' | 'below_avg'; detail: string };
+  };
+  catalysts: string[];
+  risks: string[];
+  positionSize: { pctOfPortfolio: number; dollarAmount: number; shares: number };
+  expectedReturn: number; // % expected from entry to target
+  maxRisk: number; // % risk from entry to stop
+  updatedAt: number;
+}
+
+export interface TradeFinderResult {
+  opportunities: TradeOpportunity[];
+  marketCondition: string;
+  regime: string;
+  scannedAt: number;
+  totalScanned: number;
+  dataSource: 'real' | 'simulated';
+  marketBias: 'bullish' | 'bearish' | 'neutral';
+  sectorRotation: { sector: string; strength: number; recommendation: string }[];
+}
+
+const TRADE_FINDER_CACHE_KEY = 'quest_trade_finder_cache';
+const TRADE_FINDER_CACHE_DURATION = 5 * 60 * 1000; // 5 min cache
+
+export async function findTradeOpportunities(portfolioSize = 10000): Promise<TradeFinderResult> {
+  // Check cache
+  const cached = localStorage.getItem(TRADE_FINDER_CACHE_KEY);
+  if (cached) {
+    try {
+      const parsed = JSON.parse(cached);
+      if (Date.now() - parsed._ts < TRADE_FINDER_CACHE_DURATION) {
+        return parsed.result;
+      }
+    } catch { /* ignore */ }
+  }
+
+  const symbols = STOCKS.map(s => s.symbol);
+  const priceData = await fetchRealPrices(symbols);
+  const hasRealData = Object.keys(priceData).length >= 5;
+
+  // Detect regime
+  const allCloses = Object.values(priceData).map(d => d.closes);
+  const regime = hasRealData ? detectRegimeFromPrices(allCloses) : 'sideways';
+
+  const opportunities: TradeOpportunity[] = [];
+
+  for (const stock of STOCKS) {
+    const data = priceData[stock.symbol];
+    if (!data || data.closes.length < 30) continue;
+
+    const closes = data.closes;
+    const price = closes[closes.length - 1];
+    if (!price || price <= 0) continue;
+
+    // Compute all technical indicators
+    const momentum = computeMomentum(closes);
+    const rsi = computeRSI(closes);
+    const vol = computeVolatility(closes);
+    const quality = computeQuality(closes);
+    const atr = computeATR(closes);
+    const { histogram: macdHist, signal: macdSig } = computeMACD(closes);
+    const { width: bbWidth, percentB: bbPctB } = computeBollingerWidth(closes);
+    const { confidence } = computeConfirmationScore(momentum, rsi, quality, vol, macdSig, bbPctB, bbWidth);
+
+    // Volume analysis (compare recent to average)
+    const recentVol = closes.slice(-5);
+    const avgRange = closes.slice(-20, -5);
+    const recentAvgMove = recentVol.reduce((s, c, i) => i > 0 ? s + Math.abs(c - recentVol[i-1]) : s, 0) / (recentVol.length - 1);
+    const histAvgMove = avgRange.reduce((s, c, i) => i > 0 ? s + Math.abs(c - avgRange[i-1]) : s, 0) / (avgRange.length - 1);
+    const relativeVolume = histAvgMove > 0 ? recentAvgMove / histAvgMove : 1;
+
+    // Compute opportunity score (0-100)
+    let score = 0;
+
+    // Momentum contribution (0-25)
+    if (momentum > 0.05) score += 25;
+    else if (momentum > 0.02) score += 20;
+    else if (momentum > 0) score += 12;
+    else if (momentum > -0.02) score += 5;
+
+    // RSI contribution (0-20) - oversold = high opportunity
+    if (rsi < 30) score += 20; // deeply oversold — reversal potential
+    else if (rsi < 40) score += 15;
+    else if (rsi < 55) score += 10;
+    else if (rsi < 70) score += 5;
+
+    // Quality/trend (0-20)
+    score += Math.round(quality * 20);
+
+    // MACD signal (0-15)
+    if (macdSig > 0 && macdHist > 0) score += 15;
+    else if (macdSig > 0) score += 10;
+    else if (macdHist > 0) score += 5;
+
+    // Bollinger squeeze (0-10) — impending breakout
+    if (bbWidth < 0.05) score += 10;
+    else if (bbWidth < 0.08) score += 7;
+    else if (bbPctB > 0.3 && bbPctB < 0.7) score += 4;
+
+    // Volume surge bonus (0-10)
+    if (relativeVolume > 1.5) score += 10;
+    else if (relativeVolume > 1.2) score += 6;
+    else if (relativeVolume > 0.8) score += 3;
+
+    // Minimum threshold
+    if (score < 35) continue;
+
+    // Determine time horizon based on indicators
+    const timeHorizon = determineTimeHorizon(momentum, rsi, bbWidth, vol, quality);
+
+    // Calculate target and stop
+    const targetMultiplier = timeHorizon.type === 'scalp' ? 1.5
+      : timeHorizon.type === 'swing' ? 2.5
+      : timeHorizon.type === 'position' ? 3.5
+      : 4.0;
+    const stopDistance = atr * 2.0;
+    const targetDistance = atr * targetMultiplier;
+    const entryPrice = price; // current price as entry
+    const targetPrice = price + targetDistance;
+    const stopLoss = price - stopDistance;
+    const riskReward = stopDistance > 0 ? targetDistance / stopDistance : 0;
+    const expectedReturn = ((targetPrice - entryPrice) / entryPrice) * 100;
+    const maxRisk = ((entryPrice - stopLoss) / entryPrice) * 100;
+
+    // Position sizing (risk 1.5% of portfolio per trade)
+    const riskPerShare = entryPrice - stopLoss;
+    const maxShares = riskPerShare > 0 ? Math.floor((portfolioSize * 0.015) / riskPerShare) : 0;
+    const positionDollars = maxShares * entryPrice;
+    const pctOfPortfolio = (positionDollars / portfolioSize) * 100;
+
+    // Determine action
+    const action: TradeOpportunity['action'] = score >= 75 ? 'STRONG BUY'
+      : score >= 60 ? 'BUY'
+      : score >= 45 ? 'ACCUMULATE'
+      : 'WATCH';
+
+    // Build detailed analysis
+    const analysis = buildDetailedAnalysis(momentum, rsi, macdHist, macdSig, bbPctB, bbWidth, quality, vol, atr, relativeVolume);
+
+    // Generate catalysts and risks
+    const catalysts = generateCatalysts(momentum, rsi, macdSig, bbWidth, quality, regime);
+    const risks = generateRisks(vol, rsi, bbPctB, regime, relativeVolume);
+
+    opportunities.push({
+      symbol: stock.symbol,
+      sector: stock.sector,
+      action,
+      score,
+      confidence,
+      currentPrice: price,
+      entryPrice,
+      targetPrice: Math.round(targetPrice * 100) / 100,
+      stopLoss: Math.round(stopLoss * 100) / 100,
+      riskRewardRatio: Math.round(riskReward * 100) / 100,
+      timeHorizon,
+      analysis,
+      catalysts,
+      risks,
+      positionSize: { pctOfPortfolio: Math.round(pctOfPortfolio * 10) / 10, dollarAmount: Math.round(positionDollars), shares: maxShares },
+      expectedReturn: Math.round(expectedReturn * 100) / 100,
+      maxRisk: Math.round(maxRisk * 100) / 100,
+      updatedAt: Date.now(),
+    });
+  }
+
+  // Sort by score descending
+  opportunities.sort((a, b) => b.score - a.score);
+
+  // Sector rotation analysis
+  const sectorStrength: Record<string, number[]> = {};
+  for (const opp of opportunities) {
+    if (!sectorStrength[opp.sector]) sectorStrength[opp.sector] = [];
+    sectorStrength[opp.sector].push(opp.score);
+  }
+  const sectorRotation = Object.entries(sectorStrength).map(([sector, scores]) => ({
+    sector,
+    strength: Math.round(scores.reduce((a, b) => a + b, 0) / scores.length),
+    recommendation: scores.reduce((a, b) => a + b, 0) / scores.length > 60 ? 'Overweight' : scores.reduce((a, b) => a + b, 0) / scores.length > 40 ? 'Neutral' : 'Underweight',
+  })).sort((a, b) => b.strength - a.strength);
+
+  // Market bias
+  const avgScore = opportunities.length > 0 ? opportunities.reduce((s, o) => s + o.score, 0) / opportunities.length : 50;
+  const marketBias: 'bullish' | 'bearish' | 'neutral' = avgScore > 55 ? 'bullish' : avgScore < 40 ? 'bearish' : 'neutral';
+
+  const result: TradeFinderResult = {
+    opportunities: opportunities.slice(0, 20), // top 20
+    marketCondition: regime === 'bull' ? 'Risk-On — Favorable for long positions' : regime === 'bear' ? 'Risk-Off — Defensive positioning recommended' : 'Mixed — Selective opportunities only',
+    regime,
+    scannedAt: Date.now(),
+    totalScanned: symbols.length,
+    dataSource: hasRealData ? 'real' : 'simulated',
+    marketBias,
+    sectorRotation,
+  };
+
+  // Cache
+  localStorage.setItem(TRADE_FINDER_CACHE_KEY, JSON.stringify({ result, _ts: Date.now() }));
+  return result;
+}
+
+function determineTimeHorizon(
+  momentum: number, rsi: number, bbWidth: number, vol: number, quality: number
+): TradeOpportunity['timeHorizon'] {
+  // Scalp: very tight Bollinger + low vol + RSI extreme
+  if (bbWidth < 0.04 && vol < 0.2 && (rsi < 25 || rsi > 75)) {
+    return { label: '1-3 Days', days: 2, type: 'scalp' };
+  }
+  // Swing: moderate setup, RSI oversold/mean reversion
+  if (rsi < 35 || (bbWidth < 0.06 && momentum > 0)) {
+    return { label: '3-7 Days', days: 5, type: 'swing' };
+  }
+  // Position: strong momentum + quality
+  if (momentum > 0.03 && quality > 0.6) {
+    return { label: '2-4 Weeks', days: 21, type: 'position' };
+  }
+  // Trend follow: high quality trend
+  if (quality > 0.7 && momentum > 0.05) {
+    return { label: '1-3 Months', days: 60, type: 'trend' };
+  }
+  // Default: swing
+  return { label: '1-2 Weeks', days: 10, type: 'swing' };
+}
+
+function buildDetailedAnalysis(
+  momentum: number, rsi: number, macdHist: number, macdSig: number,
+  bbPctB: number, bbWidth: number, quality: number, vol: number, atr: number, relVol: number
+): TradeOpportunity['analysis'] {
+  return {
+    momentum: {
+      value: Math.round(momentum * 10000) / 100,
+      signal: momentum > 0.02 ? 'bullish' : momentum < -0.02 ? 'bearish' : 'neutral',
+      detail: momentum > 0.05 ? 'Strong uptrend — price accelerating above 20-day average'
+        : momentum > 0.02 ? 'Positive drift — steady buying pressure'
+        : momentum > -0.02 ? 'Consolidating — no clear directional bias'
+        : 'Downtrend — wait for reversal confirmation',
+    },
+    rsi: {
+      value: Math.round(rsi * 10) / 10,
+      signal: rsi < 30 ? 'oversold' : rsi > 70 ? 'overbought' : 'neutral',
+      detail: rsi < 25 ? 'Deeply oversold — high probability mean-reversion bounce'
+        : rsi < 35 ? 'Approaching oversold — accumulation zone'
+        : rsi < 55 ? 'Healthy neutral zone — room to run'
+        : rsi < 70 ? 'Approaching resistance — tighten stops'
+        : 'Overbought — distribution likely, avoid new entries',
+    },
+    macd: {
+      histogram: Math.round(macdHist * 100) / 100,
+      signal: macdSig > 0 ? 'bullish' : 'bearish',
+      detail: macdSig > 0 && macdHist > 0 ? 'Bullish crossover with expanding histogram — strong momentum'
+        : macdSig > 0 ? 'Above signal line but losing momentum — watch for divergence'
+        : macdHist > 0 ? 'Histogram turning positive — potential crossover forming'
+        : 'Below signal line — wait for bullish crossover before entry',
+    },
+    bollinger: {
+      percentB: Math.round(bbPctB * 100) / 100,
+      width: Math.round(bbWidth * 1000) / 1000,
+      signal: bbWidth < 0.05 ? 'squeeze' : bbWidth > 0.12 ? 'breakout' : 'normal',
+      detail: bbWidth < 0.04 ? 'Extreme squeeze — explosive breakout imminent (direction TBD by other signals)'
+        : bbWidth < 0.06 ? 'Tight range compression — breakout likely within 1-3 days'
+        : bbWidth < 0.10 ? 'Normal volatility band — using %B for entry timing'
+        : 'Expanded bands — trend in progress, trail stops wider',
+    },
+    quality: {
+      value: Math.round(quality * 100) / 100,
+      signal: quality > 0.7 ? 'strong' : quality > 0.4 ? 'moderate' : 'weak',
+      detail: quality > 0.8 ? 'Exceptional trend consistency (R² > 0.8) — high predictability'
+        : quality > 0.6 ? 'Clean uptrend with minor noise — ride with confidence'
+        : quality > 0.4 ? 'Moderate trend quality — size smaller, expect chop'
+        : 'Low trend quality — avoid trend-following, consider mean-reversion only',
+    },
+    volatility: {
+      annualized: Math.round(vol * 100) / 100,
+      atr: Math.round(atr * 100) / 100,
+      signal: vol < 0.2 ? 'low' : vol < 0.4 ? 'moderate' : 'high',
+      detail: vol < 0.15 ? 'Very low volatility — smaller moves, higher Sharpe potential'
+        : vol < 0.25 ? 'Normal volatility — standard sizing appropriate'
+        : vol < 0.4 ? 'Elevated volatility — reduce position size, widen stops'
+        : 'Extreme volatility — only small speculative positions',
+    },
+    volume: {
+      relative: Math.round(relVol * 100) / 100,
+      signal: relVol > 2.0 ? 'surge' : relVol > 1.3 ? 'above_avg' : relVol > 0.7 ? 'normal' : 'below_avg',
+      detail: relVol > 2.0 ? 'Volume surge — institutional activity likely, confirms direction'
+        : relVol > 1.3 ? 'Above-average activity — conviction behind the move'
+        : relVol > 0.7 ? 'Normal volume — no unusual activity'
+        : 'Below-average volume — lack of conviction, wait for confirmation',
+    },
+  };
+}
+
+function generateCatalysts(
+  momentum: number, rsi: number, macdSig: number, bbWidth: number, quality: number, regime: string
+): string[] {
+  const catalysts: string[] = [];
+  if (momentum > 0.05) catalysts.push('Strong momentum acceleration — trend following signal');
+  if (rsi < 30) catalysts.push('RSI deeply oversold — mean reversion expected within 3-5 days');
+  if (rsi < 40 && momentum > 0) catalysts.push('RSI recovering from oversold + positive momentum = bullish divergence');
+  if (macdSig > 0) catalysts.push('MACD bullish crossover — short-term momentum shifting up');
+  if (bbWidth < 0.05) catalysts.push('Bollinger squeeze — volatility compression precedes explosive move');
+  if (quality > 0.7) catalysts.push('High trend quality (R² > 0.7) — institutional accumulation pattern');
+  if (regime === 'bull') catalysts.push('Bull market regime — favorable for long positions');
+  if (catalysts.length === 0) catalysts.push('Multiple technical indicators converging on buy zone');
+  return catalysts.slice(0, 4);
+}
+
+function generateRisks(
+  vol: number, rsi: number, bbPctB: number, regime: string, relVol: number
+): string[] {
+  const risks: string[] = [];
+  if (vol > 0.4) risks.push('High volatility — wider drawdowns possible, size accordingly');
+  if (rsi > 65) risks.push('RSI approaching overbought — limited upside before pullback');
+  if (bbPctB > 0.9) risks.push('Price at upper Bollinger — short-term mean reversion risk');
+  if (regime === 'bear') risks.push('Bear market regime — systemic headwinds for longs');
+  if (relVol < 0.7) risks.push('Low volume — breakout may lack follow-through');
+  if (regime === 'sideways') risks.push('Choppy market — false breakouts more likely');
+  if (risks.length === 0) risks.push('Standard market risk — manage with trailing stops');
+  return risks.slice(0, 3);
+}

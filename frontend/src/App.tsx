@@ -13,7 +13,7 @@ import {
   LayoutDashboard, LineChart, FlaskConical, ShieldCheck,
   Newspaper, History, Bell, BellOff,
   ExternalLink, CheckCircle2, XCircle, Calendar, Plug,
-  Trophy, Radio,
+  Trophy, Radio, Search, Compass, MapPin, Timer,
 } from 'lucide-react';
 import * as api from './lib/api';
 import {
@@ -24,6 +24,7 @@ import {
   generateWalkForwardCV, generateDeflatedSharpe, generatePCADecomposition,
   generateStressTests, generateICAnalysis, generateHRP, generateMacroRegime,
   generateTransactionCosts,
+  findTradeOpportunities, type TradeFinderResult, type TradeOpportunity,
 } from './lib/simulation';
 import {
   type LivePrice, type NewsFeed,
@@ -39,7 +40,7 @@ import {
   notifyDailyReport,
 } from './lib/realtime';
 
-type Tab = 'dashboard' | 'signals' | 'backtest' | 'risk' | 'broker' | 'paper' | 'research' | 'news' | 'track';
+type Tab = 'dashboard' | 'signals' | 'backtest' | 'risk' | 'broker' | 'paper' | 'research' | 'news' | 'track' | 'finder';
 
 interface RegimeData {
   regime: string;
@@ -59,6 +60,7 @@ interface RankingEntry {
 }
 
 const TABS: { id: Tab; icon: any; label: string; shortLabel: string }[] = [
+  { id: 'finder', icon: Compass, label: 'Trade Finder', shortLabel: 'Finder' },
   { id: 'paper', icon: LineChart, label: 'Paper Trade', shortLabel: 'Paper' },
   { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard', shortLabel: 'Home' },
   { id: 'signals', icon: Crosshair, label: 'Signals', shortLabel: 'Signals' },
@@ -71,10 +73,10 @@ const TABS: { id: Tab; icon: any; label: string; shortLabel: string }[] = [
 ];
 
 // Mobile-only bottom nav shows a subset
-const MOBILE_TABS: Tab[] = ['paper', 'dashboard', 'news', 'track', 'broker'];
+const MOBILE_TABS: Tab[] = ['finder', 'paper', 'dashboard', 'news', 'track'];
 
 function App() {
-  const [tab, setTab] = useState<Tab>('paper');
+  const [tab, setTab] = useState<Tab>('finder');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [user, setUser] = useState<any>(api.getStoredUser());
@@ -96,6 +98,8 @@ function App() {
   const [livePrices, setLivePrices] = useState<Record<string, LivePrice>>({});
   const [newsData, setNewsData] = useState<NewsFeed | null>(null);
   const [showMoreTabs, setShowMoreTabs] = useState(false);
+  const [tradeFinderData, setTradeFinderData] = useState<TradeFinderResult | null>(null);
+  const [finderLoading, setFinderLoading] = useState(false);
 
   // Real-time price subscription
   useEffect(() => {
@@ -150,6 +154,18 @@ function App() {
   }, []);
 
   useEffect(() => { loadDashboard(); }, [loadDashboard]);
+
+  const loadFinder = useCallback(async () => {
+    setFinderLoading(true);
+    try {
+      const result = await findTradeOpportunities();
+      setTradeFinderData(result);
+    } catch (e: any) { setError(e.message); }
+    setFinderLoading(false);
+  }, []);
+
+  // Auto-load finder on mount
+  useEffect(() => { loadFinder(); }, [loadFinder]);
 
   const loadSignals = async () => {
     setLoading(true);
@@ -349,6 +365,7 @@ function App() {
 
       {/* Main content */}
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 pb-24 md:pb-6 slide-up">
+        {tab === 'finder' && <TradeFinderTab data={tradeFinderData} loading={finderLoading} onRefresh={loadFinder} />}
         {tab === 'dashboard' && <DashboardTab regime={regime} rankings={rankings} sectors={sectors} onSelectSymbol={loadTechnicals} technicals={technicals} selectedSymbol={selectedSymbol} />}
         {tab === 'signals' && <SignalsTab signals={signals} loading={loading} onRefresh={loadSignals} onSelectSymbol={loadTechnicals} />}
         {tab === 'backtest' && <BacktestTab result={backtestResult} loading={loading} onRun={loadBacktest} monteCarlo={monteCarlo} attribution={attribution} />}
@@ -499,6 +516,291 @@ function EmptyState({ icon: Icon, title, subtitle }: { icon: any; title: string;
       <p className="text-[var(--text-muted)] font-medium">{title}</p>
       {subtitle && <p className="text-xs text-[var(--text-faint)] mt-1.5 max-w-xs mx-auto">{subtitle}</p>}
     </Card>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ██ TRADE FINDER TAB
+// ══════════════════════════════════════════════════════════════════════════════
+
+function TradeFinderTab({ data, loading, onRefresh }: { data: TradeFinderResult | null; loading: boolean; onRefresh: () => void }) {
+  const [expandedTrade, setExpandedTrade] = useState<string | null>(null);
+  const [filterHorizon, setFilterHorizon] = useState<string>('all');
+
+  const actionColor = (action: string) => {
+    switch (action) {
+      case 'STRONG BUY': return '#22c55e';
+      case 'BUY': return '#10b981';
+      case 'ACCUMULATE': return '#f59e0b';
+      default: return '#6b7280';
+    }
+  };
+
+  const horizonIcon = (type: string) => {
+    switch (type) {
+      case 'scalp': return '⚡';
+      case 'swing': return '🎯';
+      case 'position': return '📊';
+      case 'trend': return '🚀';
+      default: return '📈';
+    }
+  };
+
+  const signalDot = (signal: string) => {
+    if (signal === 'bullish' || signal === 'oversold' || signal === 'strong' || signal === 'squeeze' || signal === 'surge' || signal === 'above_avg' || signal === 'low') return '#22c55e';
+    if (signal === 'bearish' || signal === 'overbought' || signal === 'weak' || signal === 'high' || signal === 'below_avg') return '#ef4444';
+    return '#f59e0b';
+  };
+
+  const filtered = data?.opportunities.filter(o => {
+    if (filterHorizon === 'all') return true;
+    return o.timeHorizon.type === filterHorizon;
+  }) || [];
+
+  return (
+    <div className="space-y-5 sm:space-y-6">
+      <SectionHeader icon={Compass} title="Trade Finder" subtitle="Real-time opportunity scanner with AI-powered analysis" accent="#8b5cf6"
+        action={<ActionButton onClick={onRefresh} loading={loading} icon={RefreshCw} label="Scan Now" variant="primary" />} />
+
+      {/* Market Condition Banner */}
+      {data && (
+        <Card glow={data.marketBias === 'bullish' ? 'glow-green' : data.marketBias === 'bearish' ? 'glow-red' : ''}>
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <p className="text-[10px] text-[var(--text-faint)] uppercase tracking-wider mb-1">Market Condition</p>
+              <p className={`text-lg sm:text-xl font-bold ${data.marketBias === 'bullish' ? 'text-[#22c55e]' : data.marketBias === 'bearish' ? 'text-[#ef4444]' : 'text-[#f59e0b]'}`}>
+                {data.marketCondition}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-bold font-mono text-[#8b5cf6]">{data.opportunities.length}</p>
+              <p className="text-[10px] text-[var(--text-faint)]">opportunities found</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4 mt-3 text-[10px] text-[var(--text-faint)]">
+            <span>Scanned: {data.totalScanned} stocks</span>
+            <span>·</span>
+            <span className="flex items-center gap-1">
+              {data.dataSource === 'real' ? <><Radio className="w-3 h-3 text-[#22c55e]" /> Live Data</> : 'Simulated'}
+            </span>
+            <span>·</span>
+            <span>{new Date(data.scannedAt).toLocaleTimeString()}</span>
+          </div>
+        </Card>
+      )}
+
+      {/* Filter Bar */}
+      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+        {[
+          { id: 'all', label: 'All', icon: '🔍' },
+          { id: 'scalp', label: '1-3 Days', icon: '⚡' },
+          { id: 'swing', label: '3-7 Days', icon: '🎯' },
+          { id: 'position', label: '2-4 Weeks', icon: '📊' },
+          { id: 'trend', label: '1-3 Months', icon: '🚀' },
+        ].map(f => (
+          <button key={f.id} onClick={() => setFilterHorizon(f.id)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${filterHorizon === f.id ? 'bg-[#8b5cf6] text-white' : 'bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-muted)] hover:border-[#8b5cf6]/50'}`}>
+            <span>{f.icon}</span> {f.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Sector Rotation Quick View */}
+      {data && data.sectorRotation.length > 0 && (
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+          {data.sectorRotation.slice(0, 6).map(s => (
+            <div key={s.sector} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border)] whitespace-nowrap shrink-0">
+              <div className={`w-2 h-2 rounded-full ${s.recommendation === 'Overweight' ? 'bg-[#22c55e]' : s.recommendation === 'Neutral' ? 'bg-[#f59e0b]' : 'bg-[#ef4444]'}`} />
+              <span className="text-[10px] font-medium text-[var(--text-muted)]">{s.sector}</span>
+              <span className="text-[10px] font-bold font-mono" style={{ color: s.strength > 55 ? '#22c55e' : s.strength > 40 ? '#f59e0b' : '#ef4444' }}>{s.strength}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Loading state */}
+      {loading && !data && (
+        <Card className="text-center py-12">
+          <div className="w-12 h-12 rounded-2xl bg-[#8b5cf6]/10 flex items-center justify-center mx-auto mb-4">
+            <Search className="w-6 h-6 text-[#8b5cf6] animate-pulse" />
+          </div>
+          <p className="text-[var(--text-muted)] font-medium">Scanning 50 stocks across 11 sectors...</p>
+          <p className="text-xs text-[var(--text-faint)] mt-1">Analyzing momentum, RSI, MACD, Bollinger, quality, volume</p>
+        </Card>
+      )}
+
+      {/* Opportunity Cards */}
+      {filtered.length > 0 ? (
+        <div className="space-y-3">
+          {filtered.map((opp, idx) => (
+            <TradeOpportunityCard
+              key={opp.symbol}
+              opportunity={opp}
+              rank={idx + 1}
+              expanded={expandedTrade === opp.symbol}
+              onToggle={() => setExpandedTrade(expandedTrade === opp.symbol ? null : opp.symbol)}
+              actionColor={actionColor}
+              horizonIcon={horizonIcon}
+              signalDot={signalDot}
+            />
+          ))}
+        </div>
+      ) : data && !loading ? (
+        <Card className="text-center py-12">
+          <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center mx-auto mb-4">
+            <Target className="w-7 h-7 text-[var(--text-faint)]" />
+          </div>
+          <p className="text-[var(--text-muted)] font-medium">No opportunities match your filter</p>
+          <p className="text-xs text-[var(--text-faint)] mt-1">Try selecting a different time horizon</p>
+        </Card>
+      ) : null}
+    </div>
+  );
+}
+
+function TradeOpportunityCard({ opportunity: opp, rank, expanded, onToggle, actionColor, horizonIcon, signalDot }: {
+  opportunity: TradeOpportunity; rank: number; expanded: boolean; onToggle: () => void;
+  actionColor: (a: string) => string; horizonIcon: (t: string) => string; signalDot: (s: string) => string;
+}) {
+  return (
+    <div className={`rounded-2xl border transition-all overflow-hidden ${expanded ? 'border-[#8b5cf6]/40 bg-[var(--bg-card)]' : 'border-[var(--border)] bg-[var(--bg-card)] hover:border-[var(--border-emphasis)]'}`}>
+      {/* Header — always visible */}
+      <button onClick={onToggle} className="w-full p-3.5 sm:p-4 text-left">
+        <div className="flex items-center gap-3">
+          {/* Rank badge */}
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 font-bold text-sm" style={{ background: `${actionColor(opp.action)}15`, color: actionColor(opp.action) }}>
+            #{rank}
+          </div>
+
+          {/* Main info */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-0.5">
+              <span className="font-mono font-bold text-sm sm:text-base">{opp.symbol}</span>
+              <span className="text-[9px] px-2 py-0.5 rounded-full font-bold" style={{ background: `${actionColor(opp.action)}15`, color: actionColor(opp.action) }}>
+                {opp.action}
+              </span>
+              <span className="text-[9px] px-2 py-0.5 rounded-full bg-[#8b5cf6]/10 text-[#8b5cf6] font-semibold hidden sm:inline-flex items-center gap-1">
+                {horizonIcon(opp.timeHorizon.type)} {opp.timeHorizon.label}
+              </span>
+            </div>
+            <div className="flex items-center gap-3 text-[10px] text-[var(--text-faint)]">
+              <span>{opp.sector}</span>
+              <span className="font-mono">${opp.currentPrice.toFixed(2)}</span>
+              <span className="sm:hidden">{horizonIcon(opp.timeHorizon.type)} {opp.timeHorizon.label}</span>
+            </div>
+          </div>
+
+          {/* Score + R:R */}
+          <div className="text-right shrink-0">
+            <div className="flex items-center gap-1.5 justify-end mb-0.5">
+              <div className="w-12 h-2 rounded-full bg-[var(--bg-secondary)] overflow-hidden">
+                <div className="h-full rounded-full transition-all" style={{ width: `${opp.score}%`, background: opp.score > 70 ? '#22c55e' : opp.score > 50 ? '#f59e0b' : '#6b7280' }} />
+              </div>
+              <span className="text-xs font-bold font-mono" style={{ color: opp.score > 70 ? '#22c55e' : opp.score > 50 ? '#f59e0b' : '#6b7280' }}>{opp.score}</span>
+            </div>
+            <p className="text-[10px] text-[var(--text-faint)]">R:R {opp.riskRewardRatio}x · +{opp.expectedReturn}%</p>
+          </div>
+
+          <ChevronDown className={`w-4 h-4 text-[var(--text-faint)] transition-transform shrink-0 ${expanded ? 'rotate-180' : ''}`} />
+        </div>
+      </button>
+
+      {/* Expanded Detail */}
+      {expanded && (
+        <div className="px-3.5 sm:px-4 pb-4 space-y-4 border-t border-[var(--border)] pt-4">
+          {/* Price Levels */}
+          <div className="grid grid-cols-3 gap-2">
+            <div className="p-3 rounded-xl bg-[#22c55e]/5 border border-[#22c55e]/20 text-center">
+              <p className="text-[9px] text-[#22c55e]/70 uppercase tracking-wider font-semibold mb-1">Target</p>
+              <p className="font-mono font-bold text-sm text-[#22c55e]">${opp.targetPrice.toFixed(2)}</p>
+              <p className="text-[9px] text-[#22c55e]/60">+{opp.expectedReturn}%</p>
+            </div>
+            <div className="p-3 rounded-xl bg-[#3b82f6]/5 border border-[#3b82f6]/20 text-center">
+              <p className="text-[9px] text-[#3b82f6]/70 uppercase tracking-wider font-semibold mb-1">Entry</p>
+              <p className="font-mono font-bold text-sm text-[#3b82f6]">${opp.entryPrice.toFixed(2)}</p>
+              <p className="text-[9px] text-[#3b82f6]/60">Now</p>
+            </div>
+            <div className="p-3 rounded-xl bg-[#ef4444]/5 border border-[#ef4444]/20 text-center">
+              <p className="text-[9px] text-[#ef4444]/70 uppercase tracking-wider font-semibold mb-1">Stop Loss</p>
+              <p className="font-mono font-bold text-sm text-[#ef4444]">${opp.stopLoss.toFixed(2)}</p>
+              <p className="text-[9px] text-[#ef4444]/60">-{opp.maxRisk}%</p>
+            </div>
+          </div>
+
+          {/* Time Horizon + Position Size */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)]">
+              <div className="flex items-center gap-2 mb-1">
+                <Timer className="w-3.5 h-3.5 text-[#8b5cf6]" />
+                <span className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider font-semibold">Hold Period</span>
+              </div>
+              <p className="font-bold text-sm">{opp.timeHorizon.label}</p>
+              <p className="text-[10px] text-[var(--text-faint)] capitalize">{opp.timeHorizon.type} trade · ~{opp.timeHorizon.days} days</p>
+            </div>
+            <div className="p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)]">
+              <div className="flex items-center gap-2 mb-1">
+                <DollarSign className="w-3.5 h-3.5 text-[#22c55e]" />
+                <span className="text-[9px] text-[var(--text-faint)] uppercase tracking-wider font-semibold">Position Size</span>
+              </div>
+              <p className="font-bold text-sm">${opp.positionSize.dollarAmount.toLocaleString()}</p>
+              <p className="text-[10px] text-[var(--text-faint)]">{opp.positionSize.shares} shares · {opp.positionSize.pctOfPortfolio}% of portfolio</p>
+            </div>
+          </div>
+
+          {/* Technical Analysis Grid */}
+          <div>
+            <p className="text-[10px] text-[var(--text-faint)] uppercase tracking-wider font-semibold mb-2">Technical Analysis</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+              {Object.entries(opp.analysis).map(([key, val]) => (
+                <div key={key} className="flex items-center gap-2 p-2 rounded-lg bg-[var(--bg-secondary)]/50">
+                  <div className="w-2 h-2 rounded-full shrink-0" style={{ background: signalDot(val.signal) }} />
+                  <span className="text-[10px] font-semibold capitalize w-16 shrink-0 text-[var(--text-muted)]">{key}</span>
+                  <span className="text-[10px] text-[var(--text-faint)] truncate flex-1">{val.detail}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Catalysts & Risks */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <p className="text-[10px] text-[#22c55e] uppercase tracking-wider font-semibold mb-1.5 flex items-center gap-1">
+                <ArrowUpRight className="w-3 h-3" /> Catalysts
+              </p>
+              <div className="space-y-1">
+                {opp.catalysts.map((c, i) => (
+                  <p key={i} className="text-[10px] text-[var(--text-muted)] pl-3 border-l-2 border-[#22c55e]/30">{c}</p>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-[10px] text-[#ef4444] uppercase tracking-wider font-semibold mb-1.5 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" /> Risks
+              </p>
+              <div className="space-y-1">
+                {opp.risks.map((r, i) => (
+                  <p key={i} className="text-[10px] text-[var(--text-muted)] pl-3 border-l-2 border-[#ef4444]/30">{r}</p>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Confidence meter */}
+          <div className="p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)]">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[10px] text-[var(--text-faint)] uppercase tracking-wider font-semibold">Signal Confidence</span>
+              <span className="text-xs font-bold font-mono" style={{ color: opp.confidence > 0.7 ? '#22c55e' : opp.confidence > 0.5 ? '#f59e0b' : '#ef4444' }}>
+                {(opp.confidence * 100).toFixed(0)}%
+              </span>
+            </div>
+            <div className="h-2 bg-[var(--bg-primary)] rounded-full overflow-hidden">
+              <div className="h-full rounded-full transition-all" style={{ width: `${opp.confidence * 100}%`, background: opp.confidence > 0.7 ? '#22c55e' : opp.confidence > 0.5 ? '#f59e0b' : '#ef4444' }} />
+            </div>
+            <p className="text-[9px] text-[var(--text-faint)] mt-1">{Math.round(opp.confidence * 7)}/7 indicators aligned · R:R {opp.riskRewardRatio}:1</p>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
