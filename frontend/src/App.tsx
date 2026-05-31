@@ -13,7 +13,7 @@ import {
   LayoutDashboard, LineChart, FlaskConical, ShieldCheck,
   Newspaper, History, Bell, BellOff,
   ExternalLink, CheckCircle2, XCircle, Calendar, Plug,
-  Trophy, Radio, Search, Compass, MapPin, Timer,
+  Trophy, Radio, Search, Compass, Timer,
 } from 'lucide-react';
 import * as api from './lib/api';
 import {
