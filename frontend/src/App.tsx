@@ -334,137 +334,242 @@ function App() {
   }, [tab]);
 
   return (
-    <div className="min-h-screen bg-[var(--bg-primary)] mesh-bg">
-      {/* ── Header ── */}
-      <header className="glass border-b border-[var(--border)] sticky top-0 z-50" style={{ boxShadow: '0 1px 0 rgba(240, 185, 11, 0.04)' }}>
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-12 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded bg-[#f0b90b] flex items-center justify-center shadow-[0_0_8px_rgba(240,185,11,0.3)]">
-              <Zap className="w-3 h-3 text-[#0b0e11]" />
-            </div>
-            <div className="leading-none">
-              <h1 className="text-[11px] font-bold tracking-[0.08em] font-mono uppercase">Quest</h1>
-              <p className="text-[7px] text-[var(--text-faint)] uppercase tracking-[0.3em] font-medium">Terminal</p>
-            </div>
+    <div className="min-h-screen bg-[var(--bg-primary)] mesh-bg lg:flex">
+      {/* ── Desktop Sidebar (lg+) ── */}
+      <aside className="hidden lg:flex lg:flex-col lg:w-[220px] lg:fixed lg:inset-y-0 lg:left-0 glass border-r border-[var(--border)] z-50">
+        {/* Logo */}
+        <div className="h-14 flex items-center gap-2.5 px-5 border-b border-[var(--border)]">
+          <div className="w-7 h-7 rounded bg-[#f0b90b] flex items-center justify-center shadow-[0_0_8px_rgba(240,185,11,0.3)]">
+            <Zap className="w-3.5 h-3.5 text-[#0b0e11]" />
           </div>
-
-          <div className="flex items-center gap-2 sm:gap-3">
-            {regime && (
-              <div className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono font-semibold
-                ${regime.regime === 'bull' ? 'bg-[#0ecb81]/8 text-[#0ecb81] border border-[#0ecb81]/20' :
-                  regime.regime === 'bear' ? 'bg-[#f6465d]/8 text-[#f6465d] border border-[#f6465d]/20' :
-                    'bg-[#f0b90b]/8 text-[#f0b90b] border border-[#f0b90b]/20'}`}>
-                <span className={`w-1.5 h-1.5 rounded-full pulse-dot ${regime.regime === 'bull' ? 'bg-[#0ecb81]' : regime.regime === 'bear' ? 'bg-[#f6465d]' : 'bg-[#f0b90b]'}`} />
-                {regime.regime.toUpperCase()} {(regime.confidence * 100).toFixed(0)}%
-              </div>
-            )}
-
-            {user ? (
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-2 px-2 py-1 rounded-md bg-white/5 border border-[var(--border)]">
-                  <div className="w-6 h-6 rounded-md bg-[#f0b90b] flex items-center justify-center text-[9px] font-bold text-[#0b0e11]">
-                    {(user.display_name || user.email)?.[0]?.toUpperCase()}
-                  </div>
-                  <span className="text-[11px] font-mono hidden sm:inline max-w-[100px] truncate">{user.display_name || user.email.split('@')[0]}</span>
-                </div>
-                <button onClick={handleLogout} className="p-1.5 rounded-lg hover:bg-white/5 text-[var(--text-faint)] hover:text-white" title="Log out">
-                  <LogOut className="w-4 h-4" />
-                </button>
-              </div>
-            ) : (
-              <button onClick={() => setShowAuth(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#f0b90b] text-[#0b0e11] text-xs font-semibold hover:bg-[#d4a30a] active:scale-95 transition-transform">
-                <LogIn className="w-3.5 h-3.5" /> Sign In
-              </button>
-            )}
-
-            <button onClick={() => {
-              if (tab === 'finder') loadFinder();
-              else if (tab === 'signals') loadSignals();
-              else if (tab === 'news') loadNews();
-              else if (tab === 'research') loadResearch();
-              else loadDashboard();
-            }}
-              className="p-1.5 rounded-lg hover:bg-white/5 text-[var(--text-faint)] hover:text-white active:scale-90 transition-transform" title="Refresh">
-              <RefreshCw className={`w-4 h-4 ${loading || finderLoading ? 'animate-spin' : ''}`} />
-            </button>
+          <div className="leading-none">
+            <h1 className="text-[12px] font-bold tracking-[0.08em] font-mono uppercase">Quest</h1>
+            <p className="text-[8px] text-[var(--text-faint)] uppercase tracking-[0.3em] font-medium">Terminal</p>
           </div>
         </div>
 
-        {/* Desktop tabs */}
-        <div className="hidden md:block max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex gap-1">
-            {TABS.map(({ id, icon: Icon, label }) => (
-              <button key={id} onClick={() => setTab(id)}
-                className={`relative flex items-center gap-2 px-3.5 py-2 text-[11px] font-semibold uppercase tracking-wider transition-all
-                  ${tab === id
-                    ? 'text-[#f0b90b]'
-                    : 'text-[var(--text-faint)] hover:text-[var(--text-muted)]'}`}>
-                <Icon className="w-3.5 h-3.5" />
-                {label}
-                {tab === id && <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#f0b90b]" />}
+        {/* Regime badge */}
+        {regime && (
+          <div className="px-4 pt-4 pb-2">
+            <div className={`flex items-center gap-2 px-3 py-2 rounded text-[10px] font-mono font-bold
+              ${regime.regime === 'bull' ? 'bg-[#0ecb81]/8 text-[#0ecb81] border border-[#0ecb81]/20' :
+                regime.regime === 'bear' ? 'bg-[#f6465d]/8 text-[#f6465d] border border-[#f6465d]/20' :
+                  'bg-[#f0b90b]/8 text-[#f0b90b] border border-[#f0b90b]/20'}`}>
+              <span className={`w-2 h-2 rounded-full pulse-dot ${regime.regime === 'bull' ? 'bg-[#0ecb81]' : regime.regime === 'bear' ? 'bg-[#f6465d]' : 'bg-[#f0b90b]'}`} />
+              {regime.regime.toUpperCase()} {(regime.confidence * 100).toFixed(0)}%
+            </div>
+          </div>
+        )}
+
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-0.5">
+          {TABS.map(({ id, icon: Icon, label }) => (
+            <button key={id} onClick={() => setTab(id)}
+              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded text-[11px] font-semibold uppercase tracking-wider transition-all text-left
+                ${tab === id
+                  ? 'text-[#f0b90b] bg-[#f0b90b]/8 border border-[#f0b90b]/15'
+                  : 'text-[var(--text-faint)] hover:text-[var(--text-muted)] hover:bg-white/[0.03] border border-transparent'}`}>
+              <Icon className="w-4 h-4 shrink-0" />
+              {label}
+            </button>
+          ))}
+        </nav>
+
+        {/* User / Auth at bottom */}
+        <div className="px-3 pb-4 pt-2 border-t border-[var(--border)] mt-auto">
+          {user ? (
+            <div className="flex items-center gap-2 px-2 py-2">
+              <div className="w-7 h-7 rounded bg-[#f0b90b] flex items-center justify-center text-[10px] font-bold text-[#0b0e11]">
+                {(user.display_name || user.email)?.[0]?.toUpperCase()}
+              </div>
+              <span className="text-[11px] font-mono truncate flex-1">{user.display_name || user.email.split('@')[0]}</span>
+              <button onClick={handleLogout} className="p-1.5 rounded hover:bg-white/5 text-[var(--text-faint)] hover:text-white" title="Log out">
+                <LogOut className="w-3.5 h-3.5" />
               </button>
+            </div>
+          ) : (
+            <button onClick={() => setShowAuth(true)}
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded bg-[#f0b90b] text-[#0b0e11] text-[11px] font-bold uppercase tracking-wider hover:bg-[#d4a30a] active:scale-[0.98] transition-all">
+              <LogIn className="w-3.5 h-3.5" /> Sign In
+            </button>
+          )}
+        </div>
+      </aside>
+
+      {/* ── Main Area (offset by sidebar on lg+) ── */}
+      <div className="flex-1 lg:ml-[220px] flex flex-col min-h-screen">
+        {/* ── Mobile/Tablet Header (below lg) ── */}
+        <header className="lg:hidden glass border-b border-[var(--border)] sticky top-0 z-50" style={{ boxShadow: '0 1px 0 rgba(240, 185, 11, 0.04)' }}>
+          <div className="px-4 sm:px-6 h-12 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded bg-[#f0b90b] flex items-center justify-center shadow-[0_0_8px_rgba(240,185,11,0.3)]">
+                <Zap className="w-3 h-3 text-[#0b0e11]" />
+              </div>
+              <div className="leading-none">
+                <h1 className="text-[11px] font-bold tracking-[0.08em] font-mono uppercase">Quest</h1>
+                <p className="text-[7px] text-[var(--text-faint)] uppercase tracking-[0.3em] font-medium">Terminal</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 sm:gap-3">
+              {regime && (
+                <div className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono font-semibold
+                  ${regime.regime === 'bull' ? 'bg-[#0ecb81]/8 text-[#0ecb81] border border-[#0ecb81]/20' :
+                    regime.regime === 'bear' ? 'bg-[#f6465d]/8 text-[#f6465d] border border-[#f6465d]/20' :
+                      'bg-[#f0b90b]/8 text-[#f0b90b] border border-[#f0b90b]/20'}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full pulse-dot ${regime.regime === 'bull' ? 'bg-[#0ecb81]' : regime.regime === 'bear' ? 'bg-[#f6465d]' : 'bg-[#f0b90b]'}`} />
+                  {regime.regime.toUpperCase()} {(regime.confidence * 100).toFixed(0)}%
+                </div>
+              )}
+
+              {user ? (
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 px-2 py-1 rounded-md bg-white/5 border border-[var(--border)]">
+                    <div className="w-6 h-6 rounded-md bg-[#f0b90b] flex items-center justify-center text-[9px] font-bold text-[#0b0e11]">
+                      {(user.display_name || user.email)?.[0]?.toUpperCase()}
+                    </div>
+                    <span className="text-[11px] font-mono hidden sm:inline max-w-[100px] truncate">{user.display_name || user.email.split('@')[0]}</span>
+                  </div>
+                  <button onClick={handleLogout} className="p-1.5 rounded-lg hover:bg-white/5 text-[var(--text-faint)] hover:text-white" title="Log out">
+                    <LogOut className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <button onClick={() => setShowAuth(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#f0b90b] text-[#0b0e11] text-xs font-semibold hover:bg-[#d4a30a] active:scale-95 transition-transform">
+                  <LogIn className="w-3.5 h-3.5" /> Sign In
+                </button>
+              )}
+
+              <button onClick={() => {
+                if (tab === 'finder') loadFinder();
+                else if (tab === 'signals') loadSignals();
+                else if (tab === 'news') loadNews();
+                else if (tab === 'research') loadResearch();
+                else loadDashboard();
+              }}
+                className="p-1.5 rounded-lg hover:bg-white/5 text-[var(--text-faint)] hover:text-white active:scale-90 transition-transform" title="Refresh">
+                <RefreshCw className={`w-4 h-4 ${loading || finderLoading ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
+          </div>
+
+          {/* Tablet tabs (md but not lg) */}
+          <div className="hidden md:block lg:hidden px-4 sm:px-6">
+            <div className="flex gap-1 overflow-x-auto tabs-scroll">
+              {TABS.map(({ id, icon: Icon, label }) => (
+                <button key={id} onClick={() => setTab(id)}
+                  className={`relative flex items-center gap-2 px-3.5 py-2 text-[11px] font-semibold uppercase tracking-wider transition-all whitespace-nowrap
+                    ${tab === id
+                      ? 'text-[#f0b90b]'
+                      : 'text-[var(--text-faint)] hover:text-[var(--text-muted)]'}`}>
+                  <Icon className="w-3.5 h-3.5" />
+                  {label}
+                  {tab === id && <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#f0b90b]" />}
+                </button>
+              ))}
+            </div>
+          </div>
+        </header>
+
+        {/* ── Desktop Top Bar (lg+): ticker + refresh ── */}
+        <div className="hidden lg:flex items-center justify-between h-10 px-6 border-b border-[var(--border)] bg-[var(--bg-primary)]">
+          <div className="overflow-hidden flex-1 mr-4">
+            <div className="flex animate-ticker whitespace-nowrap gap-6">
+              {Object.values(livePrices).length > 0 ? Object.values(livePrices).map(p => (
+                <span key={p.symbol} className="inline-flex items-center gap-1.5 text-[10px] font-mono shrink-0">
+                  <span className="font-semibold text-[var(--text-secondary)]">{p.symbol}</span>
+                  <span className="text-[var(--text-primary)]">${p.price.toFixed(2)}</span>
+                  <span className={p.changePct >= 0 ? 'text-[#0ecb81]' : 'text-[#f6465d]'}>
+                    {p.changePct >= 0 ? '+' : ''}{p.changePct.toFixed(2)}%
+                  </span>
+                </span>
+              )) : (
+                ['AAPL', 'NVDA', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'META'].map(s => (
+                  <span key={s} className="inline-flex items-center gap-1.5 text-[10px] font-mono text-[var(--text-faint)] shrink-0">
+                    {s} <span className="shimmer w-12 h-3 rounded" />
+                  </span>
+                ))
+              )}
+              {Object.values(livePrices).length > 0 && Object.values(livePrices).map(p => (
+                <span key={`${p.symbol}-2`} className="inline-flex items-center gap-1.5 text-[10px] font-mono shrink-0">
+                  <span className="font-semibold text-[var(--text-secondary)]">{p.symbol}</span>
+                  <span className="text-[var(--text-primary)]">${p.price.toFixed(2)}</span>
+                  <span className={p.changePct >= 0 ? 'text-[#0ecb81]' : 'text-[#f6465d]'}>
+                    {p.changePct >= 0 ? '+' : ''}{p.changePct.toFixed(2)}%
+                  </span>
+                </span>
+              ))}
+            </div>
+          </div>
+          <button onClick={() => {
+            if (tab === 'finder') loadFinder();
+            else if (tab === 'signals') loadSignals();
+            else if (tab === 'news') loadNews();
+            else if (tab === 'research') loadResearch();
+            else loadDashboard();
+          }}
+            className="p-1.5 rounded hover:bg-white/5 text-[var(--text-faint)] hover:text-white active:scale-90 transition-transform shrink-0" title="Refresh">
+            <RefreshCw className={`w-3.5 h-3.5 ${loading || finderLoading ? 'animate-spin' : ''}`} />
+          </button>
+        </div>
+
+        {/* Error bar */}
+        {error && (
+          <div className="px-5 sm:px-6 lg:px-8 pt-3">
+            <div className="bg-[#f6465d]/8 border border-[#f6465d]/15 rounded-md px-4 py-2.5 text-[#f6465d] text-xs font-mono flex items-center gap-2 slide-up">
+              <AlertTriangle className="w-4 h-4 shrink-0" />
+              <span className="flex-1 truncate">{error}</span>
+              <button onClick={() => setError('')} className="shrink-0 p-1 hover:bg-[#f6465d]/10 rounded-lg">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Main content */}
+        <main className="flex-1 px-5 sm:px-6 lg:px-8 py-5 sm:py-6 pb-28 md:pb-6 lg:pb-8 slide-up">
+          {tab === 'finder' && <TradeFinderTab data={tradeFinderData} loading={finderLoading} onRefresh={loadFinder} trackingStats={trackingStats} trackedRecs={trackedRecs} walkForwardData={walkForwardData} wfLoading={wfLoading} />}
+          {tab === 'dashboard' && <DashboardTab regime={regime} rankings={rankings} sectors={sectors} onSelectSymbol={loadTechnicals} technicals={technicals} selectedSymbol={selectedSymbol} />}
+          {tab === 'signals' && <SignalsTab signals={signals} loading={loading} onRefresh={loadSignals} onSelectSymbol={loadTechnicals} />}
+          {tab === 'backtest' && <BacktestTab result={backtestResult} loading={loading} onRun={loadBacktest} monteCarlo={monteCarlo} attribution={attribution} />}
+          {tab === 'risk' && <RiskTab limits={riskLimits} correlationMatrix={correlationMatrix} />}
+          {tab === 'research' && <ResearchTab data={researchData} loading={loading} onRefresh={loadResearch} />}
+          {tab === 'broker' && <BrokerTab status={brokerStatus} portfolio={targetPortfolio} />}
+          {tab === 'paper' && <PaperTradingTab livePrices={livePrices} />}
+          {tab === 'news' && <NewsTab data={newsData} loading={loading} onRefresh={loadNews} />}
+          {tab === 'track' && <TrackRecordTab />}
+          {tab === 'docs' && <DocsTab />}
+        </main>
+
+        {/* Mobile ticker (below lg) */}
+        <div className="lg:hidden overflow-hidden border-t border-[var(--border)] bg-[var(--bg-primary)]">
+          <div className="flex animate-ticker whitespace-nowrap py-1 gap-8 px-4">
+            {Object.values(livePrices).length > 0 ? Object.values(livePrices).map(p => (
+              <span key={p.symbol} className="inline-flex items-center gap-1.5 text-[10px] font-mono shrink-0">
+                <span className="font-semibold text-[var(--text-secondary)]">{p.symbol}</span>
+                <span className="text-[var(--text-primary)]">${p.price.toFixed(2)}</span>
+                <span className={p.changePct >= 0 ? 'text-[#0ecb81]' : 'text-[#f6465d]'}>
+                  {p.changePct >= 0 ? '+' : ''}{p.changePct.toFixed(2)}%
+                </span>
+              </span>
+            )) : (
+              ['AAPL', 'NVDA', 'MSFT', 'GOOGL', 'AMZN'].map(s => (
+                <span key={s} className="inline-flex items-center gap-1.5 text-[10px] font-mono text-[var(--text-faint)] shrink-0">
+                  {s} <span className="shimmer w-12 h-3 rounded" />
+                </span>
+              ))
+            )}
+            {Object.values(livePrices).length > 0 && Object.values(livePrices).map(p => (
+              <span key={`${p.symbol}-2`} className="inline-flex items-center gap-1.5 text-[10px] font-mono shrink-0">
+                <span className="font-semibold text-[var(--text-secondary)]">{p.symbol}</span>
+                <span className="text-[var(--text-primary)]">${p.price.toFixed(2)}</span>
+                <span className={p.changePct >= 0 ? 'text-[#0ecb81]' : 'text-[#f6465d]'}>
+                  {p.changePct >= 0 ? '+' : ''}{p.changePct.toFixed(2)}%
+                </span>
+              </span>
             ))}
           </div>
-        </div>
-      </header>
-
-      {/* Error bar */}
-      {error && (
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-3">
-          <div className="bg-[#f6465d]/8 border border-[#f6465d]/15 rounded-md px-4 py-2.5 text-[#f6465d] text-xs font-mono flex items-center gap-2 slide-up">
-            <AlertTriangle className="w-4 h-4 shrink-0" />
-            <span className="flex-1 truncate">{error}</span>
-            <button onClick={() => setError('')} className="shrink-0 p-1 hover:bg-[#f6465d]/10 rounded-lg">
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Main content */}
-      <main className="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8 py-5 sm:py-6 pb-28 md:pb-6 slide-up">
-        {tab === 'finder' && <TradeFinderTab data={tradeFinderData} loading={finderLoading} onRefresh={loadFinder} trackingStats={trackingStats} trackedRecs={trackedRecs} walkForwardData={walkForwardData} wfLoading={wfLoading} />}
-        {tab === 'dashboard' && <DashboardTab regime={regime} rankings={rankings} sectors={sectors} onSelectSymbol={loadTechnicals} technicals={technicals} selectedSymbol={selectedSymbol} />}
-        {tab === 'signals' && <SignalsTab signals={signals} loading={loading} onRefresh={loadSignals} onSelectSymbol={loadTechnicals} />}
-        {tab === 'backtest' && <BacktestTab result={backtestResult} loading={loading} onRun={loadBacktest} monteCarlo={monteCarlo} attribution={attribution} />}
-        {tab === 'risk' && <RiskTab limits={riskLimits} correlationMatrix={correlationMatrix} />}
-        {tab === 'research' && <ResearchTab data={researchData} loading={loading} onRefresh={loadResearch} />}
-        {tab === 'broker' && <BrokerTab status={brokerStatus} portfolio={targetPortfolio} />}
-        {tab === 'paper' && <PaperTradingTab livePrices={livePrices} />}
-        {tab === 'news' && <NewsTab data={newsData} loading={loading} onRefresh={loadNews} />}
-        {tab === 'track' && <TrackRecordTab />}
-        {tab === 'docs' && <DocsTab />}
-      </main>
-
-      {/* Live Price Ticker */}
-      <div className="overflow-hidden border-b border-[var(--border)] bg-[var(--bg-primary)]">
-        <div className="flex animate-ticker whitespace-nowrap py-1 gap-8 px-4">
-          {Object.values(livePrices).length > 0 ? Object.values(livePrices).map(p => (
-            <span key={p.symbol} className="inline-flex items-center gap-1.5 text-[10px] font-mono shrink-0">
-              <span className="font-semibold text-[var(--text-secondary)]">{p.symbol}</span>
-              <span className="text-[var(--text-primary)]">${p.price.toFixed(2)}</span>
-              <span className={p.changePct >= 0 ? 'text-[#0ecb81]' : 'text-[#f6465d]'}>
-                {p.changePct >= 0 ? '+' : ''}{p.changePct.toFixed(2)}%
-              </span>
-            </span>
-          )) : (
-            ['AAPL', 'NVDA', 'MSFT', 'GOOGL', 'AMZN'].map(s => (
-              <span key={s} className="inline-flex items-center gap-1.5 text-[10px] font-mono text-[var(--text-faint)] shrink-0">
-                {s} <span className="shimmer w-12 h-3 rounded" />
-              </span>
-            ))
-          )}
-          {/* Repeat for seamless scroll */}
-          {Object.values(livePrices).length > 0 && Object.values(livePrices).map(p => (
-            <span key={`${p.symbol}-2`} className="inline-flex items-center gap-1.5 text-[10px] font-mono shrink-0">
-              <span className="font-semibold text-[var(--text-secondary)]">{p.symbol}</span>
-              <span className="text-[var(--text-primary)]">${p.price.toFixed(2)}</span>
-              <span className={p.changePct >= 0 ? 'text-[#0ecb81]' : 'text-[#f6465d]'}>
-                {p.changePct >= 0 ? '+' : ''}{p.changePct.toFixed(2)}%
-              </span>
-            </span>
-          ))}
         </div>
       </div>
 
