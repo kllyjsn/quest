@@ -528,7 +528,7 @@ function App() {
         )}
 
         {/* Main content */}
-        <main className="flex-1 px-5 sm:px-6 lg:px-8 py-5 sm:py-6 pb-28 md:pb-6 lg:pb-8 slide-up">
+        <main className="flex-1 px-5 sm:px-6 lg:px-8 xl:px-10 py-5 sm:py-6 lg:py-8 pb-28 md:pb-6 lg:pb-8 slide-up">
           {tab === 'finder' && <TradeFinderTab data={tradeFinderData} loading={finderLoading} onRefresh={loadFinder} trackingStats={trackingStats} trackedRecs={trackedRecs} walkForwardData={walkForwardData} wfLoading={wfLoading} />}
           {tab === 'dashboard' && <DashboardTab regime={regime} rankings={rankings} sectors={sectors} onSelectSymbol={loadTechnicals} technicals={technicals} selectedSymbol={selectedSymbol} />}
           {tab === 'signals' && <SignalsTab signals={signals} loading={loading} onRefresh={loadSignals} onSelectSymbol={loadTechnicals} />}
@@ -626,7 +626,7 @@ function App() {
 
 function Card({ children, className = '', glow = '' }: { children: React.ReactNode; className?: string; glow?: string }) {
   return (
-    <div className={`relative bg-[var(--bg-card)] rounded-lg p-4 sm:p-5 border border-[var(--border)] card-hover ${glow} ${className}`}>
+    <div className={`relative bg-[var(--bg-card)] rounded-lg p-4 sm:p-5 lg:p-6 border border-[var(--border)] card-hover ${glow} ${className}`}>
       <div className="absolute inset-0 rounded-lg bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
       <div className="relative">{children}</div>
     </div>
@@ -636,28 +636,28 @@ function Card({ children, className = '', glow = '' }: { children: React.ReactNo
 function MetricCard({ label, value, sub, icon: Icon, accent = '#f0b90b' }: { label: string; value: string; sub?: string; icon: any; accent?: string }) {
   return (
     <Card>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-[9px] sm:text-[10px] font-semibold text-[var(--text-faint)] uppercase tracking-[0.12em]">{label}</span>
-        <div className="w-6 h-6 rounded flex items-center justify-center" style={{ background: `${accent}08`, color: accent, border: `1px solid ${accent}20` }}>
-          <Icon className="w-3 h-3" />
+      <div className="flex items-center justify-between mb-2 lg:mb-3">
+        <span className="text-[9px] sm:text-[10px] lg:text-[11px] font-semibold text-[var(--text-faint)] uppercase tracking-[0.12em]">{label}</span>
+        <div className="w-6 h-6 lg:w-7 lg:h-7 rounded flex items-center justify-center" style={{ background: `${accent}08`, color: accent, border: `1px solid ${accent}20` }}>
+          <Icon className="w-3 h-3 lg:w-3.5 lg:h-3.5" />
         </div>
       </div>
-      <p className="text-lg sm:text-xl font-bold font-mono tracking-tight count-up" style={{ color: accent === '#0ecb81' || accent === '#f6465d' ? accent : 'var(--text-primary)' }}>{value}</p>
-      {sub && <p className="text-[9px] sm:text-[10px] text-[var(--text-faint)] mt-1.5 font-mono truncate">{sub}</p>}
+      <p className="text-lg sm:text-xl lg:text-2xl font-bold font-mono tracking-tight count-up" style={{ color: accent === '#0ecb81' || accent === '#f6465d' ? accent : 'var(--text-primary)' }}>{value}</p>
+      {sub && <p className="text-[9px] sm:text-[10px] lg:text-[11px] text-[var(--text-faint)] mt-1.5 font-mono truncate">{sub}</p>}
     </Card>
   );
 }
 
 function SectionHeader({ icon: Icon, title, subtitle, accent = '#f0b90b', action }: { icon: any; title: string; subtitle?: string; accent?: string; action?: React.ReactNode }) {
   return (
-    <div className="flex items-start sm:items-center justify-between gap-3 mb-5">
-      <div className="flex items-center gap-2.5 min-w-0">
-        <div className="w-7 h-7 rounded flex items-center justify-center shrink-0" style={{ background: `${accent}08`, color: accent, border: `1px solid ${accent}20` }}>
-          <Icon className="w-3.5 h-3.5" />
+    <div className="flex items-start sm:items-center justify-between gap-3 mb-5 lg:mb-6">
+      <div className="flex items-center gap-2.5 lg:gap-3 min-w-0">
+        <div className="w-7 h-7 lg:w-9 lg:h-9 rounded flex items-center justify-center shrink-0" style={{ background: `${accent}08`, color: accent, border: `1px solid ${accent}20` }}>
+          <Icon className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
         </div>
         <div className="min-w-0">
-          <h2 className="text-xs sm:text-sm font-bold uppercase tracking-[0.06em] truncate">{title}</h2>
-          {subtitle && <p className="text-[9px] sm:text-[10px] text-[var(--text-faint)] mt-0.5 truncate font-mono">{subtitle}</p>}
+          <h2 className="text-xs sm:text-sm lg:text-base font-bold uppercase tracking-[0.06em] truncate">{title}</h2>
+          {subtitle && <p className="text-[9px] sm:text-[10px] lg:text-[11px] text-[var(--text-faint)] mt-0.5 truncate font-mono">{subtitle}</p>}
         </div>
       </div>
       {action}
@@ -737,7 +737,7 @@ function TradeFinderTab({ data, loading, onRefresh, trackingStats, trackedRecs, 
   }) || [];
 
   return (
-    <div className="space-y-6 sm:space-y-6">
+    <div className="space-y-6">
       <SectionHeader icon={Compass} title="Trade Finder" subtitle="Real-time opportunity scanner with AI-powered analysis" accent="#f0b90b"
         action={<ActionButton onClick={onRefresh} loading={loading} icon={RefreshCw} label="Scan Now" variant="primary" />} />
 
@@ -797,6 +797,10 @@ function TradeFinderTab({ data, loading, onRefresh, trackingStats, trackedRecs, 
         </div>
       )}
 
+      {/* Desktop 2-column layout: stats left, opportunities right */}
+      <div className="xl:grid xl:grid-cols-[380px_1fr] xl:gap-6 space-y-6 xl:space-y-0">
+      {/* Left: Tracking Stats + Walk-Forward */}
+      <div className="space-y-6 xl:sticky xl:top-4 xl:self-start">
       {/* Live Tracking Stats + Walk-Forward Toggle */}
       {(trackingStats || walkForwardData) && (
         <div className="space-y-3">
@@ -977,8 +981,10 @@ function TradeFinderTab({ data, loading, onRefresh, trackingStats, trackedRecs, 
           <p className="text-xs text-[var(--text-faint)] mt-1">Multi-timeframe confirmation · Relative strength · Adaptive volatility filters</p>
         </Card>
       )}
+      </div>{/* End left panel */}
 
-      {/* Opportunity Cards */}
+      {/* Right: Opportunity Cards */}
+      <div className="space-y-3">
       {filtered.length > 0 ? (
         <div className="space-y-3">
           {filtered.map((opp, idx) => (
@@ -1003,6 +1009,8 @@ function TradeFinderTab({ data, loading, onRefresh, trackingStats, trackedRecs, 
           <p className="text-xs text-[var(--text-faint)] mt-1">Try selecting a different time horizon</p>
         </Card>
       ) : null}
+      </div>{/* End right panel */}
+      </div>{/* End 2-col grid */}
     </div>
   );
 }
