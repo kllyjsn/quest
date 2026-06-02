@@ -5,7 +5,9 @@ from pathlib import Path
 
 import aiosqlite
 
-DB_PATH = os.getenv("QUANT_EDGE_DB", str(Path(__file__).parent.parent / "data" / "quant_edge.db"))
+# Use persistent volume if available (Fly.io mounts to /data), else local data dir
+_default_db = "/data/quant_edge.db" if os.path.isdir("/data") else str(Path(__file__).parent.parent / "data" / "quant_edge.db")
+DB_PATH = os.getenv("QUANT_EDGE_DB", _default_db)
 
 
 async def get_db() -> aiosqlite.Connection:
