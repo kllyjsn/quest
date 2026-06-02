@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.db import init_db
-from app.routers import auth, backtest, broker, paper_trading, portfolio, risk, signals, strategies
+from app.routers import auth, backtest, broker, historical, paper_trading, portfolio, recommendations, risk, signals, strategies
 
 
 @asynccontextmanager
@@ -38,6 +38,8 @@ app.include_router(backtest.router, prefix="/api/backtest", tags=["backtest"])
 app.include_router(broker.router, prefix="/api/broker", tags=["broker"])
 app.include_router(risk.router, prefix="/api/risk", tags=["risk"])
 app.include_router(paper_trading.router, prefix="/api/paper", tags=["paper-trading"])
+app.include_router(historical.router, prefix="/api/historical", tags=["historical"])
+app.include_router(recommendations.router, prefix="/api/recommendations", tags=["recommendations"])
 
 
 @app.get("/api/health")

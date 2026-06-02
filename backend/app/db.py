@@ -113,6 +113,55 @@ async def init_db():
             severity TEXT NOT NULL,
             action_taken TEXT
         );
+
+        CREATE TABLE IF NOT EXISTS historical_prices (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            symbol TEXT NOT NULL,
+            date TEXT NOT NULL,
+            open REAL NOT NULL,
+            high REAL NOT NULL,
+            low REAL NOT NULL,
+            close REAL NOT NULL,
+            volume REAL NOT NULL DEFAULT 0,
+            interval TEXT NOT NULL DEFAULT '1d',
+            UNIQUE(symbol, date, interval)
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_hist_symbol_date ON historical_prices(symbol, date);
+
+        CREATE TABLE IF NOT EXISTS trade_recommendations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            scan_timestamp TEXT NOT NULL,
+            symbol TEXT NOT NULL,
+            score REAL NOT NULL,
+            signal TEXT NOT NULL,
+            horizon TEXT NOT NULL,
+            entry_price REAL NOT NULL,
+            target_price REAL,
+            stop_price REAL,
+            win_rate REAL,
+            edge_score REAL,
+            sector TEXT,
+            analysis TEXT,
+            status TEXT NOT NULL DEFAULT 'pending',
+            outcome_price REAL,
+            outcome_date TEXT,
+            outcome_return REAL,
+            resolved_at TEXT
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_rec_symbol ON trade_recommendations(symbol);
+        CREATE INDEX IF NOT EXISTS idx_rec_status ON trade_recommendations(status);
+        CREATE INDEX IF NOT EXISTS idx_rec_timestamp ON trade_recommendations(scan_timestamp);
+
+        CREATE TABLE IF NOT EXISTS daily_scans (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT NOT NULL,
+            total_scanned INTEGER NOT NULL,
+            total_signals INTEGER NOT NULL,
+            market_regime TEXT,
+            top_picks TEXT
+        );
         """
     )
     await db.commit()

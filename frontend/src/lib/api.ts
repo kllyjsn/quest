@@ -233,6 +233,71 @@ export const getPaperHistory = withFallback(
   () => ({ snapshots: [] }),
 );
 
+// Historical data
+export const ingestHistorical = (symbols?: string[], period = '2y') =>
+  fetchJson<any>('/historical/ingest', {
+    method: 'POST',
+    body: JSON.stringify({ symbols, period }),
+  });
+
+export const getHistoricalPrices = (symbol: string, startDate?: string, limit = 500) => {
+  const params = new URLSearchParams({ interval: '1d' });
+  if (startDate) params.set('start_date', startDate);
+  if (limit) params.set('limit', String(limit));
+  return withFallback(
+    () => fetchJson<any>(`/historical/prices/${symbol}?${params}`),
+    () => ({ symbol, prices: [], count: 0 }),
+  )();
+};
+
+export const getHistoricalStats = withFallback(
+  () => fetchJson<any>('/historical/stats'),
+  () => ({ total_rows: 0, total_symbols: 0 }),
+);
+
+export const getStoredSymbols = withFallback(
+  () => fetchJson<any>('/historical/symbols'),
+  () => ({ symbols: [], total: 0 }),
+);
+
+// Trade recommendations
+export const logRecommendations = (
+  recommendations: any[],
+  marketRegime?: string,
+  totalScanned?: number,
+) =>
+  fetchJson<any>('/recommendations/log', {
+    method: 'POST',
+    body: JSON.stringify({
+      recommendations,
+      market_regime: marketRegime,
+      total_scanned: totalScanned,
+    }),
+  });
+
+export const resolveRecommendations = () =>
+  fetchJson<any>('/recommendations/resolve-batch', { method: 'POST' });
+
+export const getRecommendationHistory = (status?: string, symbol?: string, limit = 200) => {
+  const params = new URLSearchParams();
+  if (status) params.set('status', status);
+  if (symbol) params.set('symbol', symbol);
+  params.set('limit', String(limit));
+  return withFallback(
+    () => fetchJson<any>(`/recommendations/history?${params}`),
+    () => ({ recommendations: [], total: 0 }),
+  )();
+};
+
+export const getRecommendationStats = withFallback(
+  () => fetchJson<any>('/recommendations/stats'),
+  () => ({
+    total_recommendations: 0, pending: 0, resolved: 0,
+    wins: 0, losses: 0, win_rate: null, avg_return: null,
+    by_horizon: [], by_score_bucket: [], recent_scans: [],
+  }),
+);
+
 // Health
 export const healthCheck = withFallback(
   () => fetchJson<any>('/health'),

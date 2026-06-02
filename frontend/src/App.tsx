@@ -168,8 +168,33 @@ function App() {
     try {
       const result = await findTradeOpportunities();
       setTradeFinderData(result);
-      // Auto-log recommendations for live tracking
+      // Auto-log recommendations for live tracking (localStorage)
       logRecommendations(result.opportunities);
+      // Also persist to backend database (fire-and-forget)
+      api.logRecommendations(
+        result.opportunities.map(opp => ({
+          symbol: opp.symbol,
+          score: opp.score,
+          signal: opp.action,
+          horizon: opp.timeHorizon.label,
+          entry_price: opp.entryPrice,
+          target_price: opp.targetPrice,
+          stop_price: opp.stopLoss,
+          win_rate: opp.historicalWinRate,
+          edge_score: opp.edgeScore,
+          sector: opp.sector,
+          analysis: JSON.stringify({
+            momentum: opp.analysis.momentum.signal,
+            rsi: opp.analysis.rsi.signal,
+            macd: opp.analysis.macd.signal,
+            expected_return: opp.expectedReturn,
+          }),
+        })),
+        result.regime,
+        result.totalScanned,
+      ).catch(() => {}); // silent fallback if backend unavailable
+      // Also try to resolve any pending recommendations in the DB
+      api.resolveRecommendations().catch(() => {});
       // Update tracked recommendations with current prices
       const updated = await updateTrackedRecommendations();
       setTrackedRecs(updated);
@@ -2953,6 +2978,206 @@ ${positive.length > negative.length * 2 ? '• Strong bullish consensus — watc
   );
 }
 
+// ── Database Stats Panel ──
+function DatabaseStatsPanel() {
+  const [dbStats, setDbStats] = useState<any>(null);
+  const [recStats, setRecStats] = useState<any>(null);
+  const [ingesting, setIngesting] = useState(false);
+  const [ingestResult, setIngestResult] = useState<string | null>(null);
+  const [recHistory, setRecHistory] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      try {
+        const [hs, rs, rh] = await Promise.all([
+          api.getHistoricalStats(),
+          api.getRecommendationStats(),
+          api.getRecommendationHistory(undefined, undefined, 20),
+        ]);
+        if (mounted) {
+          setDbStats(hs);
+          setRecStats(rs);
+          setRecHistory(rh.recommendations || []);
+        }
+      } catch { /* backend offline */ }
+      if (mounted) setLoading(false);
+    };
+    load();
+    return () => { mounted = false; };
+  }, []);
+
+  const handleIngest = async () => {
+    setIngesting(true);
+    setIngestResult(null);
+    try {
+      const result = await api.ingestHistorical(undefined, '2y');
+      setIngestResult(`Ingested ${result.total_rows_stored} bars for ${result.symbols_processed} symbols`);
+      const hs = await api.getHistoricalStats();
+      setDbStats(hs);
+    } catch (e: any) {
+      setIngestResult(`Error: ${e.message}`);
+    }
+    setIngesting(false);
+  };
+
+  if (loading) {
+    return (
+      <Card>
+        <h3 className="text-xs font-bold text-[var(--text-muted)] mb-3 flex items-center gap-2 uppercase tracking-wider">
+          <Layers className="w-3.5 h-3.5 text-[#1e90ff]" /> Database
+        </h3>
+        <p className="text-xs text-[var(--text-faint)] text-center py-4 font-mono">Connecting to database...</p>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Historical Data */}
+      <Card>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-xs font-bold text-[var(--text-muted)] flex items-center gap-2 uppercase tracking-wider">
+            <Layers className="w-3.5 h-3.5 text-[#1e90ff]" /> Historical Database
+          </h3>
+          <button onClick={handleIngest} disabled={ingesting}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-semibold bg-[#1e90ff]/10 text-[#1e90ff] border border-[#1e90ff]/20 hover:bg-[#1e90ff]/20 transition-all press-scale whitespace-nowrap shrink-0 disabled:opacity-50">
+            <RefreshCw className={`w-3 h-3 ${ingesting ? 'animate-spin' : ''}`} />
+            {ingesting ? 'Ingesting...' : 'Pull Historical'}
+          </button>
+        </div>
+        {dbStats && dbStats.total_symbols > 0 ? (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+            <div className="p-3 rounded-md bg-white/[0.02] border border-[var(--border)]">
+              <p className="text-[10px] text-[var(--text-faint)] uppercase tracking-wider">Symbols</p>
+              <p className="text-lg font-bold font-mono">{dbStats.total_symbols}</p>
+            </div>
+            <div className="p-3 rounded-md bg-white/[0.02] border border-[var(--border)]">
+              <p className="text-[10px] text-[var(--text-faint)] uppercase tracking-wider">Total Bars</p>
+              <p className="text-lg font-bold font-mono">{(dbStats.total_rows || 0).toLocaleString()}</p>
+            </div>
+            <div className="p-3 rounded-md bg-white/[0.02] border border-[var(--border)]">
+              <p className="text-[10px] text-[var(--text-faint)] uppercase tracking-wider">From</p>
+              <p className="text-sm font-bold font-mono">{dbStats.earliest_date || 'N/A'}</p>
+            </div>
+            <div className="p-3 rounded-md bg-white/[0.02] border border-[var(--border)]">
+              <p className="text-[10px] text-[var(--text-faint)] uppercase tracking-wider">To</p>
+              <p className="text-sm font-bold font-mono">{dbStats.latest_date || 'N/A'}</p>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-4">
+            <p className="text-xs text-[var(--text-faint)]">No historical data stored yet</p>
+            <p className="text-[10px] text-[var(--text-faint)] mt-1">Click "Pull Historical" to download 2 years of OHLCV for the full universe</p>
+          </div>
+        )}
+        {ingestResult && (
+          <p className={`text-[10px] mt-2 font-mono ${ingestResult.startsWith('Error') ? 'text-[#f6465d]' : 'text-[#0ecb81]'}`}>{ingestResult}</p>
+        )}
+      </Card>
+
+      {/* Persisted Recommendation Stats */}
+      {recStats && recStats.total_recommendations > 0 && (
+        <Card>
+          <h3 className="text-xs font-bold text-[var(--text-muted)] mb-3 flex items-center gap-2 uppercase tracking-wider">
+            <Target className="w-3.5 h-3.5 text-[#f0b90b]" /> Persisted Recommendations
+          </h3>
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-2 mb-3">
+            <div className="p-3 rounded-md bg-white/[0.02] border border-[var(--border)]">
+              <p className="text-[10px] text-[var(--text-faint)] uppercase tracking-wider">Total</p>
+              <p className="text-lg font-bold font-mono">{recStats.total_recommendations}</p>
+            </div>
+            <div className="p-3 rounded-md bg-white/[0.02] border border-[var(--border)]">
+              <p className="text-[10px] text-[var(--text-faint)] uppercase tracking-wider">Pending</p>
+              <p className="text-lg font-bold font-mono text-[#f0b90b]">{recStats.pending}</p>
+            </div>
+            <div className="p-3 rounded-md bg-white/[0.02] border border-[var(--border)]">
+              <p className="text-[10px] text-[var(--text-faint)] uppercase tracking-wider">Wins</p>
+              <p className="text-lg font-bold font-mono text-[#0ecb81]">{recStats.wins}</p>
+            </div>
+            <div className="p-3 rounded-md bg-white/[0.02] border border-[var(--border)]">
+              <p className="text-[10px] text-[var(--text-faint)] uppercase tracking-wider">Losses</p>
+              <p className="text-lg font-bold font-mono text-[#f6465d]">{recStats.losses}</p>
+            </div>
+            <div className="p-3 rounded-md bg-white/[0.02] border border-[var(--border)]">
+              <p className="text-[10px] text-[var(--text-faint)] uppercase tracking-wider">Win Rate</p>
+              <p className={`text-lg font-bold font-mono ${(recStats.win_rate || 0) >= 0.55 ? 'text-[#0ecb81]' : (recStats.win_rate || 0) < 0.45 ? 'text-[#f6465d]' : 'text-[#f0b90b]'}`}>
+                {recStats.win_rate !== null ? `${(recStats.win_rate * 100).toFixed(1)}%` : 'N/A'}
+              </p>
+            </div>
+          </div>
+
+          {/* By Horizon breakdown */}
+          {recStats.by_horizon && recStats.by_horizon.length > 0 && (
+            <div className="mt-3">
+              <p className="text-[10px] text-[var(--text-faint)] uppercase tracking-wider mb-2">By Horizon</p>
+              <div className="space-y-1.5">
+                {recStats.by_horizon.map((h: any) => (
+                  <div key={h.horizon} className="flex items-center justify-between p-2 rounded-md bg-white/[0.02] border border-[var(--border)]">
+                    <span className="text-xs font-mono">{h.horizon}</span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-[10px] text-[var(--text-faint)]">{h.total} recs</span>
+                      <span className={`text-xs font-mono font-bold ${h.win_rate >= 0.55 ? 'text-[#0ecb81]' : h.win_rate < 0.45 ? 'text-[#f6465d]' : 'text-[#f0b90b]'}`}>
+                        {(h.win_rate * 100).toFixed(0)}% WR
+                      </span>
+                      {h.avg_return !== null && (
+                        <span className={`text-xs font-mono font-bold ${h.avg_return >= 0 ? 'text-[#0ecb81]' : 'text-[#f6465d]'}`}>
+                          {h.avg_return >= 0 ? '+' : ''}{(h.avg_return * 100).toFixed(1)}%
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </Card>
+      )}
+
+      {/* Recent DB Recommendations */}
+      {recHistory.length > 0 && (
+        <Card>
+          <h3 className="text-xs font-bold text-[var(--text-muted)] mb-3 flex items-center gap-2 uppercase tracking-wider">
+            <History className="w-3.5 h-3.5 text-[#f0b90b]" /> Recent DB Recommendations
+          </h3>
+          <div className="space-y-1.5 max-h-[300px] overflow-y-auto">
+            {recHistory.map((rec: any) => (
+              <div key={rec.id} className="flex items-center justify-between p-2.5 rounded-lg hover:bg-white/[0.02] transition-colors">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${
+                    rec.status === 'win' ? 'bg-[#0ecb81]/10' :
+                    rec.status === 'loss' || rec.status === 'stopped_out' ? 'bg-[#f6465d]/10' :
+                    'bg-[#f0b90b]/10'
+                  }`}>
+                    {rec.status === 'win' ? <CheckCircle2 className="w-3 h-3 text-[#0ecb81]" /> :
+                     rec.status === 'loss' || rec.status === 'stopped_out' ? <XCircle className="w-3 h-3 text-[#f6465d]" /> :
+                     <Clock className="w-3 h-3 text-[#f0b90b]" />}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-mono font-bold text-sm">{rec.symbol} <span className="text-[10px] text-[#0ecb81]">{rec.signal}</span></p>
+                    <p className="text-[10px] text-[var(--text-faint)] truncate">{rec.horizon} · Score {rec.score?.toFixed(0)}</p>
+                  </div>
+                </div>
+                <div className="text-right shrink-0 ml-2">
+                  {rec.outcome_return !== null ? (
+                    <p className={`font-mono text-sm font-bold ${rec.outcome_return >= 0 ? 'text-[#0ecb81]' : 'text-[#f6465d]'}`}>
+                      {rec.outcome_return >= 0 ? '+' : ''}{(rec.outcome_return * 100).toFixed(1)}%
+                    </p>
+                  ) : (
+                    <p className="text-[10px] text-[#f0b90b] font-semibold">PENDING</p>
+                  )}
+                  <p className="text-[10px] text-[var(--text-faint)]">${rec.entry_price?.toFixed(2)}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+}
+
 // ── Track Record Tab ──
 function TrackRecordTab() {
   const [stats] = useState(getTrackRecordStats());
@@ -3112,6 +3337,9 @@ function TrackRecordTab() {
           </div>
         )}
       </Card>
+
+      {/* Database Stats — from backend */}
+      <DatabaseStatsPanel />
 
       {/* Notification Settings */}
       <Card>
