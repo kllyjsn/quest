@@ -6,10 +6,17 @@ from datetime import datetime
 
 import yfinance as yf
 from fastapi import APIRouter
+from pydantic import BaseModel
 
 from app.db import get_db
 
 router = APIRouter()
+
+
+class IngestRequest(BaseModel):
+    symbols: list[str] | None = None
+    period: str = "2y"
+    interval: str = "1d"
 
 
 async def _fetch_and_store(symbol: str, period: str = "2y", interval: str = "1d") -> int:
@@ -54,17 +61,17 @@ async def _fetch_and_store(symbol: str, period: str = "2y", interval: str = "1d"
 
 
 @router.post("/ingest")
-async def ingest_historical(
-    symbols: list[str] | None = None,
-    period: str = "2y",
-    interval: str = "1d",
-):
+async def ingest_historical(body: IngestRequest | None = None):
     """Pull historical OHLCV data from yfinance and store in the database.
 
     If no symbols provided, ingests the full universe (~90 stocks).
     """
     from app.engine.market_data import UNIVERSE
 
+    req = body or IngestRequest()
+    symbols = req.symbols
+    period = req.period
+    interval = req.interval
     targets = symbols or UNIVERSE
     results: dict[str, int] = {}
 
