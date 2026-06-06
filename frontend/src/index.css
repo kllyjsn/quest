@@ -234,9 +234,26 @@ input:focus, select:focus {
   transform: scale(0.995);
 }
 
-/* Safe area for mobile */
+/* Safe area for mobile + Capacitor Android */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
   .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+  .safe-top { padding-top: env(safe-area-inset-top); }
+}
+
+/* Capacitor Android: disable user-select on non-input, hide overscroll glow */
+html.capacitor-android {
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+html.capacitor-android input,
+html.capacitor-android textarea,
+html.capacitor-android [contenteditable] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+html.capacitor-android body {
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* ── Mobile-first enhancements ── */
