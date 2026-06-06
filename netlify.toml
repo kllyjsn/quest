@@ -1,0 +1,32 @@
+[build]
+  base = "frontend"
+  command = "npm run build"
+  publish = "dist"
+
+[functions]
+  directory = "../netlify/functions"
+
+[[redirects]]
+  from = "/api/market-data"
+  to = "/.netlify/functions/market-data"
+  status = 200
+
+[[redirects]]
+  from = "/api/stock-fundamentals"
+  to = "/.netlify/functions/stock-fundamentals"
+  status = 200
+
+[[redirects]]
+  from = "/api/news-feed"
+  to = "/.netlify/functions/news-feed"
+  status = 200
+
+[[redirects]]
+  from = "/api/alpaca/*"
+  to = "/.netlify/functions/alpaca-proxy"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
